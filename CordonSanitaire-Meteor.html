@@ -1,14 +1,145 @@
 <head>
-  <title>CordonSanitaire-Meteor</title>
+    <meta charset="utf-8">
+    <title>Cordon Sanitaire | Meteor</title>
+    <meta name="description" content="Cordon Sanitaire. Contain the outbreak.">
+    <meta name="author" content="Jonathan Bobrow  @jonathanbobrow">
+    <meta http-equiv='cache-control' content='no-cache'>
+    <meta http-equiv='expires' content='0'>
+    <meta http-equiv='pragma' content='no-cache'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
 </head>
 
-<body>
-  <h1>Welcome to Meteor!</h1>
+<!--Sign Up-->
+<template name="signup">
+    {{> loginButtons}}
+    <button id="guest">Guest</button>
+    <!--<h2>Create an account</h2>-->
+    <!--<input id="username" type="text" placeholder="username">-->
+    <!--<input id="email" type="text" placeholder="email">-->
+    <!--<input id="password" type="text" placeholder="password">-->
+    <!--<button id="signUp" onclick="signUp()">Create Account</button>-->
+</template>
 
-  {{> hello}}
-</body>
+<!--Log In-->
+<template name="login">
+    {{> loginButtons}}
+    <!--<h2>Log in</h2>-->
+    <!--<input id="username" type="text" placeholder="username">-->
+    <!--<input id="password" type="text" placeholder="password">-->
+    <!--<button id="logIn" onclick="logIn()">Log In</button>-->
+</template>
+
+<template name="mainmenu">
+    {{> loginButtons}}
+    <button id="play">Play</button>
+    <button id="profile">Profile</button>
+</template>
+
+<!-- Pregame or Lobby View -->
+<template name="lobby">
+    <!-- Container for timer and intro text-->
+    <div id="overlay">
+        <div id="intro">
+            <h1>CORDON SANITAIRE <span id="version">v546</span></h1>
+
+            <div id="lobby_count">
+                <div class="minibox">
+                    <h2>{{num_players_needed}} people needed</h2>
+                </div>
+                <p>{{num_players_present}}present</p>
+            </div>
+
+            <div id="lobby_wait">
+                <div class="minibox">
+                    <h2><span id="timerbox" class="countdown_til_start">0</span></h2>
+                </div>
+                <p>til the search begins</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- List of players in lobby-->
+    <div id="players">
+    </div>
+</template>
+
+<!-- On boarding for game mechanics -->
+<template name="tutorial">
+
+</template>
+
+<!-- All in game views -->
+<template name="game">
+    <!-- Container for countdown -->
+    <div id="countdown"><span id="seconds">00</span>.<span id="hundredths">00</span></div>
+
+    <!-- Logout button for player | Not currently necessary -->
+    <!--<input type="button" value="Log Out" class="logoutButton" onclick="userLogout()" />-->
+
+
+    <!-- Container for scoreboard -->
+    <div id="scoreboard">
+        <ul>
+            <li class="no_border"><span id="num_active">0</span> people maintaining the quarantine</li>
+            <li><span id="casualty_count">0</span> people trapped</li>
+            <li><span id="area_quarantined">0</span> sq mi. quarantined</li>
+        </ul>
+    </div>
+
+    <!-- Container for Patient Zero status -->
+    <div id="p0_status">
+        <img id="p0_isolated" src="assets/pzero_status_isolated.svg"/>
+        <img id="p0_contained" src="assets/pzero_status_contained.svg"/>
+        <img id="p0_loose" src="assets/pzero_status_loose.svg"/>
+    </div>
+
+    <div id="bottom_container">
+        <a href="#" id="mainToggleButton" class="mainButton toggleButton" onclick="toggleMe()">JOIN</a>
+        <!--<a href="#" id="shoutButton" class="mainButton shoutButton" onclick="sendShout()">SHOUT!</a>-->
+        <!--<a href="#" id="helloButton" class="mainButton helloButton" onclick="sendHello()">HELLO!</a>-->
+    </div>
+
+    <!-- container for introduction screen -->
+    <div id="intro_container">
+    </div>
+
+    <!-- Container for Google Map -->
+    <div id="map-container">
+        <div id="map-canvas">
+        </div>
+    </div>
+</template>
+
+<!-- Display conclusion after the game -->
+<template name="conclusion">
+    <h2>{{game_status}}</h2>
+
+    <p>{{game_summary}}</p>
+
+    <h3>Stats</h3>
+    <ul>
+        <li>patien zero status: {{pZero_status}}</li>
+        <li>people joined: {{people_joined}}</li>
+        <li>people trapped: {{people_trapped}}</li>
+        <li>people passive: {{people_passive}}</li>
+    </ul>
+</template>
+
+<!-- A page for profile information i.e. username, stats, ... -->
+<template name="profile">
+    <img id="profile_pic" src=""/>
+
+    <h2 id="username">{{username}}}</h2>
+
+    <h3>Stats</h3>
+    <ul>
+        <li>games played: {{games_played}}</li>
+        <li></li>
+    </ul>
+</template>
+
 
 <template name="hello">
-  <button>Click Me</button>
-  <p>You've pressed the button {{counter}} times.</p>
+    <button>Click Me</button>
+    <p>You've pressed the button {{counter}} times.</p>
 </template>
