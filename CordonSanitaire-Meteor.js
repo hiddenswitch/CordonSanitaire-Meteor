@@ -10,13 +10,13 @@ Meteor.methods({
         var game = games[0];
 
         // if latest game is filled, create new game
-        if (game == undefined || game.isComplete) {
+        if (game == undefined || game.isGameFull) {
             console.log("creating a new game");
             game = Games.insert({
                 gameId: Random.id().toLowerCase(),
                 createdAt: Date.now(),
                 joinedPlayerIds: [],
-                isComplete: false
+                isGameFull: false
             });
         }
 
@@ -33,6 +33,8 @@ Meteor.methods({
         // add player to game
         //game.joinedPlayerIds.push(player);
         //Games.update({_id:game._id}, {joinedPlayerIds: game.joinedPlayerIds});
+        
+        // if player is the number of max players per game, update 'isGameFull' to true
 
         return game.gameId;
     }
