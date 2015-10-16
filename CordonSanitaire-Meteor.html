@@ -60,6 +60,9 @@
 
     <!-- List of players in lobby-->
     <div id="players">
+        {{#each players}}
+            <p>{{this.name}}</p>
+        {{/each}}
     </div>
 </template>
 
