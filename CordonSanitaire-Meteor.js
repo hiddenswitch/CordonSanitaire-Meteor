@@ -55,7 +55,7 @@ if (Meteor.isServer) {
                 addPlayerToGame(new_game, this.userId);
                 return new_game.gameId;
             }
-
+            // otherwise, simply join an existing game
             else {
                 addPlayerToGame(existing_game, this.userId);
                 return existing_game.gameId;
@@ -86,12 +86,13 @@ var addPlayerToGame = function (game, playerId) {
         state: 'passive'
     });
 
-    // make sure there is an entry for joined player Ids
+    // make sure there is an entry for joined player Ids (this shouldn't be necessary)
+    console.log("game object:", game);
     if(!game.joinedPlayerIds)
         game.joinedPlayerIds = [];
 
     // add player to game
-    game.joinedPlayerIds.push(player);
+    game.joinedPlayerIds.push(playerId);
     // if player is the number of max players per game, update 'isGameFull' to true
     if(game.joinedPlayerIds.length >= max_players)
         game.isGameFull = true;
