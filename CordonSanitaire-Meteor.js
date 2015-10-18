@@ -2,45 +2,7 @@
 Games = new Mongo.Collection('games');
 Players = new Mongo.Collection('players');
 
-Meteor.methods({
-
-    joinGame: function (options) {
-        // look for latest game
-        var games = Games.find({}, {sort: {createdAt: 1}, limit: 1}).fetch();
-        var game = games[0];
-
-        // if latest game is filled, create new game
-        if (game == undefined || game.isGameFull) {
-            console.log("creating a new game");
-            game = Games.insert({
-                gameId: Random.id().toLowerCase(),
-                createdAt: Date.now(),
-                joinedPlayerIds: [],
-                isGameFull: false
-            });
-        }
-
-        console.log("got a game with gameId: " + game.gameId + " createdAt: " + game.createdAt);
-        //console.log("containing the following players:");
-        //for (var i = 0; i < game.joinedPlayerIds.length; i++) {
-        //    console.log(game.joinedPlayerIds[i]);
-        //}
-
-        // create a player entry
-        console.log("creating a player for userId: " + Meteor.userId());
-        var player = Players.insert({userId: Meteor.userId(), name: "tempUserName", gameId: game.gameId, state: 'passive'});
-
-        // add player to game
-        //game.joinedPlayerIds.push(player);
-        //Games.update({_id:game._id}, {joinedPlayerIds: game.joinedPlayerIds});
-        
-        // if player is the number of max players per game, update 'isGameFull' to true
-
-        return game.gameId;
-    }
-
-
-});
+var max_players = 10;
 
 if (Meteor.isClient) {
     Template.signup.helpers({});
@@ -56,8 +18,11 @@ if (Meteor.isClient) {
 
     Template.mainmenu.events({
         'click button#play': function () {
-            Meteor.call
-            Router.go('lobby');
+            // find a game to join
+            Meteor.call('joinGame', function (e, gameId) {
+                // load lobby to wait for start of game
+                Router.go('lobby', {gameId: gameId});
+            });
         },
         'click button#profile': function () {
             Router.go('profile', {userId: Meteor.userId()});
@@ -76,7 +41,64 @@ if (Meteor.isServer) {
     Meteor.startup(function () {
         // code to run on server at startup
     });
+
+    Meteor.methods({
+
+        joinGame: function (options) {
+            // look for latest game
+            var games = Games.find({}, {sort: {createdAt: 1}, limit: 1}).fetch();
+            var existing_game = games[0];
+
+            // if latest game is filled, create new game
+            if (existing_game == undefined || existing_game.isGameFull) {
+                var new_game = createGame(options);
+                addPlayerToGame(new_game, this.userId);
+                return new_game.gameId;
+            }
+
+            else {
+                addPlayerToGame(existing_game, this.userId);
+                return existing_game.gameId;
+            }
+        }
+
+    });
 }
+
+
+var createGame = function (options) {
+    var gameId = Random.id().toLowerCase();
+    var game = Games.insert({
+        gameId: gameId,
+        createdAt: Date.now(),
+        joinedPlayerIds: [],
+        isGameFull: false
+    });
+    return game;
+};
+
+var addPlayerToGame = function (game, playerId) {
+    // create a player entry
+    var player = Players.insert({
+        userId: playerId,
+        name: playerId,
+        gameId: game.gameId,
+        state: 'passive'
+    });
+
+    // make sure there is an entry for joined player Ids
+    if(!game.joinedPlayerIds)
+        game.joinedPlayerIds = [];
+
+    // add player to game
+    game.joinedPlayerIds.push(player);
+    // if player is the number of max players per game, update 'isGameFull' to true
+    if(game.joinedPlayerIds.length >= max_players)
+        game.isGameFull = true;
+    Games.update({_id: game._id}, game);
+
+    return game.gameId;
+};
 
 // Routes
 Router.route('/', function () {
@@ -108,14 +130,11 @@ Router.route('/lobby/:gameId?', function () {
     this.render('lobby');
 
     if (this.params.gameId == undefined) {
-        console.log("go get a game");
-        Meteor.call('joinGame', function (e, gameId) {
-            // reload lobby to show current lobby
-            Router.go('lobby', {gameId: gameId});
-        });
+        console.log("no game id... go back to the main menu");
+        this.redirect('/mainmenu');
     }
     else
-        console.log("already joined a game with id: " + this.params.gameId);
+        console.log("you are waiting to join a game with id: " + this.params.gameId);
 
 }, {name: 'lobby'});
 
