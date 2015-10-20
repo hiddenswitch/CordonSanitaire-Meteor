@@ -67,6 +67,11 @@ var addPlayerToGame = function (gameId, userId) {
         throw new Meteor.Error(404, 'Game not found.');
     }
 
+    // check if game already contains a player for this userId
+    var player = Players.findOne({gameId:gameId, userId:userId});
+    if(!!player)
+        return player._id;
+
     // create a player entry
     var playerId = Players.insert({
         userId: userId,
