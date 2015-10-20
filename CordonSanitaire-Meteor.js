@@ -2,7 +2,7 @@
 Games = new Mongo.Collection('games');
 Players = new Mongo.Collection('players');
 
-var max_players = 10;
+var MAX_PLAYERS = 4;
 
 if (Meteor.isClient) {
     Template.signup.helpers({});
@@ -19,7 +19,9 @@ if (Meteor.isClient) {
     Template.mainmenu.events({
         'click button#play': function () {
             // find a game to join
-            Meteor.call('joinGame', function (e, gameId) {
+            Meteor.call('joinGame', function (e, info) {
+                var gameId = info.gameId;
+                var playerId = info.playerId;
                 // load lobby to wait for start of game
                 Router.go('lobby', {gameId: gameId});
             });
@@ -41,67 +43,79 @@ if (Meteor.isServer) {
     Meteor.startup(function () {
         // code to run on server at startup
     });
-
-    Meteor.methods({
-
-        joinGame: function (options) {
-            // look for latest game
-            var games = Games.find({}, {sort: {createdAt: 1}, limit: 1}).fetch();
-            var existing_game = games[0];
-
-            // if latest game is filled, create new game
-            if (existing_game == undefined || existing_game.isGameFull) {
-                var new_game = createGame(options);
-                addPlayerToGame(new_game, this.userId);
-                return new_game.gameId;
-            }
-            // otherwise, simply join an existing game
-            else {
-                addPlayerToGame(existing_game, this.userId);
-                return existing_game.gameId;
-            }
-        }
-
-    });
 }
 
 
 var createGame = function (options) {
     var gameId = Random.id().toLowerCase();
-    var game = Games.insert({
-        gameId: gameId,
+    var game = {
+        _id: gameId,
         createdAt: Date.now(),
         joinedPlayerIds: [],
         isGameFull: false
-    });
+    };
+
+    Games.insert(game);
+
     return game;
 };
 
-var addPlayerToGame = function (game, playerId) {
+var addPlayerToGame = function (gameId, userId) {
+    var game = Games.findOne(gameId);
+
+    if (!game) {
+        throw new Meteor.Error(404, 'Game not found.');
+    }
+
     // create a player entry
-    var player = Players.insert({
-        userId: playerId,
-        name: playerId,
-        gameId: game.gameId,
+    var playerId = Players.insert({
+        userId: userId,
+        name: userId,
+        gameId: gameId,
         state: 'passive'
     });
 
-    // make sure there is an entry for joined player Ids (this shouldn't be necessary)
-    console.log("game object:", game);
-    if(!game.joinedPlayerIds)
-        game.joinedPlayerIds = [];
+    var updateCommand = {
+        $addToSet: {
+            joinedPlayerIds: playerId
+        }
+    };
 
-    // add player to game
-    game.joinedPlayerIds.push(playerId);
-    // if player is the number of max players per game, update 'isGameFull' to true
-    if(game.joinedPlayerIds.length >= max_players)
-        game.isGameFull = true;
-    Games.update({_id: game._id}, game);
+    // if with our newly added player, we are at max players, set the game to full
+    if (game.joinedPlayerIds.length + 1 >= MAX_PLAYERS) {
+        updateCommand['$set'] = {isGameFull: true};
+    }
 
-    return game.gameId;
+    var updateStatus = Games.update({_id: game._id}, updateCommand);
+    if (updateStatus === 0) {
+        throw new Meteor.Error(500, 'No document changed');
+    }
+
+    return playerId;
 };
 
+//--------------------------
+// Meteor API - Cloud code
+//--------------------------
+Meteor.methods({
+    joinGame: function (options) {
+        // look for latest game
+        var game = Games.findOne({isGameFull: false}, {sort: {createdAt: -1}, limit: 1});
+
+        if (!game) {
+            game = createGame(options);
+        }
+
+        console.log(game);
+
+        var playerId = addPlayerToGame(game._id, this.userId);
+        return {gameId: game._id, playerId: playerId};
+    }
+});
+
+//--------------------------
 // Routes
+//--------------------------
 Router.route('/', function () {
     this.redirect('/signup');
 });
