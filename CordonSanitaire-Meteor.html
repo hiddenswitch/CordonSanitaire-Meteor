@@ -58,12 +58,15 @@
         </div>
     </div>
 
+    <h3>Game {{gameId}}</h3>
     <!-- List of players in lobby-->
     <div id="players">
         {{#each players}}
             <p>{{this.name}}</p>
         {{/each}}
     </div>
+
+    {{> dots gameId=gameId}}
 </template>
 
 <!-- On boarding for game mechanics -->
@@ -126,6 +129,7 @@
         <li>people trapped: {{people_trapped}}</li>
         <li>people passive: {{people_passive}}</li>
     </ul>
+    <button id="mainmenu">back</button>
 </template>
 
 <!-- A page for profile information i.e. username, stats, ... -->
@@ -139,10 +143,10 @@
         <li>games played: {{games_played}}</li>
         <li></li>
     </ul>
+    <button id="mainmenu">back</button>
 </template>
 
-
-<template name="hello">
-    <button>Click Me</button>
-    <p>You've pressed the button {{counter}} times.</p>
+<template name="dots">
+    <div id="dots">
+    </div>
 </template>

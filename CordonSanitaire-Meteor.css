@@ -34,6 +34,14 @@ body {
     background-color: #ffffff;
 }
 
+button {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 0px;
+    color: #ffffff;
+    background: #000000;
+}
+
 #gui {
     visibility: hidden;
     position: absolute;

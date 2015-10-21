@@ -5,6 +5,64 @@ Players = new Mongo.Collection('players');
 var MAX_PLAYERS = 4;
 
 if (Meteor.isClient) {
+    Template.dots.onRendered(function () {
+        // This gets called in the following order
+        // Nothing in HTML
+        // Added all HTML inside the template that we can
+        // onCreated(function() {})
+        // Compute all of the referenced helper functions in the template
+        // .helpers({})
+        // Insert their rendered content as per their templates
+        // onRendered(function() {})
+
+        // Do stuff after I have everything in the template that I could possibly
+        // draw drawn based on the helpers
+
+        // This is an instance of a Dots template
+        var templateInstance = this;
+        // Everything inside autorun will rerun whenever any of its
+        // dependencies (think Excel cells) change/update/etc.
+
+        // Create two.js canvas
+
+        var templateArguments = Template.currentData();
+        var gameId = templateArguments && templateArguments.gameId;
+
+        // Observe
+        // Check docs.meteor.com
+        Players.find({gameId: gameId}).observe({
+            added: function (document) {
+                // initial draw state
+            },
+            changed: function (newDocument, oldDocument) {
+                if (newDocument.connectedPlayerId !== oldDocument.connectedPlayerId) {
+                    // draw change
+                }
+            }
+        });
+
+        /*
+         templateInstance.autorun(function () {
+         // This will be a reactive call to the arguments of the
+         // template invoke. IE
+         // {{> dots gameId='dijfoasjf'}}
+         // Template.currentData() == {gameId: 'dijfoasjf'}
+         var templateArguments = Template.currentData();
+         var gameId = templateArguments && templateArguments.gameId;
+         // REACTIVE! Whenever ANY field in ANY player with this gameId changes,
+         // the ENTIRE function passed to autorun (this function) gets executed.
+         var players = Players.find({gameId: gameId}).fetch();
+
+         // Now, pretend this is a traditional render function which
+         // has to deal with the current state of the canvas etc etc
+         // It should work well with two.js
+         // $ == this.findAll == document.querySelectorAll
+         var instance = Template.instance();
+         instance.findAll('#dots')[0].innerHTML = _.pluck(players, 'name').join(', ');
+         });
+         */
+    });
+
     Template.signup.helpers({});
 
     Template.signup.events({
@@ -36,13 +94,40 @@ if (Meteor.isClient) {
         players: function () {
             return Players.find({gameId: Router.current().params.gameId})
         }
-    })
+    });
+
+    Template.conclusion.helpers({});
+
+    Template.conclusion.events({
+        'click button#mainmenu': function () {
+            // go back to mainmenu
+            Router.go('mainmenu');
+        }
+    });
+
+    Template.profile.helpers({});
+
+    Template.profile.events({
+        'click button#mainmenu': function () {
+            // go back to mainmenu
+            Router.go('mainmenu');
+        }
+    });
 }
 
 if (Meteor.isServer) {
     Meteor.startup(function () {
         // code to run on server at startup
     });
+
+    // start a game when it is full with a countdown for 10 seconds
+    // then keep track of the time for the length of the game
+    // then send players to the conclusion after the game ends
+    // players can navigate away from the conclusion via GUI
+    //
+    //var startGame = function (gameId) {
+    //
+    //};
 }
 
 
@@ -68,8 +153,8 @@ var addPlayerToGame = function (gameId, userId) {
     }
 
     // check if game already contains a player for this userId
-    var player = Players.findOne({gameId:gameId, userId:userId});
-    if(!!player)
+    var player = Players.findOne({gameId: gameId, userId: userId});
+    if (!!player)
         return player._id;
 
     // create a player entry
@@ -140,14 +225,17 @@ Router.route('/signup', function () {
 
 Router.route('/login', function () {
     this.render('login');
+    $(document.body).css('background-color', '#ffffff');
 }, {name: 'login'});
 
 Router.route('/mainmenu', function () {
     this.render('mainmenu');
+    $(document.body).css('background-color', '#cccccc');
 }, {name: 'mainmenu'});
 
 Router.route('/lobby/:gameId?', function () {
     this.render('lobby');
+    $(document.body).css('background-color', '#ffffaa');
 
     if (this.params.gameId == undefined) {
         console.log("no game id... go back to the main menu");
@@ -156,10 +244,16 @@ Router.route('/lobby/:gameId?', function () {
     else
         console.log("you are waiting to join a game with id: " + this.params.gameId);
 
-}, {name: 'lobby'});
+}, {
+    name: 'lobby',
+    data: function () {
+        return {gameId: this.params.gameId};
+    }
+});
 
 Router.route('/game/:gameId', function () {
     this.render('game');
+    $(document.body).css('background-color', '#333333');
 }, {name: 'game'});
 
 Router.route('/tutorial', function () {
@@ -168,8 +262,10 @@ Router.route('/tutorial', function () {
 
 Router.route('/conclusion', function () {
     this.render('conclusion');
+    $(document.body).css('background-color', '#ffaa33');
 }, {name: 'conclusion'});
 
 Router.route('/profile/:userId', function () {
     this.render('profile');
+    $(document.body).css('background-color', '#33ccff');
 }, {name: 'profile'});

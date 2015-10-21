@@ -22,6 +22,7 @@ ejson
 spacebars
 check
 accounts-facebook
-accounts-ui
 accounts-password
 msavin:mongol
+mizzao:timesync
+accounts-ui
