@@ -27,5 +27,16 @@ Meteor.methods({
         }
 
         return Sanitaire.quitGame(gameId, this.userId);
+    },
+    finishTutorial: function () {
+        if (!this.userId) {
+            throw new Meteor.Error(403, 'Permission denied.');
+        }
+
+        return Meteor.users.update(this.userId, {
+            $set: {
+                hasSeenTutorial: true
+            }
+        });
     }
 });
