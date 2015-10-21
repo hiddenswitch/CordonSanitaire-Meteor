@@ -40,20 +40,19 @@ Router.route('/profile/:userId', function () {
  * be reactive to the game states.
  */
 Router.route('/g/:gameId', function () {
-    var gameId = this.params && this.params.gameId;
-    var game = Games.findOne(gameId, {fields: {state: 1}});
-
-    if (!game) {
-        this.render('loading');
-        return;
-    }
-
-    // TODO: Check if this is the first time the user is playing the game. If so, render the tutorial.
     var userId = Meteor.userId();
 
     var isLoggedIn = !!userId;
     if (!isLoggedIn) {
         this.render('signup');
+        return;
+    }
+
+    var gameId = this.params && this.params.gameId;
+    var game = Games.findOne(gameId, {fields: {state: 1}});
+
+    if (!game) {
+        this.render('loading');
         return;
     }
 
