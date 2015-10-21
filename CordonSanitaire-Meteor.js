@@ -20,7 +20,7 @@ if (Meteor.isClient) {
                 var gameId = info.gameId;
                 var playerId = info.playerId;
                 // load lobby to wait for start of game
-                Router.go('lobby', {gameId: gameId});
+                Router.go('game', {gameId: gameId});
             });
         },
         'click button#profile': function () {

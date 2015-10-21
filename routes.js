@@ -58,7 +58,7 @@ Router.route('/g/:gameId', function () {
     }
 
     var user = Meteor.users.findOne(userId, {fields: {hasSeenTutorial: 1}});
-    var hasSeenTutorial = !!user.hasSeenTutorial;
+    var hasSeenTutorial = user.hasSeenTutorial;
     if (!hasSeenTutorial) {
         this.render('tutorial');
         return;
@@ -84,5 +84,11 @@ Router.route('/g/:gameId', function () {
     data: function () {
         var gameId = this.params && this.params.gameId;
         return {gameId: gameId};
+    },
+    subscriptions: function () {
+        var gameId = this.params && this.params.gameId;
+        return [
+            Meteor.subscribe('game', gameId)
+        ]
     }
 });
