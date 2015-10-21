@@ -1,7 +1,6 @@
 // global variable for tasks
 
 
-
 if (Meteor.isClient) {
     Template.dots.onRendered(function () {
         // This gets called in the following order
@@ -75,7 +74,7 @@ if (Meteor.isClient) {
     Template.mainmenu.events({
         'click button#play': function () {
             // find a game to join
-            Meteor.call('joinGame', function (e, info) {
+            Meteor.call('matchMakeAndJoin', function (e, info) {
                 var gameId = info.gameId;
                 var playerId = info.playerId;
                 // load lobby to wait for start of game
