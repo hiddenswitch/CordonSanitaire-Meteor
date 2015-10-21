@@ -131,17 +131,3 @@ if (Meteor.isServer) {
 //--------------------------
 // Meteor API - Cloud code
 //--------------------------
-Meteor.methods({
-    joinGame: function (options) {
-        // look for latest game
-        var game = Games.findOne({isGameFull: false}, {sort: {createdAt: -1}, limit: 1});
-
-        if (!game) {
-            // TODO: Should be different options.
-            game = {_id: Sanitaire.createGame(options)};
-        }
-
-        var playerId = Sanitaire.addPlayerToGame(game._id, this.userId);
-        return {gameId: game._id, playerId: playerId};
-    }
-});
