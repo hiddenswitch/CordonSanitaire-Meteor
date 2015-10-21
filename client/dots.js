@@ -13,6 +13,44 @@ DotsCanvas = function (container, options) {
     // This state may contain a Two.js instance
     this.state = null;
 
+    var startTouchPoint = {x: 0, y: 0};
+
+    container.addEventListener('onmousedown', function (event) {
+        console.log("began press: (" + event.offsetX + ", " + event.offsetY + ")");
+    }, false);
+
+    container.addEventListener('touchstart', function (event) {
+        // If there's exactly one finger inside this element
+        if (event.targetTouches.length == 1) {
+            var touch = event.targetTouches[0];
+            // location of touch
+            console.log("began touch: (" + touch.pageX + ", " + touch.pageY + ")");
+            startTouchPoint.x = touch.pageX;
+            startTouchPoint.y = touch.pageY;
+            _makeMeBig();
+            _showGuideLines();
+        }
+    }, false);
+
+    container.addEventListener('touchmove', function (event) {
+        // If there's exactly one finger inside this element
+        if (event.targetTouches.length == 1) {
+            var touch = event.targetTouches[0];
+            // location of touch
+            console.log("moved touch: (" + touch.pageX + ", " + touch.pageY + ")");
+
+            updateLineDirection(touch.pageX - startTouchPoint.x, startTouchPoint.y - touch.pageY);
+        }
+    }, false);
+
+    container.addEventListener('touchend', function (event) {
+        console.log("ended touch: (" + event.pageX + ", " + event.pageY + ")");
+        makeMeSmall();
+        makePlayerSmall(selectedPlayerID);
+        hideGuideLines();
+        drawToSelectedPlayer();
+    }, false);
+
     // TODO: By the end of this function, we should be ready to render stuff
 };
 
@@ -73,6 +111,7 @@ DotsCanvas.prototype.connect = function (startDot, endDot, options) {
  */
 DotsCanvas.prototype.disconnect = function (connection, options) {
     // TODO: For some representation of a connection, which may be as simple as two dots, remove the connection
+
 };
 
 /**
