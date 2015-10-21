@@ -44,9 +44,9 @@
 
             <div id="lobby_count">
                 <div class="minibox">
-                    <h2>{{num_players_needed}} people needed</h2>
+                    <h2>{{numberOfPlayersNeeded}} people needed</h2>
                 </div>
-                <p>{{num_players_present}}present</p>
+                <p>{{numberOfPlayersPresent}}present</p>
             </div>
 
             <div id="lobby_wait">
@@ -65,8 +65,6 @@
             <p>{{this.name}}</p>
         {{/each}}
     </div>
-
-    {{> dots gameId=gameId}}
 </template>
 
 <!-- On boarding for game mechanics -->
@@ -111,8 +109,7 @@
 
     <!-- Container for Google Map -->
     <div id="map-container">
-        <div id="map-canvas">
-        </div>
+        {{> gameBoard gameId=gameId}}
     </div>
 </template>
 
