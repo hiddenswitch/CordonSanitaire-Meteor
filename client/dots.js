@@ -54,6 +54,7 @@ DotsCanvas = function (container, options) {
     this.background = two.makeGroup();
     this.middleground = two.makeGroup();
     this.foreground = two.makeGroup();
+    this.unaddressedConnections = [];
     this.playerSize = 8;
     this.players = {};
     this.me = null;
@@ -125,6 +126,9 @@ DotsCanvas = function (container, options) {
         self.makePlayerSmall(self.selectedPlayerId);
         self.hideGuideLines();
         self.drawToSelectedPlayer();
+        var newSelectedPlayerId = self.selectedPlayerId;
+
+        self._triggerConnection(new Connection(self.me.dot, self.players[newSelectedPlayerId].dot))
     }, false);
 
 
@@ -309,6 +313,8 @@ DotsCanvas.prototype.updateLineDirection = function (x, y) {
         this.makePlayerBig(playerId);
         this.selectedPlayerId = playerId;
     }
+    // TODO: explore if we really need this behavior
+    this.selectedPlayer = this.players[this.selectedPlayerId];
     // find player closest to direction
     // if doesn't exist a player currently selected
     // connect to player
@@ -367,6 +373,7 @@ DotsCanvas.prototype.addDot = function (dot) {
         };
         // TODO: Create all the appropriate picker widgetry
         _.each(this.executeAfterMeAddedQueue, function (func) {
+            debugger;
             func();
         });
 
@@ -430,7 +437,7 @@ DotsCanvas.prototype.addDot = function (dot) {
             highlight: highlight
         };
 
-        if (!!this.me) {
+        if (this.me) {
             playerUIForMe();
         } else {
             this.executeAfterMeAddedQueue.push(playerUIForMe);
@@ -464,8 +471,19 @@ DotsCanvas.prototype.removeDot = function (id) {
 DotsCanvas.prototype.connect = function (startDot, endDot, options) {
     // TODO: For some representation of dots, which may be as simple as x,y coordinate pairs or IDs of elements
     // inside two.js elements,
+    var connection = new Connection(startDot, endDot);
+    return connection;
 
-    return new Connection(startDot, endDot);
+    // TODO: Deal with this
+    var player1 = this.players[startDot._id];
+    var player2 = this.players[endDot._id];
+    if (!player1
+        || !player2) {
+        this.unaddressedConnections.push(connection);
+        return connection;
+    }
+
+
 };
 
 /**
