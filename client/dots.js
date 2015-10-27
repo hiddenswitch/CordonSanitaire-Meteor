@@ -5,7 +5,7 @@
 
 var me;
 var players = [];
-var selectedPlayerID = -1;
+var selectedPlayerId = -1;
 var lastSelectedPlayer;
 var lastPreSelectedPlayer;
 var guides = [];
@@ -23,12 +23,14 @@ var background;
 var middleground;
 var foreground;
 
+
 /**
  * Create a new DotsCanvas, a combination of a two.js instance and a container which Just Works
  * @param container A div or CSS selector of where to construct the canvas
  * @constructor
  */
 DotsCanvas = function (container, options) {
+    var self = this;
     options = _.extend({
         width: $(window).width(),
         height: $(window).height()
@@ -42,11 +44,13 @@ DotsCanvas = function (container, options) {
         fullscreen: true
     });
 
+    this.selectedPlayer = null;
+    this.lastSelectedPlayer = null;
     two.appendTo(container || $('.two')[0] || document.body);
 
     // Update the renderer in order to generate corresponding DOM Elements.
     two.update();
-
+    this.line_length = 28;
     this.background = two.makeGroup();
     this.middleground = two.makeGroup();
     this.foreground = two.makeGroup();
@@ -58,6 +62,7 @@ DotsCanvas = function (container, options) {
     _.defer(function () {
         two.bind('resize', function () {
             // TODO: Fix tons of coordinates
+            // Use groups for resizing
         })
             .bind('update', function (frameCount) {
                 // update loop here
@@ -66,50 +71,251 @@ DotsCanvas = function (container, options) {
             .play();
     });
 
+    // TODO: Remove
     console.log(two);
     TestTwo = two;
 
-    /*
-     var startTouchPoint = {x: 0, y: 0};
 
-     container.addEventListener('onmousedown', function (event) {
-     console.log("began press: (" + event.offsetX + ", " + event.offsetY + ")");
-     }, false);
+    self.startTouchPoint = {x: 0, y: 0};
 
-     container.addEventListener('touchstart', function (event) {
-     // If there's exactly one finger inside this element
-     if (event.targetTouches.length == 1) {
-     var touch = event.targetTouches[0];
-     // location of touch
-     console.log("began touch: (" + touch.pageX + ", " + touch.pageY + ")");
-     startTouchPoint.x = touch.pageX;
-     startTouchPoint.y = touch.pageY;
-     _makeMeBig();
-     _showGuideLines();
-     }
-     }, false);
+    container.addEventListener('onmousedown', function (event) {
+        if (!self.me) {
+            return;
+        }
+        console.log("began press: (" + event.offsetX + ", " + event.offsetY + ")");
+    }, false);
 
-     container.addEventListener('touchmove', function (event) {
-     // If there's exactly one finger inside this element
-     if (event.targetTouches.length == 1) {
-     var touch = event.targetTouches[0];
-     // location of touch
-     console.log("moved touch: (" + touch.pageX + ", " + touch.pageY + ")");
+    container.addEventListener('touchstart', function (event) {
+        if (!self.me) {
+            return;
+        }
+        // If there's exactly one finger inside this element
+        if (event.targetTouches.length == 1) {
+            var touch = event.targetTouches[0];
+            // location of touch
+            console.log("began touch: (" + touch.pageX + ", " + touch.pageY + ")");
+            self.startTouchPoint.x = touch.pageX;
+            self.startTouchPoint.y = touch.pageY;
+            self.makeMeBig();
+            self.showGuideLines();
+        }
 
-     updateLineDirection(touch.pageX - startTouchPoint.x, startTouchPoint.y - touch.pageY);
-     }
-     }, false);
+    }, false);
 
-     container.addEventListener('touchend', function (event) {
-     console.log("ended touch: (" + event.pageX + ", " + event.pageY + ")");
-     makeMeSmall();
-     makePlayerSmall(selectedPlayerID);
-     hideGuideLines();
-     drawToSelectedPlayer();
-     }, false);
-     */
+    container.addEventListener('touchmove', function (event) {
+        if (!self.me) {
+            return;
+        }
+        // If there's exactly one finger inside this element
+        if (event.targetTouches.length == 1) {
+            var touch = event.targetTouches[0];
+            // location of touch
+            console.log("moved touch: (" + touch.pageX + ", " + touch.pageY + ")");
+
+            self.updateLineDirection(touch.pageX - self.startTouchPoint.x, self.startTouchPoint.y - touch.pageY);
+        }
+    }, false);
+
+    container.addEventListener('touchend', function (event) {
+        if (!self.me) {
+            return;
+        }
+        console.log("ended touch: (" + event.pageX + ", " + event.pageY + ")");
+        self.makeMeSmall();
+        self.makePlayerSmall(self.selectedPlayerId);
+        self.hideGuideLines();
+        self.drawToSelectedPlayer();
+    }, false);
+
 
     // TODO: By the end of this function, we should be ready to render stuff
+};
+
+
+DotsCanvas.prototype.makeMeBig = function () {
+    new TWEEN.Tween(this.me.icon)
+        .to({scale: 1.5}, 500)
+        .easing(TWEEN.Easing.Elastic.Out)
+        .start();
+    new TWEEN.Tween(this.me.highlight)
+        .to({scale: 4}, 750)
+        .easing(TWEEN.Easing.Elastic.Out)
+        .start();
+    new TWEEN.Tween(this.aim_line)
+        .to({
+            opacity: 0.5
+        }, 500)
+        .easing(TWEEN.Easing.Elastic.Out)
+        .start();
+};
+
+DotsCanvas.prototype.makeMeSmall = function () {
+    new TWEEN.Tween(this.me.icon)
+        .to({scale: 1}, 500)
+        .easing(TWEEN.Easing.Elastic.Out)
+        .start();
+    new TWEEN.Tween(this.me.highlight)
+        .to({scale: 1}, 750)
+        .easing(TWEEN.Easing.Elastic.Out)
+        .start();
+    new TWEEN.Tween(this.aim_line)
+        .to({
+            opacity: 0.0
+        }, 500)
+        .easing(TWEEN.Easing.Elastic.Out)
+        .start();
+};
+
+
+DotsCanvas.prototype.makePlayerBig = function (id) {
+    new TWEEN.Tween(this.players[id].icon)
+        .to({scale: 1.2}, 500)
+        .easing(TWEEN.Easing.Elastic.Out)
+        .start();
+    new TWEEN.Tween(this.players[id].highlight)
+        .to({scale: 3}, 750)
+        .easing(TWEEN.Easing.Elastic.Out)
+        .start();
+    var x_pos = this.players[id].icon.translation.x - this.me.icon.translation.x;
+    var y_pos = this.players[id].icon.translation.y - this.me.icon.translation.y;
+    new TWEEN.Tween(this.players[id].preline.vertices[1])
+        .to({x: x_pos, y: y_pos}, 500)
+        .easing(TWEEN.Easing.Exponential.Out)
+        .start();
+};
+
+DotsCanvas.prototype.makePlayerSmall = function (id) {
+    new TWEEN.Tween(this.players[id].icon)
+        .to({scale: 1}, 500)
+        .easing(TWEEN.Easing.Elastic.Out)
+        .start();
+    new TWEEN.Tween(this.players[id].highlight)
+        .to({scale: 1}, 750)
+        .easing(TWEEN.Easing.Elastic.Out)
+        .start();
+    new TWEEN.Tween(this.players[id].preline.vertices[1])
+        .to({x: 0, y: 0}, 500)
+        .easing(TWEEN.Easing.Exponential.Out)
+        .start();
+};
+
+
+DotsCanvas.prototype.showGuideLines = function () {
+    _.each(this.players, function (player) {
+        new TWEEN.Tween(player.guide)
+            .to({
+                opacity: 0.1
+            }, 250)
+            .easing(TWEEN.Easing.Elastic.Out)
+            .start();
+    });
+
+};
+
+DotsCanvas.prototype.hideGuideLines = function () {
+    _.each(this.players, function (player) {
+        new TWEEN.Tween(player.guide)
+            .to({
+                opacity: 0
+            }, 250)
+            .easing(TWEEN.Easing.Elastic.Out)
+            .start();
+    });
+};
+
+/**
+ * blah blah
+ * @param lastSelectedPlayer
+ * @param selectedPlayer
+ * @param me
+ * @returns {String} The selected player Id
+ */
+DotsCanvas.prototype.drawToSelectedPlayer = function () {
+    // if no change, don't animate
+    if (this.lastSelectedPlayer == this.selectedPlayer)
+        return;
+
+    var x_pos = this.selectedPlayer.icon.translation.x - this.me.icon.translation.x;
+    var y_pos = this.selectedPlayer.icon.translation.y - this.me.icon.translation.y;
+    new TWEEN.Tween(this.selectedPlayer.line.vertices[1])
+        .to({x: x_pos, y: y_pos}, 500)
+        .easing(TWEEN.Easing.Exponential.Out)
+        .start();
+
+    // return old selected line
+    if (this.lastSelectedPlayer) {
+        new TWEEN.Tween(this.lastSelectedPlayer.line.vertices[1])
+            .to({x: 0, y: 0}, 500)
+            .easing(TWEEN.Easing.Exponential.Out)
+            .start();
+    }
+
+    return this.selectedPlayer;
+};
+
+/**
+ * Get player closest to direction
+ * @param degrees
+ * @returns {number}
+ */
+DotsCanvas.prototype.getPlayerClosestToDirection = function (degrees) {
+    var id = null;
+    var minAngle = 360;
+    _.each(this.players, function (player, i) {
+        if (Math.abs(player.angle - degrees) < minAngle) {
+            minAngle = Math.abs(player.angle - degrees);
+            id = i;
+        }
+        if (Math.abs(360 + player.angle - degrees) < minAngle) {
+            minAngle = Math.abs(player.angle - degrees);
+            id = i;
+        }
+    });
+
+    return id;
+};
+
+/**
+ *
+ * @param x
+ * @param y
+ * @param line_length
+ * @param aim_line
+ * @param players
+ * @param selectedPlayerId
+ * @returns {String} The selected player ID
+ */
+DotsCanvas.prototype.updateLineDirection = function (x, y) {
+    //console.log("my position: ("+me.icon.translation.x+", "+me.icon.translation.y+")");
+    var theta = Math.atan2(x, y) - Math.PI / 2;
+    if (theta < 0) theta += 2 * Math.PI;
+    theta = 2 * Math.PI - theta;
+    //document.getElementById('angle').innerHTML = Math.floor(theta * 180 / Math.PI);
+    //console.log("degrees: " + theta * 180 / Math.PI);
+    this.aim_line.vertices[1].x = Math.round(this.line_length * Math.cos(theta));
+    this.aim_line.vertices[1].y = -Math.round(this.line_length * Math.sin(theta));
+    //console.log("line point: (" + aim_line.vertices[1].x + ", " + aim_line.vertices[1].y + ")");
+
+    //aim_circle.translation.x = me.icon.translation.x + Math.round(2 * playerSize * Math.cos(Math.atan2(x, y) - Math.PI / 2));
+    //aim_circle.translation.y = me.icon.translation.y + Math.round(2 * playerSize * Math.sin(Math.atan2(x, y) - Math.PI / 2));
+
+    var playerId = this.getPlayerClosestToDirection(Math.floor(theta * 180 / Math.PI));
+    if (this.selectedPlayerId == null) {
+        this.makePlayerBig(playerId);
+        this.selectedPlayerId = playerId;
+    }
+    else if (this.selectedPlayerId != playerId) {
+        this.makePlayerSmall(this.selectedPlayerId);
+        this.makePlayerBig(playerId);
+        this.selectedPlayerId = playerId;
+    }
+    // find player closest to direction
+    // if doesn't exist a player currently selected
+    // connect to player
+    // else
+    // if different from player currently selected
+    // disconnect from current player
+    // select new player to connect to
 };
 
 /**
@@ -131,30 +337,31 @@ DotsCanvas.prototype.addDot = function (dot) {
         var x_pos = dot.location.x * self.width;
         var y_pos = dot.location.y * self.height;
 
-        aim_line = this.two.makeLine(x_pos, y_pos, x_pos, y_pos);
-        aim_line.stroke = '#00CCFF';
-        aim_line.opacity = 0;
-        aim_line.linewidth = 6;
-        aim_line.cap = 'round';
-        this.background.add(aim_line);
+        self.aim_line = this.two.makeLine(x_pos, y_pos, x_pos, y_pos);
+        self.aim_line.stroke = '#00CCFF';
+        self.aim_line.opacity = 0;
+        self.aim_line.linewidth = 6;
+        self.aim_line.cap = 'round';
+        this.background.add(self.aim_line);
 
         //aim_circle = two.makeCircle(x_pos, y_pos, playerSize / 2)
         //aim_circle.lineWidth = 0;
         //aim_circle.fill = '#000000';
         //background.add(aim_circle);
 
-        var highlight = this.two.makeCircle(x_pos, y_pos, playerSize);
+        var highlight = this.two.makeCircle(x_pos, y_pos, self.playerSize);
         highlight.stroke = '#000000';
         highlight.linewidth = 0;
         highlight.opacity = 0.3;
         highlight.fill = "#00CCFF";
 
-        var icon = this.two.makeCircle(x_pos, y_pos, playerSize);
+        var icon = this.two.makeCircle(x_pos, y_pos, self.playerSize);
         icon.stroke = '#000000';
         icon.linewidth = 4;
         icon.fill = '#99DDFF';
 
         this.me = {
+            dot: dot,
             icon: icon,
             highlight: highlight
         };
@@ -184,6 +391,7 @@ DotsCanvas.prototype.addDot = function (dot) {
         icon.fill = '#FFFF00';
 
         var playerUIForMe = function () {
+            // TODO: Extremely rare bug where after a resize these locations will be wronger than wrong
             var guide = self.two.makeLine(x, y, self.me.icon.translation.x, self.me.icon.translation.y);
             guide.stroke = '#00CCFF';
             guide.linewidth = 4;
@@ -217,6 +425,7 @@ DotsCanvas.prototype.addDot = function (dot) {
         };
 
         this.players[id] = {
+            dot: dot,
             icon: icon,
             highlight: highlight
         };
