@@ -30,39 +30,64 @@ Router.route('/mainmenu', function () {
     $(document.body).css('background-color', '#cccccc');
 }, {name: 'mainmenu'});
 
-Router.route('/lobby/:gameId?', function () {
-    this.render('lobby');
-    $(document.body).css('background-color', '#ffffaa');
-
-    if (this.params.gameId == undefined) {
-        console.log("no game id... go back to the main menu");
-        this.redirect('/mainmenu');
-    }
-    else
-        console.log("you are waiting to join a game with id: " + this.params.gameId);
-
-}, {
-    name: 'lobby',
-    data: function () {
-        return {gameId: this.params.gameId};
-    }
-});
-
-Router.route('/game/:gameId', function () {
-    this.render('game');
-    $(document.body).css('background-color', '#333333');
-}, {name: 'game'});
-
-Router.route('/tutorial', function () {
-    this.render('tutorial');
-}, {name: 'tutorial'});
-
-Router.route('/conclusion', function () {
-    this.render('conclusion');
-    $(document.body).css('background-color', '#ffaa33');
-}, {name: 'conclusion'});
-
 Router.route('/profile/:userId', function () {
     this.render('profile');
     $(document.body).css('background-color', '#33ccff');
 }, {name: 'profile'});
+
+/**
+ * The global game route. Automatically renders the appropriate page template based on the status of the game. Should
+ * be reactive to the game states.
+ */
+Router.route('/g/:gameId', function () {
+    var userId = Meteor.userId();
+
+    var isLoggedIn = !!userId;
+    if (!isLoggedIn) {
+        this.render('signup');
+        return;
+    }
+
+    var gameId = this.params && this.params.gameId;
+    var game = Games.findOne(gameId, {fields: {state: 1}});
+
+    if (!game) {
+        this.render('loading');
+        return;
+    }
+
+    var user = Meteor.users.findOne(userId, {fields: {hasSeenTutorial: 1}});
+    var hasSeenTutorial = user.hasSeenTutorial;
+    if (!hasSeenTutorial) {
+        this.render('tutorial');
+        return;
+    }
+
+    switch (game.state) {
+        case Sanitaire.gameStates.LOBBY:
+        case Sanitaire.gameStates.COUNTDOWN:
+            this.render('lobby');
+            return;
+        case Sanitaire.gameStates.IN_PROGRESS:
+            this.render('game');
+            return;
+        case Sanitaire.gameStates.ENDED:
+            this.render('conclusion');
+            return;
+        default:
+            this.render('loading');
+            return;
+    }
+}, {
+    name: 'game',
+    data: function () {
+        var gameId = this.params && this.params.gameId;
+        return {gameId: gameId};
+    },
+    subscriptions: function () {
+        var gameId = this.params && this.params.gameId;
+        return [
+            Meteor.subscribe('game', gameId)
+        ]
+    }
+});

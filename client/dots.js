@@ -54,7 +54,12 @@ DotsCanvas = function (container, options) {
     // TODO: By the end of this function, we should be ready to render stuff
 };
 
-
+/**
+ * Resets the dots canvas
+ */
+DotsCanvas.prototype.reset = function() {
+    // TODO: Delete all the existing dots and connections, as though this were a brand new canvas
+};
 /**
  * Add a dot to the canvas
  * @param dot {Dot}
