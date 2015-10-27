@@ -79,14 +79,7 @@ DotsCanvas = function (container, options) {
 
     self.startTouchPoint = {x: 0, y: 0};
 
-    container.addEventListener('onmousedown', function (event) {
-        if (!self.me) {
-            return;
-        }
-        console.log("began press: (" + event.offsetX + ", " + event.offsetY + ")");
-    }, false);
-
-    container.addEventListener('touchstart', function (event) {
+    var startInput = function (event) {
         if (!self.me) {
             return;
         }
@@ -101,9 +94,13 @@ DotsCanvas = function (container, options) {
             self.showGuideLines();
         }
 
-    }, false);
+    };
 
-    container.addEventListener('touchmove', function (event) {
+    container.addEventListener('touchstart', startInput, false);
+    //document.body.addEventListener('onmousedown', startInput, true);
+    //TODO: add mouse event handling (needs a div to operate on)...
+
+    var moveInput = function (event) {
         if (!self.me) {
             return;
         }
@@ -115,22 +112,29 @@ DotsCanvas = function (container, options) {
 
             self.updateLineDirection(touch.pageX - self.startTouchPoint.x, self.startTouchPoint.y - touch.pageY);
         }
-    }, false);
+    };
 
-    container.addEventListener('touchend', function (event) {
+    container.addEventListener('touchmove', moveInput, false);
+    //document.body.addEventListener('ondrag', moveInput, true);
+
+    var endInput = function (event) {
         if (!self.me) {
             return;
         }
+        if (!self.selectedPlayerId) {
+            return;
+        }
         console.log("ended touch: (" + event.pageX + ", " + event.pageY + ")");
+        var newSelectedPlayerId = self.selectedPlayerId;
         self.makeMeSmall();
         self.makePlayerSmall(self.selectedPlayerId);
         self.hideGuideLines();
-        self.drawToSelectedPlayer();
-        var newSelectedPlayerId = self.selectedPlayerId;
 
         self._triggerConnection(new Connection(self.me.dot, self.players[newSelectedPlayerId].dot))
-    }, false);
+    };
 
+    container.addEventListener('touchend', endInput, false);
+    //document.body.addEventListener('onmouseup', endInput, true);
 
     // TODO: By the end of this function, we should be ready to render stuff
 };
@@ -306,15 +310,15 @@ DotsCanvas.prototype.updateLineDirection = function (x, y) {
     var playerId = this.getPlayerClosestToDirection(Math.floor(theta * 180 / Math.PI));
     if (this.selectedPlayerId == null) {
         this.makePlayerBig(playerId);
-        this.selectedPlayerId = playerId;
     }
     else if (this.selectedPlayerId != playerId) {
         this.makePlayerSmall(this.selectedPlayerId);
         this.makePlayerBig(playerId);
-        this.selectedPlayerId = playerId;
     }
+
+    this.selectedPlayerId = playerId;
     // TODO: explore if we really need this behavior
-    this.selectedPlayer = this.players[this.selectedPlayerId];
+    //this.selectedPlayer = this.players[this.selectedPlayerId];
     // find player closest to direction
     // if doesn't exist a player currently selected
     // connect to player
@@ -366,14 +370,27 @@ DotsCanvas.prototype.addDot = function (dot) {
         icon.linewidth = 4;
         icon.fill = '#99DDFF';
 
+        var line1 = self.two.makeLine(x_pos, y_pos, x_pos, y_pos);
+        line1.stroke = '#000000';
+        line1.opacity = 1;
+        line1.linewidth = 4;
+        self.background.add(line1);
+
+        var line2 = self.two.makeLine(x_pos, y_pos, x_pos, y_pos);
+        line2.stroke = '#000000';
+        line2.opacity = 1;
+        line2.linewidth = 4;
+        self.background.add(line2);
+
         this.me = {
             dot: dot,
             icon: icon,
-            highlight: highlight
+            highlight: highlight,
+            line1: line1,
+            line2: line2
         };
         // TODO: Create all the appropriate picker widgetry
         _.each(this.executeAfterMeAddedQueue, function (func) {
-            debugger;
             func();
         });
 
@@ -396,6 +413,19 @@ DotsCanvas.prototype.addDot = function (dot) {
         icon.stroke = '#000000';
         icon.linewidth = 4;
         icon.fill = '#FFFF00';
+
+        var line1 = self.two.makeLine(x, y, x, y);
+        line1.stroke = '#000000';
+        line1.opacity = 1;
+        line1.linewidth = 4;
+        self.background.add(line1);
+
+        var line2 = self.two.makeLine(x, y, x, y);
+        line2.stroke = '#000000';
+        line2.opacity = 1;
+        line2.linewidth = 4;
+        self.background.add(line2);
+
 
         var playerUIForMe = function () {
             // TODO: Extremely rare bug where after a resize these locations will be wronger than wrong
@@ -434,7 +464,9 @@ DotsCanvas.prototype.addDot = function (dot) {
         this.players[id] = {
             dot: dot,
             icon: icon,
-            highlight: highlight
+            highlight: highlight,
+            line1: line1,
+            line2: line2
         };
 
         if (this.me) {
@@ -472,18 +504,20 @@ DotsCanvas.prototype.connect = function (startDot, endDot, options) {
     // TODO: For some representation of dots, which may be as simple as x,y coordinate pairs or IDs of elements
     // inside two.js elements,
     var connection = new Connection(startDot, endDot);
-    return connection;
 
     // TODO: Deal with this
-    var player1 = this.players[startDot._id];
-    var player2 = this.players[endDot._id];
+    var player1 = startDot.isLocalPlayer ? this.me : this.players[startDot._id];
+    var player2 = endDot.isLocalPlayer ? this.me : this.players[endDot._id];
     if (!player1
         || !player2) {
         this.unaddressedConnections.push(connection);
         return connection;
     }
 
-
+    player1.connectedToPlayerId = player2._id;
+    player1.line1.vertices[1].x = this.width * (player2.dot.location.x - player1.dot.location.x);
+    player1.line1.vertices[1].y = this.height * (player2.dot.location.y - player1.dot.location.y);
+    return connection;
 };
 
 /**
@@ -496,6 +530,22 @@ DotsCanvas.prototype.connect = function (startDot, endDot, options) {
 DotsCanvas.prototype.disconnect = function (connection, options) {
     // TODO: For some representation of a connection, which may be as simple as two dots, remove the connection
 
+    var startDot = connection.startDot;
+    var endDot = connection.endDot;
+
+    // TODO: Deal with this
+    var player1 = this.players[startDot._id];
+    var player2 = this.players[endDot._id];
+
+    if (!player1
+        || !player2) {
+        return;
+    }
+
+    if (player1.connectedToPlayerId == player2._id) {
+        player1.line1.vertices[1].x = 0;
+        player1.line1.vertices[1].y = 0;
+    }
 };
 
 /**
@@ -549,6 +599,7 @@ Dot = function (playerDocument, options) {
     this.isLocalPlayer = options && options.isLocalPlayer;
     this.isPatientZero = options && options.isPatientZero;
     this.location = playerDocument.location;
+    this.connectedToPlayerId = null;
     // If this can be supported, this is ideal
     this._id = playerDocument._id;
 };
