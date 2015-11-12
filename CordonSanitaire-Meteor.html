@@ -102,6 +102,10 @@
     <div id="intro_container">
     </div>
 
+    <!-- Container for Two.js canvas -->
+    <div id="two">
+    </div>
+
     <!-- Container for Google Map -->
     <div id="map-container">
         {{> gameBoard gameId=gameId}}
@@ -121,6 +125,8 @@
         <li>people trapped: {{people_trapped}}</li>
         <li>people passive: {{people_passive}}</li>
     </ul>
+
+    {{>gameBoard gameId=gameId}}
     <button id="mainmenu">back</button>
 </template>
 
