@@ -199,7 +199,7 @@ function getIntersectionTiles(currentTile){
 // get all crosswalk tiles given an intersection
 function getCrosswalkTiles(intersectionTiles){
     // look through tiles and keep an array of all crosswalk tiles
-    for each (tile in intersectionTiles) {
+    for (tile of intersectionTiles) {
         // look for a crosswalk as neighbor (up, down, left, right)
     }
 }
