@@ -182,18 +182,20 @@ function addQuarantine(){
 
     //horizontal
     if(lastPromptTile.index == 8 || lastPromptTile.index == 9) {
-        map.fill(13, layer.getTileX(lastPromptTile.x*16), layer.getTileY(lastPromptTile.y*16), 1, 1);
+        map.fill(13, lastPromptTile.x, lastPromptTile.y, 1, 1);
     }
 
     // vertical
     if(lastPromptTile.index == 10 || lastPromptTile.index == 11) {
-        map.fill(14, layer.getTileX(lastPromptTile.x*16), layer.getTileY(lastPromptTile.y*16), 1, 1);
+        map.fill(14, lastPromptTile.x, lastPromptTile.y, 1, 1);
     }
 }
 
 // get all intersection tiles at intersection
 function getIntersectionTiles(currentTile){
     // look through tiles and keep an array of all intersection tiles
+    // look up, down, left, right... if intersection tile, add it to array and
+
 }
 
 // get all crosswalk tiles given an intersection
