@@ -187,16 +187,13 @@ function promptAtIntersection(sprite, tile) {
     console.log("At intersection");
     console.log(tile);
 
-    //
+    // testing to see which intersection we are at
+    // TODO: only stop once at a single intersection, i.e. not all sides
+    // TODO: build quarantine around entire intersection
     getIntersectionTiles(tile);
 
-    // player.body.velocity.x = 0;
-    // player.body.velocity.y = 0;
-    //player.animations.stop();
+    // stop our player (stops animation and movement)
     player_direction = '';
-    // tile.alpha = 0.2;
-    // layer.dirty = true;
-    //return false;
 }
 
 // place build a quarantine on the corner that a player arrives at
@@ -261,48 +258,3 @@ function endSwipe(){
     game.input.onDown.add(beginSwipe);
     game.input.onUp.remove(endSwipe);
 }
-
-// listenSwipe(function(direction) {
-//     console.log(direction);
-// });
-
-// function listenSwipe(callback) {
-//     var eventDuration;
-//     var startPoint = {};
-//     var endPoint = {};
-//     var direction;
-//     var minimum = {
-//         duration: 75,
-//         distance: 150
-//     }
-
-//     game.input.onDown.add(function(pointer) {
-//         startPoint.x = pointer.clientX;
-//         startPoint.y = pointer.clientY;
-//     }, this);
-
-//     game.input.onUp.add(function(pointer) {
-//         direction = '';
-//         eventDuration = game.input.activePointer.duration;
-
-//         if (eventDuration > minimum.duration) {
-//             endPoint.x = pointer.clientX;
-//             endPoint.y = pointer.clientY;
-
-//             // Check direction
-//             if (endPoint.x - startPoint.x > minimum.distance) {
-//                 direction = 'right';
-//             } else if (startPoint.x - endPoint.x > minimum.distance) {
-//                 direction = 'left';
-//             } else if (endPoint.y - startPoint.y > minimum.distance) {
-//                 direction = 'bottom';
-//             } else if (startPoint.y - endPoint.y > minimum.distance) {
-//                 direction = 'top';
-//             }
-
-//             if (direction) {
-//                 callback(direction);
-//             }
-//         }
-//     }, this);
-// };
