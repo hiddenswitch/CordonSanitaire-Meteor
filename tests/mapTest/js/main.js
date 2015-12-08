@@ -1,11 +1,13 @@
+/**
+ * @author Jonathan Bobrow
+ * © 2015 All Rights Reserved
+ **/
+
 var width = window.innerWidth / (window.devicePixelRatio * 2);  // everything double scale
 var height = window.innerHeight / (window.devicePixelRatio * 2);
 var scaleRatio = window.devicePixelRatio / 3;   // assuming the most dense is 3x
 
-
 var game = new Phaser.Game(width, height, Phaser.AUTO, 'gameboard', { preload: preload, create: create, update: update, render: render });
-
-// var game = new Phaser.Game(width, height, Phaser.AUTO, 'gameboard', { preload: preload, create: create, update: update, render: render });
 
 function preload() {
 
@@ -130,6 +132,11 @@ function render() {
 
 }
 
+/**
+ * Set the player in motion given a specific direction
+ * TODO: expand this to take player state for speed into account
+ * @param direction
+ */
 function move(direction) {
     switch(direction) {
         case 'left': 
@@ -156,7 +163,17 @@ function move(direction) {
     }
 }
 
+/**
+ * Displays a prompt when we arrive at a specific tile
+ * @param sprite
+ * @param tile
+ */
 function promptAtIntersection(sprite, tile) {
+
+    /** TODO: move this logic for checks elsewhere, the function
+     * should simply display the correct prompt (i.e. buttons when needed)
+     *
+     */
 
     if((tile.x == lastPromptTile.x || tile.x == (lastPromptTile.x - 1) || tile.x == (lastPromptTile.x + 1))
      && (tile.y == lastPromptTile.y || tile.y == (lastPromptTile.y - 1) || tile.y == (lastPromptTile.y + 1)))

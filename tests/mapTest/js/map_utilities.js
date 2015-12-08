@@ -1,8 +1,16 @@
+/**
+ * @author Jonathan Bobrow
+ * © 2015 All Rights Reserved
+ **/
 
 var tileStack = [];
 
-// get all intersection tiles at intersection
-function getIntersectionTiles(currentTile){
+/**
+ * Gets all intersection tiles at intersection from a
+ * starting interior or adjacent tile
+ * @param currentTile
+ */
+function getIntersectionTiles(currentTile) {
     //tileStack = [{x: currentTile.x, y: currentTile.y}];
 
     // look through tiles and keep an array of all intersection tiles
@@ -39,6 +47,11 @@ function getIntersectionTiles(currentTile){
     }
 }
 
+/**
+ * Checks to see if the tile is already in the stack
+ * @param tile
+ * @returns {boolean}
+ */
 function isTileInStack(tile) {
     for(t of tileStack) {
         if(t.x == tile.x && t.y == tile.y) {
@@ -48,27 +61,44 @@ function isTileInStack(tile) {
     return false;
 }
 
-// get all crosswalk tiles given an intersection
+/**
+ * Gets all crosswalk tiles given an intersection
+ * @param intersectionTiles
+ * @returns {Array}
+ */
 function getCrosswalkTiles(intersectionTiles){
+    var crosswalkTiles = [];
+
     // look through tiles and keep an array of all crosswalk tiles
     for (tile of intersectionTiles) {
         // look for a crosswalk as neighbor (up, down, left, right)
     }
+
+    return crosswalkTiles;
 }
 
-//function checks if tile is a crosswalk
+/**
+ * Checks if tile is a crosswalk
+ * @param tile
+ * @returns {boolean}
+ */
 function isTileCrosswalk(tile) {
 
+    // index of crosswalk tiles
     if(tile.index == 8 || tile.index == 9 || tile.index == 10 || tile.index == 11)
         return true;
 
     return false;
 }
 
-//function checks if a tile is an intersection
+/**
+ * Checks if a tile is an intersection
+ * @param tile
+ * @returns {boolean}
+ */
 function isTileIntersection(tile) {
 
-    if(tile.index == 15)
+    if(tile.index == 15)    // index of intersection tiles
         return true;
 
     return false;
