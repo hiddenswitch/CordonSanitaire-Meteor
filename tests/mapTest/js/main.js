@@ -51,8 +51,9 @@ function create() {
     //  Resize the world
     layer.resizeWorld();
 
-    //  This isn't totally accurate, but it'll do for now
-    map.setCollisionBetween(0, 7);
+    //  Simplified list of things that the player collides into
+    map.setCollisionBetween(0, 7);  // walls + buildings
+    map.setCollisionBetween(13,14); // barricades
 
     //  Handle special tiles on gameboard (i.e. intersections)
     map.setTileIndexCallback(8, promptAtIntersection, this);
@@ -168,6 +169,10 @@ function promptAtIntersection(sprite, tile) {
     // give option to build
     console.log("At intersection");
     console.log(tile);
+
+    //
+    getIntersectionTiles(tile);
+
     // player.body.velocity.x = 0;
     // player.body.velocity.y = 0;
     //player.animations.stop();
@@ -188,21 +193,6 @@ function addQuarantine(){
     // vertical
     if(lastPromptTile.index == 10 || lastPromptTile.index == 11) {
         map.fill(14, lastPromptTile.x, lastPromptTile.y, 1, 1);
-    }
-}
-
-// get all intersection tiles at intersection
-function getIntersectionTiles(currentTile){
-    // look through tiles and keep an array of all intersection tiles
-    // look up, down, left, right... if intersection tile, add it to array and
-
-}
-
-// get all crosswalk tiles given an intersection
-function getCrosswalkTiles(intersectionTiles){
-    // look through tiles and keep an array of all crosswalk tiles
-    for (tile of intersectionTiles) {
-        // look for a crosswalk as neighbor (up, down, left, right)
     }
 }
 
