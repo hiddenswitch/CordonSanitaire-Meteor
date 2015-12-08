@@ -5,6 +5,37 @@
 
 var tileStack = [];
 
+//TODO: Make a class that generates a map, indexes its intersections,...
+//var intersection = {
+//    index: 0,
+//    totalArea: 0,
+//    interior: [],   // tiles inside of intersection
+//    border: [],     // tiles bordering the intersection (crosswalks or barricades)
+//    numPeoplePresent: 0,
+//    quarantine: {
+//        isQuarantined: false,
+//        buildStatus: 0.00
+//    }
+//};
+//
+//GameMap = function {
+//
+//    this.streets = [];
+//    this.buildings = [];
+//    this.intersections = [];
+//};
+//
+//GameMap.prototype = {
+//
+//    generate: function(seed) {
+//
+//    },
+//
+//    _getIntersectionTiles: function(tile) {
+//
+//    }
+//}
+
 /**
  * Gets all intersection tiles at intersection from a
  * starting interior or adjacent tile
