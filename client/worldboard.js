@@ -35,6 +35,16 @@ Template.worldBoard.onRendered(function () {
                 sprite.position.y = player.position.y;
             };
 
+            var updateGame = function (id, fields) {
+                // See if a quarantine tile has been added
+                _.each(fields, function (position, k) {
+                    if (/^quarantine/.test(k)
+                        && !_.isUndefined(position)) {
+                        addWallTile(position.x, position.y);
+                    }
+                });
+            };
+
             this.playerUpdate = Players.find({gameId: Router.current().data().gameId}).observe({
                 added: function (player) {
                     sprites[player._id] = createSpriteForPlayer(localPlayerId, {isLocalPlayer: player._id == localPlayerId});
@@ -45,6 +55,16 @@ Template.worldBoard.onRendered(function () {
                 },
                 removed: function (player) {
 
+                }
+            });
+
+            this.quarantineTiles = Games.find(gameId).observeChanges({
+                added: function (id, fields) {
+                    // Add all the quarantine tiles
+                    updateGame(id, fields);
+                },
+                changed: function (id, fields) {
+                    updateGame(id, fields);
                 }
             });
 
@@ -144,7 +164,7 @@ Template.worldBoard.onRendered(function () {
             // Do physics
             phaserGame.physics.arcade.collide(sprite, layer, function () {
                 // Only process the callback for local player
-                if (sprite.playerId !== localPlayerId) {
+                if (playerId !== localPlayerId) {
                     return;
                 }
 
@@ -283,6 +303,14 @@ Template.worldBoard.onRendered(function () {
 // place build a quarantine on the corner that a player arrives at
     addQuarantine = function () {
 
+        if (_.isUndefined(lastPromptTile)) {
+            return;
+        }
+
+        // TODO: Call meteor method instead
+        Meteor.call('addQuarantine', gameId, {x: lastPromptTile.x, y: lastPromptTile.y});
+
+        return;
         //horizontal
         if (lastPromptTile.index == 8 || lastPromptTile.index == 9) {
             map.fill(13, lastPromptTile.x, lastPromptTile.y, 1, 1);
@@ -292,7 +320,11 @@ Template.worldBoard.onRendered(function () {
         if (lastPromptTile.index == 10 || lastPromptTile.index == 11) {
             map.fill(14, lastPromptTile.x, lastPromptTile.y, 1, 1);
         }
-    }
+    };
+
+    function addWallTile(positionX, positionY) {
+        map.fill(13, positionX, positionY, 1, 1);
+    };
 
 // when the player begins to swipe we only save mouse/finger coordinates, remove the touch/click
 // input listener and add a new listener to be fired when the mouse/finger has been released,

@@ -49,5 +49,15 @@ Meteor.methods({
         var thisPlayer = Players.findOne({gameId: gameId, userId: this.userId});
 
         return Sanitaire.updatePlayerPositionAndVelocity(thisPlayer._id, position, velocity);
+    },
+
+    addQuarantine: function(gameId, position) {
+        if (!this.userId) {
+            throw new Meteor.Error(403, 'Permission denied.');
+        }
+
+        // TODO: Security
+
+        return Sanitaire.addQuarantine(gameId, position);
     }
 });
