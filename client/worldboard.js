@@ -31,8 +31,18 @@ Template.worldBoard.onRendered(function () {
 
                 // TODO: Whenever position changes, interpolate between the current estimated position and the new position from the server
                 // TODO: Smooth to this position. Also, this position is by default something that comes from the network
-                sprite.position.x = player.position.x;
-                sprite.position.y = player.position.y;
+                var diffX = 0;
+                var diffY = 0;
+                if (!_.isUndefined(player.updatedAt)) {
+                    var deltaTime = (TimeSync.serverTime(new Date()) - player.updatedAt) / 1000.0;
+                    // Fudged additional position change. It will be sensitive to physics.
+                    // TODO: Handle physics problems here...
+                    diffX = deltaTime * sprite.body.velocity.x;
+                    diffY = deltaTime * sprite.body.velocity.y;
+                }
+
+                sprite.position.x = player.position.x + diffX;
+                sprite.position.y = player.position.y + diffY;
             };
 
             var updateGame = function (id, fields) {
@@ -183,7 +193,7 @@ Template.worldBoard.onRendered(function () {
                 }, {
                     x: 0,
                     y: 0
-                });
+                }, TimeSync.serverTime(new Date()));
             });
 
             // TODO: Update position on collide.
@@ -264,7 +274,7 @@ Template.worldBoard.onRendered(function () {
                 break;
         }
 
-        Meteor.call('updatePositionAndVelocity', Router.current().data().gameId, position, velocity);
+        Meteor.call('updatePositionAndVelocity', Router.current().data().gameId, position, velocity, TimeSync.serverTime(new Date()));
     }
 
     /**
