@@ -52,25 +52,25 @@ function getIntersectionTiles(currentTile) {
     var right = map.getTileRight(0, currentTile.x, currentTile.y);
 
     // if tile is intersection and not yet in the stack
-    if(isTileIntersection(above) && !isTileInStack(above)) {
+    if (isTileIntersection(above) && !isTileInStack(above)) {
         console.log("(" + above.x + ", " + above.y + ") is an intersection");
         // add to stack
         tileStack.push({x: above.x, y: above.y});
         getIntersectionTiles(above);
     }
-    if(isTileIntersection(below) && !isTileInStack(below)) {
+    if (isTileIntersection(below) && !isTileInStack(below)) {
         console.log("(" + below.x + ", " + below.y + ") is an intersection");
         // add to stack
         tileStack.push({x: below.x, y: below.y});
         getIntersectionTiles(below);
     }
-    if(isTileIntersection(left) && !isTileInStack(left)) {
+    if (isTileIntersection(left) && !isTileInStack(left)) {
         console.log("(" + left.x + ", " + left.y + ") is an intersection");
         // add to stack
         tileStack.push({x: left.x, y: left.y});
         getIntersectionTiles(left);
     }
-    if(isTileIntersection(right) && !isTileInStack(right)) {
+    if (isTileIntersection(right) && !isTileInStack(right)) {
         console.log("(" + right.x + ", " + right.y + ") is an intersection");
         // add to stack
         tileStack.push({x: right.x, y: right.y});
@@ -84,11 +84,13 @@ function getIntersectionTiles(currentTile) {
  * @returns {boolean}
  */
 function isTileInStack(tile) {
-    for(t of tileStack) {
-        if(t.x == tile.x && t.y == tile.y) {
+    for (var i = 0; i < tileStack.length; i++) {
+        var t = tileStack[i];
+        if (t.x == tile.x && t.y == tile.y) {
             return true;
         }
     }
+
     return false;
 }
 
@@ -97,11 +99,12 @@ function isTileInStack(tile) {
  * @param intersectionTiles
  * @returns {Array}
  */
-function getCrosswalkTiles(intersectionTiles){
+function getCrosswalkTiles(intersectionTiles) {
     var crosswalkTiles = [];
 
     // look through tiles and keep an array of all crosswalk tiles
-    for (tile of intersectionTiles) {
+    for (var i = 0; i < intersectionTiles.length; i++) {
+        var tile = intersectionTiles[i];
         // look for a crosswalk as neighbor (up, down, left, right)
     }
 
@@ -114,12 +117,8 @@ function getCrosswalkTiles(intersectionTiles){
  * @returns {boolean}
  */
 function isTileCrosswalk(tile) {
-
     // index of crosswalk tiles
-    if(tile.index == 8 || tile.index == 9 || tile.index == 10 || tile.index == 11)
-        return true;
-
-    return false;
+    return !!(tile.index == 8 || tile.index == 9 || tile.index == 10 || tile.index == 11);
 }
 
 /**
@@ -128,9 +127,5 @@ function isTileCrosswalk(tile) {
  * @returns {boolean}
  */
 function isTileIntersection(tile) {
-
-    if(tile.index == 15)    // index of intersection tiles
-        return true;
-
-    return false;
+    return tile.index == 15;
 }
