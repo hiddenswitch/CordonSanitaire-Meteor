@@ -135,12 +135,36 @@ Template.worldBoard.onRendered(function () {
         initializeMeteor();
     }
 
+    var lastLocalPlayerWallCollisionHandled = null;
+
     function update() {
         for (var playerId in sprites) {
             var sprite = sprites[playerId];
 
             // Do physics
-            phaserGame.physics.arcade.collide(sprite, layer);
+            phaserGame.physics.arcade.collide(sprite, layer, function () {
+                // Only process the callback for local player
+                if (sprite.playerId !== localPlayerId) {
+                    return;
+                }
+
+                // Have I already handled this particular collision event before?
+                if (lastLocalPlayerWallCollisionHandled != null
+                    && lastLocalPlayerWallCollisionHandled.x === sprite.position.x
+                    && lastLocalPlayerWallCollisionHandled.y === sprite.position.y) {
+                    return;
+                }
+                // If so, don't repeat a message to meteor.
+                // Otherwise, tell meteor about my change in velocity.
+
+                Meteor.call('updatePositionAndVelocity', gameId, {
+                    x: sprite.position.x,
+                    y: sprite.position.y
+                }, {
+                    x: 0,
+                    y: 0
+                });
+            });
 
             // TODO: Update position on collide.
 
@@ -257,7 +281,7 @@ Template.worldBoard.onRendered(function () {
     }
 
 // place build a quarantine on the corner that a player arrives at
-    addQuarantine = function() {
+    addQuarantine = function () {
 
         //horizontal
         if (lastPromptTile.index == 8 || lastPromptTile.index == 9) {
@@ -347,7 +371,7 @@ Template.worldBoard.onRendered(function () {
 });
 
 Template.game.events({
-    'click #mainToggleButton': function() {
+    'click #mainToggleButton': function () {
         // TODO: Make this smarter (it should be calling a meteor method)
         addQuarantine();
     }
