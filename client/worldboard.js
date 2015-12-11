@@ -4,19 +4,53 @@
  **/
 
 Template.worldBoard.onRendered(function () {
-    phaserGame();
-});
-
-phaserGame = function () {
+    var renderer = this;
     var routeData = Router.current().data();
     var gameId = routeData.gameId;
-    var playerId = routeData.playerId;
+    var localPlayerId = routeData.playerId;
     var game = Games.findOne(gameId);
-    var localPlayer = Players.findOne(playerId);
+    var localPlayer = Players.findOne(localPlayerId);
 
     var width = window.innerWidth / (window.devicePixelRatio * 2);  // everything double scale
     var height = window.innerHeight / (window.devicePixelRatio * 2);
     var scaleRatio = window.devicePixelRatio / 3;   // assuming the most dense is 3x
+
+
+    var sprites = {};
+
+    var initializeMeteor = function () {
+        renderer.autorun(function () {
+            if (this.initialized) {
+                return;
+            }
+
+            var updatePlayer = function (player) {
+                var sprite = sprites[player._id];
+                sprite.body.velocity.x = player.velocity.x;
+                sprite.body.velocity.y = player.velocity.y;
+
+                // TODO: Whenever position changes, interpolate between the current estimated position and the new position from the server
+                // TODO: Smooth to this position. Also, this position is by default something that comes from the network
+                sprite.position.x = player.position.x;
+                sprite.position.y = player.position.y;
+            };
+
+            this.playerUpdate = Players.find({gameId: Router.current().data().gameId}).observe({
+                added: function (player) {
+                    sprites[player._id] = createSpriteForPlayer(localPlayerId, {isLocalPlayer: player._id == localPlayerId});
+                    updatePlayer(player);
+                },
+                changed: function (player) {
+                    updatePlayer(player);
+                },
+                removed: function (player) {
+
+                }
+            });
+
+            this.initialized = true;
+        });
+    };
 
     var phaserGame = new Phaser.Game(width, height, Phaser.AUTO, 'gameboard', {
         preload: preload,
@@ -48,7 +82,7 @@ phaserGame = function () {
         phaserGame.scale.pageAlignHorizontally = true;
         phaserGame.scale.pageAlignVertically = true;
         phaserGame.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-        phaserGame.stage.smoothed = false
+        phaserGame.stage.smoothed = false;
         // game.scale.setScreenSize(true);
     }
 
@@ -82,9 +116,6 @@ phaserGame = function () {
         //  Un-comment this on to see the collision tiles
         // layer.debug = true;
 
-        //  Player
-        localPlayerSprite = createSpriteForPlayer(localPlayer._id, {isLocalPlayer: true});
-
         cursors = phaserGame.input.keyboard.createCursorKeys();
 
         // Useful for adding an HUD
@@ -94,36 +125,59 @@ phaserGame = function () {
         // beginSwipe function
         phaserGame.input.onDown.add(beginSwipe, this);
 
-        // add button for building quarantines
-        button = phaserGame.add.button(width / 2 - 90, height - 80, 'button', addQuarantine, this, 2, 1, 0);
-        //button.scale.setTo(scaleRatio, scaleRatio);
-        button.fixedToCamera = true;
+        //// add button for building quarantines
+        //button = phaserGame.add.button(width / 2 - 90, height - 80, 'button', addQuarantine, this, 2, 1, 0);
+        ////button.scale.setTo(scaleRatio, scaleRatio);
+        //button.fixedToCamera = true;
 
         console.log(phaserGame.world.height);
+
+        initializeMeteor();
     }
 
     function update() {
+        for (var playerId in sprites) {
+            var sprite = sprites[playerId];
 
-        phaserGame.physics.arcade.collide(localPlayerSprite, layer);
+            // Do physics
+            phaserGame.physics.arcade.collide(sprite, layer);
 
+            // TODO: Update position on collide.
 
-        localPlayerSprite.body.velocity.set(0);
+            // Do animations
+            if (sprite.body.velocity.x > 0) {
+                sprite.play('right');
+            } else if (sprite.body.velocity.x < 0) {
+                sprite.play('left');
+            } else if (sprite.body.velocity.y > 0) {
+                sprite.play('down');
+            } else if (sprite.body.velocity.y < 0) {
+                sprite.play('up');
+            } else {
+                sprite.animations.stop();
+            }
+        }
 
-        if (player_direction == 'left' || cursors.left.isDown) {
-            move('left');
-        }
-        else if (player_direction == 'right' || cursors.right.isDown) {
-            move('right');
-        }
-        else if (player_direction == 'up' || cursors.up.isDown) {
-            move('up');
-        }
-        else if (player_direction == 'down' || cursors.down.isDown) {
-            move('down');
-        }
-        else {
-            localPlayerSprite.animations.stop();
-        }
+        //return;
+        //
+        //
+        //localPlayerSprite.body.velocity.set(0);
+        //
+        //if (player_direction == 'left' || cursors.left.isDown) {
+        //    move('left');
+        //}
+        //else if (player_direction == 'right' || cursors.right.isDown) {
+        //    move('right');
+        //}
+        //else if (player_direction == 'up' || cursors.up.isDown) {
+        //    move('up');
+        //}
+        //else if (player_direction == 'down' || cursors.down.isDown) {
+        //    move('down');
+        //}
+        //else {
+        //    localPlayerSprite.animations.stop();
+        //}
 
     }
 
@@ -139,30 +193,34 @@ phaserGame = function () {
      * @param direction
      */
     function move(direction) {
+        if (!sprites[localPlayerId]) {
+            return;
+        }
+
+        var position = {
+            x: sprites[localPlayerId].position.x,
+            y: sprites[localPlayerId].position.y
+        };
+
+        var velocity = {x: 0, y: 0};
         switch (direction) {
             case 'left':
-                localPlayerSprite.body.velocity.x = -100;
-                localPlayerSprite.play('left');
+                velocity.x = -100;
                 break;
-
             case 'right':
-                localPlayerSprite.body.velocity.x = 100;
-                localPlayerSprite.play('right');
+                velocity.x = 100;
                 break;
-
             case 'down':
-                localPlayerSprite.body.velocity.y = 100;
-                localPlayerSprite.play('down');
+                velocity.y = 100;
                 break;
-
             case 'up':
-                localPlayerSprite.body.velocity.y = -100;
-                localPlayerSprite.play('up');
+                velocity.y = -100;
                 break;
-
             default:
                 break;
         }
+
+        Meteor.call('updatePositionAndVelocity', Router.current().data().gameId, position, velocity);
     }
 
     /**
@@ -199,7 +257,7 @@ phaserGame = function () {
     }
 
 // place build a quarantine on the corner that a player arrives at
-    function addQuarantine() {
+    addQuarantine = function() {
 
         //horizontal
         if (lastPromptTile.index == 8 || lastPromptTile.index == 9) {
@@ -237,11 +295,11 @@ phaserGame = function () {
             // moving left, calling move function with horizontal and vertical tiles to move as arguments
             if (distX > 0) {
                 // TODO: Replace with Meteor.call
-                player_direction = 'left';
+                move('left');
             }
             // moving right, calling move function with horizontal and vertical tiles to move as arguments
             else {
-                player_direction = 'right';
+                move('right');
             }
         }
         // in order to have a vertical swipe, we need that y distance is at least twice the x distance
@@ -249,11 +307,11 @@ phaserGame = function () {
         if (Math.abs(distY) > Math.abs(distX) * 2 && Math.abs(distY) > 10) {
             // moving up, calling move function with horizontal and vertical tiles to move as arguments
             if (distY > 0) {
-                player_direction = 'up';
+                move('up');
             }
             // moving down, calling move function with horizontal and vertical tiles to move as arguments
             else {
-                player_direction = 'down';
+                move('down');
             }
         }
 
@@ -261,8 +319,6 @@ phaserGame = function () {
         phaserGame.input.onDown.add(beginSwipe);
         phaserGame.input.onUp.remove(endSwipe);
     }
-
-    // TODO: Create a new player with a given ID on demand
 
     var createSpriteForPlayer = function (playerId, options) {
         options = _.extend({
@@ -288,8 +344,11 @@ phaserGame = function () {
 
         return player;
     };
-    // TODO: Use movement code only when the player is the local player
-    // TODO: Call a method to update my position and velocity.
-    // TODO: Whenever position changes, interpolate between the current estimated position and the new position from the server
-    // TODO: Make a networked player appear in a position interpolated from the position since last update and the velocity.
-};
+});
+
+Template.game.events({
+    'click #mainToggleButton': function() {
+        // TODO: Make this smarter (it should be calling a meteor method)
+        addQuarantine();
+    }
+});

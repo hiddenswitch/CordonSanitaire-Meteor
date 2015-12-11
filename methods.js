@@ -38,5 +38,16 @@ Meteor.methods({
                 hasSeenTutorial: true
             }
         });
+    },
+
+    updatePositionAndVelocity: function(gameId, position, velocity) {
+        if (!this.userId) {
+            throw new Meteor.Error(403, 'Permission denied.');
+        }
+
+        // Reconstruct all the necessary information
+        var thisPlayer = Players.findOne({gameId: gameId, userId: this.userId});
+
+        return Sanitaire.updatePlayerPositionAndVelocity(thisPlayer._id, position, velocity);
     }
 });
