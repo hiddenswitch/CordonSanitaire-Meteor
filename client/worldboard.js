@@ -8,11 +8,17 @@ Template.worldBoard.onRendered(function () {
 });
 
 phaserGame = function () {
+    var routeData = Router.current().data();
+    var gameId = routeData.gameId;
+    var playerId = routeData.playerId;
+    var game = Games.findOne(gameId);
+    var localPlayer = Players.findOne(playerId);
+
     var width = window.innerWidth / (window.devicePixelRatio * 2);  // everything double scale
     var height = window.innerHeight / (window.devicePixelRatio * 2);
     var scaleRatio = window.devicePixelRatio / 3;   // assuming the most dense is 3x
 
-    var game = new Phaser.Game(width, height, Phaser.AUTO, 'gameboard', {
+    var phaserGame = new Phaser.Game(width, height, Phaser.AUTO, 'gameboard', {
         preload: preload,
         create: create,
         update: update,
@@ -21,16 +27,16 @@ phaserGame = function () {
 
     function preload() {
 
-        game.load.tilemap('map', '/assets/tilemaps/csv/cordon_gradient.csv', null, Phaser.Tilemap.CSV);
-        game.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map.png');
-        game.load.spritesheet('player', '/assets/sprites/cdc_man.png', 16, 16);
-        game.load.spritesheet('button', '/assets/buttons/button_sprite_sheet.png', 193, 71);
+        phaserGame.load.tilemap('map', '/assets/tilemaps/csv/cordon_gradient.csv', null, Phaser.Tilemap.CSV);
+        phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map.png');
+        phaserGame.load.spritesheet('player', '/assets/sprites/cdc_man.png', 16, 16);
+        phaserGame.load.spritesheet('button', '/assets/buttons/button_sprite_sheet.png', 193, 71);
     }
 
     var map;
     var layer;
     var cursors;
-    var player;
+    var localPlayerSprite;
     var player_direction;
     var button;
 
@@ -39,10 +45,10 @@ phaserGame = function () {
 
 // function to scale up the game to full screen
     function goFullScreen() {
-        game.scale.pageAlignHorizontally = true;
-        game.scale.pageAlignVertically = true;
-        game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-        game.stage.smoothed = false
+        phaserGame.scale.pageAlignHorizontally = true;
+        phaserGame.scale.pageAlignVertically = true;
+        phaserGame.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+        phaserGame.stage.smoothed = false
         // game.scale.setScreenSize(true);
     }
 
@@ -52,7 +58,7 @@ phaserGame = function () {
         goFullScreen();
 
         //  Because we're loading CSV map data we have to specify the tile size here or we can't render it
-        map = game.add.tilemap('map', 16, 16);
+        map = phaserGame.add.tilemap('map', 16, 16);
 
         //  Now add in the tileset
         map.addTilesetImage('tiles');
@@ -77,41 +83,31 @@ phaserGame = function () {
         // layer.debug = true;
 
         //  Player
-        player = game.add.sprite(16, 16, 'player', 1);
-        player.animations.add('left', [8, 9], 10, true);
-        player.animations.add('right', [1, 2], 10, true);
-        player.animations.add('up', [11, 12, 13], 10, true);
-        player.animations.add('down', [4, 5, 6], 10, true);
-        player.smoothed = false;
+        localPlayerSprite = createSpriteForPlayer(localPlayer._id, {isLocalPlayer: true});
 
-        game.physics.enable(player, Phaser.Physics.ARCADE);
-
-        player.body.setSize(10, 14, 2, 1);
-
-        game.camera.follow(player);
-
-        cursors = game.input.keyboard.createCursorKeys();
+        cursors = phaserGame.input.keyboard.createCursorKeys();
 
         // Useful for adding an HUD
         // var help = game.add.text(16, 16, 'Arrows to move', { font: '14px Arial', fill: '#ffffff' });
         // help.fixedToCamera = true;
 
         // beginSwipe function
-        game.input.onDown.add(beginSwipe, this);
+        phaserGame.input.onDown.add(beginSwipe, this);
 
         // add button for building quarantines
-        button = game.add.button(width / 2 - 90, height - 80, 'button', addQuarantine, this, 2, 1, 0);
+        button = phaserGame.add.button(width / 2 - 90, height - 80, 'button', addQuarantine, this, 2, 1, 0);
         //button.scale.setTo(scaleRatio, scaleRatio);
         button.fixedToCamera = true;
 
-        console.log(game.world.height);
+        console.log(phaserGame.world.height);
     }
 
     function update() {
 
-        game.physics.arcade.collide(player, layer);
+        phaserGame.physics.arcade.collide(localPlayerSprite, layer);
 
-        player.body.velocity.set(0);
+
+        localPlayerSprite.body.velocity.set(0);
 
         if (player_direction == 'left' || cursors.left.isDown) {
             move('left');
@@ -126,7 +122,7 @@ phaserGame = function () {
             move('down');
         }
         else {
-            player.animations.stop();
+            localPlayerSprite.animations.stop();
         }
 
     }
@@ -145,23 +141,23 @@ phaserGame = function () {
     function move(direction) {
         switch (direction) {
             case 'left':
-                player.body.velocity.x = -100;
-                player.play('left');
+                localPlayerSprite.body.velocity.x = -100;
+                localPlayerSprite.play('left');
                 break;
 
             case 'right':
-                player.body.velocity.x = 100;
-                player.play('right');
+                localPlayerSprite.body.velocity.x = 100;
+                localPlayerSprite.play('right');
                 break;
 
             case 'down':
-                player.body.velocity.y = 100;
-                player.play('down');
+                localPlayerSprite.body.velocity.y = 100;
+                localPlayerSprite.play('down');
                 break;
 
             case 'up':
-                player.body.velocity.y = -100;
-                player.play('up');
+                localPlayerSprite.body.velocity.y = -100;
+                localPlayerSprite.play('up');
                 break;
 
             default:
@@ -220,17 +216,17 @@ phaserGame = function () {
 // input listener and add a new listener to be fired when the mouse/finger has been released,
 // then we call endSwipe function
     function beginSwipe() {
-        startX = game.input.worldX;
-        startY = game.input.worldY;
-        game.input.onDown.remove(beginSwipe);
-        game.input.onUp.add(endSwipe);
+        startX = phaserGame.input.worldX;
+        startY = phaserGame.input.worldY;
+        phaserGame.input.onDown.remove(beginSwipe);
+        phaserGame.input.onUp.add(endSwipe);
     }
 
 // function to be called when the player releases the mouse/finger
     function endSwipe() {
         // saving mouse/finger coordinates
-        endX = game.input.worldX;
-        endY = game.input.worldY;
+        endX = phaserGame.input.worldX;
+        endY = phaserGame.input.worldY;
         // determining x and y distance travelled by mouse/finger from the start
         // of the swipe until the end
         var distX = startX - endX;
@@ -240,6 +236,7 @@ phaserGame = function () {
         if (Math.abs(distX) > Math.abs(distY) * 2 && Math.abs(distX) > 10) {
             // moving left, calling move function with horizontal and vertical tiles to move as arguments
             if (distX > 0) {
+                // TODO: Replace with Meteor.call
                 player_direction = 'left';
             }
             // moving right, calling move function with horizontal and vertical tiles to move as arguments
@@ -261,11 +258,36 @@ phaserGame = function () {
         }
 
         // stop listening for the player to release finger/mouse, let's start listening for the player to click/touch
-        game.input.onDown.add(beginSwipe);
-        game.input.onUp.remove(endSwipe);
+        phaserGame.input.onDown.add(beginSwipe);
+        phaserGame.input.onUp.remove(endSwipe);
     }
 
     // TODO: Create a new player with a given ID on demand
+
+    var createSpriteForPlayer = function (playerId, options) {
+        options = _.extend({
+            isLocalPlayer: false
+        }, options);
+
+        var player = phaserGame.add.sprite(16, 16, 'player', 1);
+        player.animations.add('left', [8, 9], 10, true);
+        player.animations.add('right', [1, 2], 10, true);
+        player.animations.add('up', [11, 12, 13], 10, true);
+        player.animations.add('down', [4, 5, 6], 10, true);
+        player.smoothed = false;
+
+        phaserGame.physics.enable(player, Phaser.Physics.ARCADE);
+
+        player.body.setSize(10, 14, 2, 1);
+
+        if (options.isLocalPlayer) {
+            phaserGame.camera.follow(player);
+        }
+
+        player.playerId = playerId;
+
+        return player;
+    };
     // TODO: Use movement code only when the player is the local player
     // TODO: Call a method to update my position and velocity.
     // TODO: Whenever position changes, interpolate between the current estimated position and the new position from the server

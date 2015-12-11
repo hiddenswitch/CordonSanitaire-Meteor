@@ -82,7 +82,7 @@ Router.route('/g/:gameId', function () {
     name: 'game',
     data: function () {
         var gameId = this.params && this.params.gameId;
-        var playerId = this.params && this.params.playerId;
+        var playerId = this.params && this.params.query.playerId;
         return {gameId: gameId, playerId: playerId};
     },
     subscriptions: function () {
