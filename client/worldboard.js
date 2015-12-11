@@ -264,4 +264,10 @@ phaserGame = function () {
         game.input.onDown.add(beginSwipe);
         game.input.onUp.remove(endSwipe);
     }
+
+    // TODO: Create a new player with a given ID on demand
+    // TODO: Use movement code only when the player is the local player
+    // TODO: Call a method to update my position and velocity.
+    // TODO: Whenever position changes, interpolate between the current estimated position and the new position from the server
+    // TODO: Make a networked player appear in a position interpolated from the position since last update and the velocity.
 };
