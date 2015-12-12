@@ -11,10 +11,8 @@ Template.worldBoard.onRendered(function () {
     var game = Games.findOne(gameId);
     var localPlayer = Players.findOne(localPlayerId);
 
-    var width = window.innerWidth / (window.devicePixelRatio * 2);  // everything double scale
-    var height = window.innerHeight / (window.devicePixelRatio * 2);
-    var scaleRatio = window.devicePixelRatio / 3;   // assuming the most dense is 3x
-
+    var width = window.innerWidth; // (window.devicePixelRatio * 2);  // everything double scale
+    var height = window.innerHeight; // (window.devicePixelRatio * 2);
 
     var sprites = {};
 
@@ -157,7 +155,6 @@ Template.worldBoard.onRendered(function () {
 
         //// add button for building quarantines
         //button = phaserGame.add.button(width / 2 - 90, height - 80, 'button', addQuarantine, this, 2, 1, 0);
-        ////button.scale.setTo(scaleRatio, scaleRatio);
         //button.fixedToCamera = true;
 
         console.log(phaserGame.world.height);
@@ -259,16 +256,16 @@ Template.worldBoard.onRendered(function () {
         var velocity = {x: 0, y: 0};
         switch (direction) {
             case 'left':
-                velocity.x = -100;
+                velocity.x = -200;
                 break;
             case 'right':
-                velocity.x = 100;
+                velocity.x = 200;
                 break;
             case 'down':
-                velocity.y = 100;
+                velocity.y = 200;
                 break;
             case 'up':
-                velocity.y = -100;
+                velocity.y = -200;
                 break;
             default:
                 break;
