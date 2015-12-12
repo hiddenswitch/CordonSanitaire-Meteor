@@ -90,7 +90,7 @@ Template.worldBoard.onRendered(function () {
         function preload() {
 
             // load path to map from settings
-            var filename = Meteor.settings && Meteor.settings.mapPath || "cordon_gradient.csv";
+            var filename = "London.csv";
             var mapPath = "/assets/tilemaps/csv/" + filename;
             phaserGame.load.tilemap('map', mapPath, null, Phaser.Tilemap.CSV);
             phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map.png');
@@ -189,17 +189,21 @@ Template.worldBoard.onRendered(function () {
                         var e_key = "(" + (i + 1) + "," + j + ")"
                         var w_key = "(" + (i - 1) + "," + j + ")"
 
-                        if (maptiles[n_key].index === 15 && maptiles[n_key].intersection != null) {
-                            maptiles[key].intersection = maptiles[n_key].intersection;
+                        if (maptiles[n_key]) {
+                            if(maptiles[n_key].index === 15 && maptiles[n_key].intersection != null)
+                                maptiles[key].intersection = maptiles[n_key].intersection;
                         }
-                        else if (maptiles[s_key].index === 15 && maptiles[s_key].intersection != null) {
-                            maptiles[key].intersection = maptiles[s_key].intersection;
+                        else if (maptiles[s_key]) {
+                            if(maptiles[s_key].index === 15 && maptiles[s_key].intersection != null)
+                                maptiles[key].intersection = maptiles[s_key].intersection;
                         }
-                        else if (maptiles[e_key].index === 15 && maptiles[e_key].intersection != null) {
-                            maptiles[key].intersection = maptiles[e_key].intersection;
+                        else if (maptiles[e_key]) {
+                            if(maptiles[e_key].index === 15 && maptiles[e_key].intersection != null)
+                                maptiles[key].intersection = maptiles[e_key].intersection;
                         }
-                        else if (maptiles[w_key].index === 15 && maptiles[w_key].intersection != null) {
-                            maptiles[key].intersection = maptiles[w_key].intersection;
+                        else if (maptiles[w_key]) {
+                            if(maptiles[w_key].index === 15 && maptiles[w_key].intersection != null)
+                                maptiles[key].intersection = maptiles[w_key].intersection;
                         }
                         else {
                             // if no neighboring intersection tile, create a new intersection
