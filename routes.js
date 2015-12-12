@@ -18,6 +18,7 @@ Router.route('/signup', function () {
     } else {
         this.render('signup');
     }
+    $(document.body).css('background-color', '#eeeeee');
 }, {name: "signup"});
 
 Router.route('/login', function () {
@@ -26,6 +27,14 @@ Router.route('/login', function () {
 }, {name: 'login'});
 
 Router.route('/mainmenu', function () {
+    var userId = Meteor.userId();
+
+    var isLoggedIn = !!userId;
+    if (!isLoggedIn) {
+        this.redirect('/signup');
+        return;
+    }
+
     this.render('mainmenu');
     $(document.body).css('background-color', '#cccccc');
 }, {name: 'mainmenu'});
