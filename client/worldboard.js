@@ -270,7 +270,7 @@ Template.worldBoard.onRendered(function () {
                 });
             }
 
-            //TODO: create a dictionary of all roads
+            // create a dictionary of all roads
             var numRoads = road_index;
             var roads = new Array();
 
@@ -278,6 +278,7 @@ Template.worldBoard.onRendered(function () {
 
                 var innerTiles = new Array();
                 var borderTiles = new Array();
+                var intersectionIds = new Array();
 
                 for (var j = 0; j < map.width; j++) {
                     for (var k = 0; k < map.height; k++) {
@@ -285,20 +286,30 @@ Template.worldBoard.onRendered(function () {
                         if (maptiles[key].road === i) {
                             if (isTileRoad(maptiles[key]))
                                 innerTiles.push({x: j, y: k});
-                            else if (isTileCrosswalk(maptiles[key]))
+                            else if (isTileCrosswalk(maptiles[key])) {
                                 borderTiles.push({x: j, y: k});
+                                intersectionIds.push(maptiles[key].intersection);
+                            }
                         }
                     }
                 }
+                // only unique intersection ids
+                intersectionIds = _.uniq(intersectionIds, function (v, k) {
+                    return v;
+                });
+                // create a road entry with intersection ids
                 roads.push({
                     id: i,
                     innerTiles: innerTiles,
-                    borderTiles: borderTiles
+                    borderTiles: borderTiles,
+                    intersectionsIds: intersectionIds
                 });
             }
-            
+
             //TODO: create a node/edge representation of intersections and roads
-            // note: if a road shares a crosswalk w/ an intersection, they are connected
+            // This is sort of already done by adding intersections to the roads array
+            // each road is an edge, containing the two nodes it connects
+            // console.log(roads);
 
             initializeMeteor();
         }
