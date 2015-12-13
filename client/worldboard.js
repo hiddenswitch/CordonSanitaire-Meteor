@@ -164,13 +164,15 @@ Template.worldBoard.onRendered(function () {
 
             // create a dictionary of all map tiles
             var maptiles = new Array();
+            var NONEXISTENT = -1;
 
             for (var i = 0; i < map.width; i++) {
                 for (var j = 0; j < map.height; j++) {
                     var key = "(" + i + "," + j + ")";
                     maptiles[key] = {
                         index: map.getTile(i, j, 0).index,
-                        intersection: -1
+                        intersection: NONEXISTENT,
+                        road: NONEXISTENT
                     };
                 }
             }
@@ -184,11 +186,17 @@ Template.worldBoard.onRendered(function () {
                 return tile.index === 15;
             }
 
+            function isTileRoad(tile) {
+                return tile.index === 12;
+            }
+
             // label or group all intersections on the map
             var intersection_index = 0;
+            var road_index = 0;
             for (var i = 0; i < map.width; i++) {
                 for (var j = 0; j < map.height; j++) {
                     var key = "(" + i + "," + j + ")";
+                    // add an intersection id for each intersection + crosswalk tile
                     if (isTileIntersection(maptiles[key]) || isTileCrosswalk(maptiles[key])) // is intersection or crosswalk
                     {
                         // if N, W, neighbor is in an intersection, add this one to that collection
@@ -197,18 +205,39 @@ Template.worldBoard.onRendered(function () {
 
                         if (maptiles[n_key] &&
                             ( isTileIntersection(maptiles[n_key]) || isTileCrosswalk(maptiles[n_key]))
-                            && maptiles[n_key].intersection != -1) {
+                            && maptiles[n_key].intersection != NONEXISTENT) {
                             maptiles[key].intersection = maptiles[n_key].intersection;
                         }
                         else if (maptiles[w_key] &&
                             ( isTileIntersection(maptiles[w_key]) || isTileCrosswalk(maptiles[w_key]))
-                            && maptiles[w_key].intersection != -1) {
+                            && maptiles[w_key].intersection != NONEXISTENT) {
                             maptiles[key].intersection = maptiles[w_key].intersection;
                         }
                         else {
                             // intersection is of a new group
                             maptiles[key].intersection = intersection_index;
                             intersection_index++;
+                        }
+                    }
+                    // add a road id for each road + crosswalk tile
+                    if (isTileRoad(maptiles[key]) || isTileCrosswalk(maptiles[key])) {
+                        var n_key = "(" + i + "," + (j - 1) + ")";
+                        var w_key = "(" + (i - 1) + "," + j + ")";
+
+                        if (maptiles[n_key] &&
+                            ( isTileRoad(maptiles[n_key]) || isTileCrosswalk(maptiles[n_key]))
+                            && maptiles[n_key].road != NONEXISTENT) {
+                            maptiles[key].road = maptiles[n_key].road;
+                        }
+                        else if (maptiles[w_key] &&
+                            ( isTileRoad(maptiles[w_key]) || isTileCrosswalk(maptiles[w_key]))
+                            && maptiles[w_key].road != NONEXISTENT) {
+                            maptiles[key].road = maptiles[w_key].road;
+                        }
+                        else {
+                            // road is of a new group
+                            maptiles[key].road = road_index;
+                            road_index++;
                         }
                     }
                 }
@@ -240,6 +269,36 @@ Template.worldBoard.onRendered(function () {
                     borderTiles: borderTiles
                 });
             }
+
+            //TODO: create a dictionary of all roads
+            var numRoads = road_index;
+            var roads = new Array();
+
+            for (var i = 0; i < numRoads; i++) {
+
+                var innerTiles = new Array();
+                var borderTiles = new Array();
+
+                for (var j = 0; j < map.width; j++) {
+                    for (var k = 0; k < map.height; k++) {
+                        var key = "(" + j + "," + k + ")";
+                        if (maptiles[key].road === i) {
+                            if (isTileRoad(maptiles[key]))
+                                innerTiles.push({x: j, y: k});
+                            else if (isTileCrosswalk(maptiles[key]))
+                                borderTiles.push({x: j, y: k});
+                        }
+                    }
+                }
+                roads.push({
+                    id: i,
+                    innerTiles: innerTiles,
+                    borderTiles: borderTiles
+                });
+            }
+            
+            //TODO: create a node/edge representation of intersections and roads
+            // note: if a road shares a crosswalk w/ an intersection, they are connected
 
             initializeMeteor();
         }
