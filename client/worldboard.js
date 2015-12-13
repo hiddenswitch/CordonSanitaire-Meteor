@@ -170,43 +170,43 @@ Template.worldBoard.onRendered(function () {
                     var key = "(" + i + "," + j + ")";
                     maptiles[key] = {
                         index: map.getTile(i, j, 0).index,
-                        intersection: null
+                        intersection: -1
                     };
                 }
             }
 
-            // create a dictionary of all intersections on the map
+            function isTileCrosswalk(tile) {
+                // index of crosswalk tiles
+                return (tile.index === 8 || tile.index === 9 || tile.index === 10 || tile.index === 11);
+            }
+
+            function isTileIntersection(tile) {
+                return tile.index === 15;
+            }
+
+            // label or group all intersections on the map
             var intersection_index = 0;
-            // look through all tiles
             for (var i = 0; i < map.width; i++) {
                 for (var j = 0; j < map.height; j++) {
                     var key = "(" + i + "," + j + ")";
-                    if (maptiles[key].index === 15) // is intersection
+                    if (isTileIntersection(maptiles[key]) || isTileCrosswalk(maptiles[key])) // is intersection or crosswalk
                     {
-                        // if N, S, E, W, neighbor is in an intersection, add this one to that collection
+                        // if N, W, neighbor is in an intersection, add this one to that collection
                         var n_key = "(" + i + "," + (j - 1) + ")";
-                        var s_key = "(" + i + "," + (j + 1) + ")";
-                        var e_key = "(" + (i + 1) + "," + j + ")"
-                        var w_key = "(" + (i - 1) + "," + j + ")"
+                        var w_key = "(" + (i - 1) + "," + j + ")";
 
-                        if (maptiles[n_key]) {
-                            if(maptiles[n_key].index === 15 && maptiles[n_key].intersection != null)
-                                maptiles[key].intersection = maptiles[n_key].intersection;
+                        if (maptiles[n_key] &&
+                            ( isTileIntersection(maptiles[n_key]) || isTileCrosswalk(maptiles[n_key]))
+                            && maptiles[n_key].intersection != -1) {
+                            maptiles[key].intersection = maptiles[n_key].intersection;
                         }
-                        else if (maptiles[s_key]) {
-                            if(maptiles[s_key].index === 15 && maptiles[s_key].intersection != null)
-                                maptiles[key].intersection = maptiles[s_key].intersection;
-                        }
-                        else if (maptiles[e_key]) {
-                            if(maptiles[e_key].index === 15 && maptiles[e_key].intersection != null)
-                                maptiles[key].intersection = maptiles[e_key].intersection;
-                        }
-                        else if (maptiles[w_key]) {
-                            if(maptiles[w_key].index === 15 && maptiles[w_key].intersection != null)
-                                maptiles[key].intersection = maptiles[w_key].intersection;
+                        else if (maptiles[w_key] &&
+                            ( isTileIntersection(maptiles[w_key]) || isTileCrosswalk(maptiles[w_key]))
+                            && maptiles[w_key].intersection != -1) {
+                            maptiles[key].intersection = maptiles[w_key].intersection;
                         }
                         else {
-                            // if no neighboring intersection tile, create a new intersection
+                            // intersection is of a new group
                             maptiles[key].intersection = intersection_index;
                             intersection_index++;
                         }
@@ -214,15 +214,32 @@ Template.worldBoard.onRendered(function () {
                 }
             }
 
-            // Use filter to find and quickly group intersections...
-            // console log tiles in each intersection
-            //for (var i = 0; i < intersection_index; i++) {
-            //    var tiles = maptiles.filter(function (t) {
-            //        return t.intersection === i;
-            //    });
-            //    console.log("intersection: " + i);
-            //    console.log(tiles);
-            //}
+            // create a dictionary of all intersections, inner tiles and border tiles
+            var numIntersections = intersection_index;
+            var intersections = new Array();
+
+            for (var i = 0; i < numIntersections; i++) {
+
+                var innerTiles = new Array();
+                var borderTiles = new Array();
+
+                for (var j = 0; j < map.width; j++) {
+                    for (var k = 0; k < map.height; k++) {
+                        var key = "(" + j + "," + k + ")";
+                        if (maptiles[key].intersection === i) {
+                            if (isTileIntersection(maptiles[key]))
+                                innerTiles.push({x: j, y: k});
+                            else if (isTileCrosswalk(maptiles[key]))
+                                borderTiles.push({x: j, y: k});
+                        }
+                    }
+                }
+                intersections.push({
+                    id: i,
+                    innerTiles: innerTiles,
+                    borderTiles: borderTiles
+                });
+            }
 
             initializeMeteor();
         }
