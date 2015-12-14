@@ -202,16 +202,29 @@ Template.worldBoard.onRendered(function () {
                         // if N, W, neighbor is in an intersection, add this one to that collection
                         var n_key = "(" + i + "," + (j - 1) + ")";
                         var w_key = "(" + (i - 1) + "," + j + ")";
+                        var nw_key = "(" + (i - 1) + "," + (j - 1) + ")";
+                        var sw_key = "(" + (i - 1) + "," + (j + 1) + ")";
 
-                        if (maptiles[n_key] &&
-                            ( isTileIntersection(maptiles[n_key]) || isTileCrosswalk(maptiles[n_key]))
-                            && maptiles[n_key].intersection != NONEXISTENT) {
-                            maptiles[key].intersection = maptiles[n_key].intersection;
+                        // order from nw -> w -> sw -> n, same as the scan
+                        if (maptiles[nw_key] &&
+                            ( isTileIntersection(maptiles[nw_key]) || isTileCrosswalk(maptiles[nw_key]))
+                            && maptiles[nw_key].intersection != NONEXISTENT) {
+                            maptiles[key].intersection = maptiles[nw_key].intersection;
                         }
                         else if (maptiles[w_key] &&
                             ( isTileIntersection(maptiles[w_key]) || isTileCrosswalk(maptiles[w_key]))
                             && maptiles[w_key].intersection != NONEXISTENT) {
                             maptiles[key].intersection = maptiles[w_key].intersection;
+                        }
+                        else if (maptiles[sw_key] &&
+                            ( isTileIntersection(maptiles[sw_key]) || isTileCrosswalk(maptiles[sw_key]))
+                            && maptiles[sw_key].intersection != NONEXISTENT) {
+                            maptiles[key].intersection = maptiles[sw_key].intersection;
+                        }
+                        else if (maptiles[n_key] &&
+                            ( isTileIntersection(maptiles[n_key]) || isTileCrosswalk(maptiles[n_key]))
+                            && maptiles[n_key].intersection != NONEXISTENT) {
+                            maptiles[key].intersection = maptiles[n_key].intersection;
                         }
                         else {
                             // intersection is of a new group
@@ -304,6 +317,17 @@ Template.worldBoard.onRendered(function () {
                     borderTiles: borderTiles,
                     intersectionsIds: intersectionIds
                 });
+            }
+
+            // get all of the crossswalk tiles related to a specific tile
+            getCrosswalkTiles = function (x, y) {
+                for (var i = 0; i < intersections.length; i++) {
+                    for (var j = 0; j < intersections[i].borderTiles.length; j++) {
+                        if (intersections[i].borderTiles[j].x === x && intersections[i].borderTiles[j].y === y)
+                            return intersections[i].borderTiles;
+                    }
+                }
+                return null;
             }
 
             //TODO: create a node/edge representation of intersections and roads
@@ -470,7 +494,13 @@ Template.worldBoard.onRendered(function () {
             }
 
             // TODO: Call meteor method instead
-            Meteor.call('addQuarantine', gameId, {x: lastPromptTile.x, y: lastPromptTile.y});
+
+            // update all crosswalk tiles associated with this intersection
+            var crosswalks = getCrosswalkTiles(lastPromptTile.x, lastPromptTile.y);
+            for (var i = 0; i < crosswalks.length; i++) {
+                Meteor.call('addQuarantine', gameId, {x: crosswalks[i].x, y: crosswalks[i].y});
+            }
+            //Meteor.call('addQuarantine', gameId, {x: lastPromptTile.x, y: lastPromptTile.y});
 
             return;
             //horizontal
