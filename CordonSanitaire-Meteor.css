@@ -231,22 +231,26 @@ start of game */
 #p0_status {
     margin: 5%;
     z-index: 100;
-    display: none;
+    position: absolute;
+    /*display: none;*/
 }
 
 #p0_loose {
-    display: none;
+    /*display: none;*/
     z-index: 100;
+    width: 200px;
 }
 
 #p0_contained {
     display: none;
     z-index: 100;
+    width: 200px;
 }
 
 #p0_isolated {
     display: none;
     z-index: 100;
+    width: 200px;
 }
 
 #end_game {
