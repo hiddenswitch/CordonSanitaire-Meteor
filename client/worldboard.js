@@ -323,9 +323,6 @@ Template.worldBoard.onRendered(function () {
              *
              */
 
-                // show buttons
-            Session.set("showing build buttons", true);
-
             var intersectionId = SanitaireMaps.getIntersectionId(tile.x, tile.y, currentMapInfo.intersections);
             if (lastIntersectionId === intersectionId)
                 return;
@@ -339,14 +336,8 @@ Template.worldBoard.onRendered(function () {
             lastPromptTile.x = tile.x;
             lastPromptTile.y = tile.y;
 
-            // give option to build
-            console.log("At intersection");
-            console.log(tile);
-
-            // testing to see which intersection we are at
-            // TODO: only stop once at a single intersection, i.e. not all sides
-            // TODO: build quarantine around entire intersection
-            // getIntersectionTiles(tile);
+            // show buttons for building
+            Session.set("showing build buttons", true);
 
             prevPhysics = {
                 direction: player_direction,
@@ -435,6 +426,9 @@ Template.worldBoard.onRendered(function () {
 
 // function to be called when the player releases the mouse/finger
         function endSwipe() {
+            // hide buttons
+            Session.set("showing build buttons", false);
+
             // saving mouse/finger coordinates
             endX = phaserGame.input.worldX;
             endY = phaserGame.input.worldY;
