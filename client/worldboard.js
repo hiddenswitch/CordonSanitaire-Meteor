@@ -151,6 +151,9 @@ Template.worldBoard.onRendered(function () {
             map.setTileIndexCallback(9, promptAtIntersection, this);
             map.setTileIndexCallback(10, promptAtIntersection, this);
             map.setTileIndexCallback(11, promptAtIntersection, this);
+            // quarantine tiles
+            map.setTileIndexCallback(13, promptAtQuarantine, this);
+            map.setTileIndexCallback(14, promptAtQuarantine, this);
 
             //  Un-comment this on to see the collision tiles
             // layer.debug = true;
@@ -323,8 +326,47 @@ Template.worldBoard.onRendered(function () {
              *
              */
 
-                // show buttons
+            var intersectionId = SanitaireMaps.getIntersectionId(tile.x, tile.y, currentMapInfo.intersections);
+            if (lastIntersectionId === intersectionId)
+                return;
+            lastIntersectionId = intersectionId;
+
+            if ((tile.x === lastPromptTile.x || tile.x === (lastPromptTile.x - 1) || tile.x === (lastPromptTile.x + 1))
+                && (tile.y === lastPromptTile.y || tile.y === (lastPromptTile.y - 1) || tile.y === (lastPromptTile.y + 1)))
+                return;
+
+            lastPromptTile.index = tile.index;
+            lastPromptTile.x = tile.x;
+            lastPromptTile.y = tile.y;
+
+            // show buttons for building
             Session.set("showing build buttons", true);
+            Session.set("showing destroy button", false);
+
+            prevPhysics = {
+                direction: player_direction,
+                position: {
+                    x: sprite.position.x,
+                    y: sprite.position.y
+                },
+                velocity: {
+                    x: sprite.body.velocity.x,
+                    y: sprite.body.velocity.y
+                }
+            }
+            // stop our player (stops animation and movement)
+            player_direction = '';
+
+            Meteor.call('updatePositionAndVelocity', gameId, {
+                x: sprite.position.x,
+                y: sprite.position.y
+            }, {
+                x: 0,
+                y: 0
+            }, TimeSync.serverTime(new Date()));
+        }
+
+        function promptAtQuarantine(sprite, tile) {
 
             var intersectionId = SanitaireMaps.getIntersectionId(tile.x, tile.y, currentMapInfo.intersections);
             if (lastIntersectionId === intersectionId)
@@ -339,14 +381,9 @@ Template.worldBoard.onRendered(function () {
             lastPromptTile.x = tile.x;
             lastPromptTile.y = tile.y;
 
-            // give option to build
-            console.log("At intersection");
-            console.log(tile);
-
-            // testing to see which intersection we are at
-            // TODO: only stop once at a single intersection, i.e. not all sides
-            // TODO: build quarantine around entire intersection
-            // getIntersectionTiles(tile);
+            // show buttons for building
+            Session.set("showing build buttons", true);
+            Session.set("showing destroy button", true);
 
             prevPhysics = {
                 direction: player_direction,
@@ -407,6 +444,7 @@ Template.worldBoard.onRendered(function () {
             // TODO: make the buttons actually hide, not sure why they aren't right now
             // hide buttons
             Session.set("showing build buttons", false);
+            Session.set("showing destroy button", false);
 
             if (!!prevPhysics) {
                 Meteor.call('updatePositionAndVelocity', gameId, {
@@ -418,6 +456,14 @@ Template.worldBoard.onRendered(function () {
                 }, TimeSync.serverTime(new Date()));
             }
         };
+
+        cancelDestroy = function () {
+
+            // TODO: make the buttons actually hide, not sure why they aren't right now
+            // hide buttons
+            Session.set("showing build buttons", false);
+            Session.set("showing destroy button", false);
+        }
 
         function addWallTile(positionX, positionY) {
             map.fill(13, positionX, positionY, 1, 1);
@@ -435,6 +481,9 @@ Template.worldBoard.onRendered(function () {
 
 // function to be called when the player releases the mouse/finger
         function endSwipe() {
+            // hide buttons
+            Session.set("showing build buttons", false);
+
             // saving mouse/finger coordinates
             endX = phaserGame.input.worldX;
             endY = phaserGame.input.worldY;
@@ -518,7 +567,10 @@ Template.game.events({
 
     'click #cancelButton': function () {
         // TODO: Make this smarter (it should be calling a meteor method)
-        keepRunning();
+        if(Session.get("showing destroy button"))
+            cancelDestroy();
+        else
+            keepRunning();
     }
 
 });

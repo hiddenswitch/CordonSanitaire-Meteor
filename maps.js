@@ -43,6 +43,10 @@ SanitaireMaps.getMapInfo = function (phaserTileMapInterface) {
         return tile.index === 12;
     }
 
+    function isTileQuarantine(tile) {
+        return (tile.index === 13 || tile.index === 14);
+    }
+
     // create a dictionary of all map tiles
     var mapInfo = {};
     var mapTiles = mapInfo.mapTiles = [];

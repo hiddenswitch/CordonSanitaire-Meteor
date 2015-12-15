@@ -67,7 +67,12 @@ if (Meteor.isClient) {
 
         showingBuildButtons: function () {
             return Session.get("showing build buttons");
+        },
+
+        showingDestroyButton: function () {
+            return Session.get("showing destroy button");
         }
+
     });
 
     Template.conclusion.helpers({});

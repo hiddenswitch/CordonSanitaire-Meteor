@@ -330,7 +330,6 @@ start of game */
     -moz-user-select: none;
     -ms-user-select: none;
 
-    background-color: #ffffff;
     -moz-border-radius: 40px;
     -webkit-border-radius: 40px;
     border-radius: 40px;
@@ -357,6 +356,19 @@ start of game */
     bottom: 20px;
     width: 30%;
     margin: 0 15% 0 55%;
+}
+
+.cancelButton {
+    background-color: rgba(164,182,200,0.9);
+}
+
+.buildButton {
+    background-color: rgba(253,238,74,0.9);
+}
+
+.destroyButton {
+    background-color: rgba(63,72,83,0.9);
+    color: rgba(164,182,200,0.9);
 }
 
 /* Main button styling */
