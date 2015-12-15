@@ -55,7 +55,7 @@ Template.worldBoard.onRendered(function () {
 
                 this.playerUpdate = Players.find({gameId: Router.current().data().gameId}).observe({
                     added: function (player) {
-                        sprites[player._id] = createSpriteForPlayer(localPlayerId, {isLocalPlayer: player._id == localPlayerId});
+                        sprites[player._id] = createSpriteForPlayer(localPlayerId, {isLocalPlayer: player._id == localPlayerId, location: {"x":16, "y":96}});
                         updatePlayer(player);
                     },
                     changed: function (player) {
@@ -162,184 +162,18 @@ Template.worldBoard.onRendered(function () {
 
             //console.log(phaserGame.world.height);
 
-            // create a dictionary of all map tiles
-            var maptiles = new Array();
-            var NONEXISTENT = -1;
 
-            for (var i = 0; i < map.width; i++) {
-                for (var j = 0; j < map.height; j++) {
-                    var key = "(" + i + "," + j + ")";
-                    maptiles[key] = {
-                        index: map.getTile(i, j, 0).index,
-                        intersection: NONEXISTENT,
-                        road: NONEXISTENT
-                    };
-                }
-            }
 
-            function isTileCrosswalk(tile) {
-                // index of crosswalk tiles
-                return (tile.index === 8 || tile.index === 9 || tile.index === 10 || tile.index === 11);
-            }
-
-            function isTileIntersection(tile) {
-                return tile.index === 15;
-            }
-
-            function isTileRoad(tile) {
-                return tile.index === 12;
-            }
-
-            // label or group all intersections on the map
-            var intersection_index = 0;
-            var road_index = 0;
-            for (var i = 0; i < map.width; i++) {
-                for (var j = 0; j < map.height; j++) {
-                    var key = "(" + i + "," + j + ")";
-                    // add an intersection id for each intersection + crosswalk tile
-                    if (isTileIntersection(maptiles[key]) || isTileCrosswalk(maptiles[key])) // is intersection or crosswalk
-                    {
-                        // if N, W, neighbor is in an intersection, add this one to that collection
-                        var n_key = "(" + i + "," + (j - 1) + ")";
-                        var w_key = "(" + (i - 1) + "," + j + ")";
-                        var nw_key = "(" + (i - 1) + "," + (j - 1) + ")";
-                        var sw_key = "(" + (i - 1) + "," + (j + 1) + ")";
-
-                        // order from nw -> w -> sw -> n, same as the scan
-                        if (maptiles[nw_key] &&
-                            ( isTileIntersection(maptiles[nw_key]) || isTileCrosswalk(maptiles[nw_key]))
-                            && maptiles[nw_key].intersection != NONEXISTENT) {
-                            maptiles[key].intersection = maptiles[nw_key].intersection;
-                        }
-                        else if (maptiles[w_key] &&
-                            ( isTileIntersection(maptiles[w_key]) || isTileCrosswalk(maptiles[w_key]))
-                            && maptiles[w_key].intersection != NONEXISTENT) {
-                            maptiles[key].intersection = maptiles[w_key].intersection;
-                        }
-                        else if (maptiles[sw_key] &&
-                            ( isTileIntersection(maptiles[sw_key]) || isTileCrosswalk(maptiles[sw_key]))
-                            && maptiles[sw_key].intersection != NONEXISTENT) {
-                            maptiles[key].intersection = maptiles[sw_key].intersection;
-                        }
-                        else if (maptiles[n_key] &&
-                            ( isTileIntersection(maptiles[n_key]) || isTileCrosswalk(maptiles[n_key]))
-                            && maptiles[n_key].intersection != NONEXISTENT) {
-                            maptiles[key].intersection = maptiles[n_key].intersection;
-                        }
-                        else {
-                            // intersection is of a new group
-                            maptiles[key].intersection = intersection_index;
-                            intersection_index++;
-                        }
-                    }
-                    // add a road id for each road + crosswalk tile
-                    if (isTileRoad(maptiles[key]) || isTileCrosswalk(maptiles[key])) {
-                        var n_key = "(" + i + "," + (j - 1) + ")";
-                        var w_key = "(" + (i - 1) + "," + j + ")";
-
-                        if (maptiles[n_key] &&
-                            ( isTileRoad(maptiles[n_key]) || isTileCrosswalk(maptiles[n_key]))
-                            && maptiles[n_key].road != NONEXISTENT) {
-                            maptiles[key].road = maptiles[n_key].road;
-                        }
-                        else if (maptiles[w_key] &&
-                            ( isTileRoad(maptiles[w_key]) || isTileCrosswalk(maptiles[w_key]))
-                            && maptiles[w_key].road != NONEXISTENT) {
-                            maptiles[key].road = maptiles[w_key].road;
-                        }
-                        else {
-                            // road is of a new group
-                            maptiles[key].road = road_index;
-                            road_index++;
-                        }
-                    }
-                }
-            }
-
-            // create a dictionary of all intersections, inner tiles and border tiles
-            var numIntersections = intersection_index;
-            var intersections = new Array();
-
-            for (var i = 0; i < numIntersections; i++) {
-
-                var innerTiles = new Array();
-                var borderTiles = new Array();
-
-                for (var j = 0; j < map.width; j++) {
-                    for (var k = 0; k < map.height; k++) {
-                        var key = "(" + j + "," + k + ")";
-                        if (maptiles[key].intersection === i) {
-                            if (isTileIntersection(maptiles[key]))
-                                innerTiles.push({x: j, y: k});
-                            else if (isTileCrosswalk(maptiles[key]))
-                                borderTiles.push({x: j, y: k});
-                        }
-                    }
-                }
-                intersections.push({
-                    id: i,
-                    innerTiles: innerTiles,
-                    borderTiles: borderTiles
-                });
-            }
-
-            // create a dictionary of all roads
-            var numRoads = road_index;
-            var roads = new Array();
-
-            for (var i = 0; i < numRoads; i++) {
-
-                var innerTiles = new Array();
-                var borderTiles = new Array();
-                var intersectionIds = new Array();
-
-                for (var j = 0; j < map.width; j++) {
-                    for (var k = 0; k < map.height; k++) {
-                        var key = "(" + j + "," + k + ")";
-                        if (maptiles[key].road === i) {
-                            if (isTileRoad(maptiles[key]))
-                                innerTiles.push({x: j, y: k});
-                            else if (isTileCrosswalk(maptiles[key])) {
-                                borderTiles.push({x: j, y: k});
-                                intersectionIds.push(maptiles[key].intersection);
-                            }
-                        }
-                    }
-                }
-                // only unique intersection ids
-                intersectionIds = _.uniq(intersectionIds, function (v, k) {
-                    return v;
-                });
-                // create a road entry with intersection ids
-                roads.push({
-                    id: i,
-                    innerTiles: innerTiles,
-                    borderTiles: borderTiles,
-                    intersectionsIds: intersectionIds
-                });
-            }
+            currentMapInfo = SanitaireMaps.getMapInfo(map);
 
             // get all of the crossswalk tiles related to a specific tile
-            getCrosswalkTiles = function (x, y) {
-                for (var i = 0; i < intersections.length; i++) {
-                    for (var j = 0; j < intersections[i].borderTiles.length; j++) {
-                        if (intersections[i].borderTiles[j].x === x && intersections[i].borderTiles[j].y === y)
-                            return intersections[i].borderTiles;
-                    }
-                }
-                return null;
-            }
+
 
             // get id of intersection from a bordering tile
-            getIntersectionId = function (x, y) {
-                for (var i = 0; i < intersections.length; i++) {
-                    for (var j = 0; j < intersections[i].borderTiles.length; j++) {
-                        if (intersections[i].borderTiles[j].x === x && intersections[i].borderTiles[j].y === y)
-                            return intersections[i].id;
-                    }
-                }
-                return null;
-            }
+
+
+            // pick center tile of random street to start our players location
+
 
             //TODO: create a node/edge representation of intersections and roads
             // This is sort of already done by adding intersections to the roads array
@@ -476,7 +310,7 @@ Template.worldBoard.onRendered(function () {
              * should simply display the correct prompt (i.e. buttons when needed)
              *
              */
-            var intersectionId = getIntersectionId(tile.x, tile.y);
+            var intersectionId = SanitaireMaps.getIntersectionId(tile.x, tile.y, currentMapInfo.intersections);
             if (lastIntersectionId === intersectionId)
                 return;
             lastIntersectionId = intersectionId;
@@ -520,7 +354,7 @@ Template.worldBoard.onRendered(function () {
             // TODO: Call meteor method instead
 
             // update all crosswalk tiles associated with this intersection
-            var crosswalks = getCrosswalkTiles(lastPromptTile.x, lastPromptTile.y);
+            var crosswalks = SanitaireMaps.getCrosswalkTiles(lastPromptTile.x, lastPromptTile.y, currentMapInfo.intersections);
             for (var i = 0; i < crosswalks.length; i++) {
                 Meteor.call('addQuarantine', gameId, {x: crosswalks[i].x, y: crosswalks[i].y});
             }
@@ -594,15 +428,23 @@ Template.worldBoard.onRendered(function () {
 
         var createSpriteForPlayer = function (playerId, options) {
             options = _.extend({
-                isLocalPlayer: false
+                isLocalPlayer: false,
+                location: {"x":0, "y":0}
             }, options);
 
-            var player = phaserGame.add.sprite(16, 16, 'player', 1);
+            // set random position for yourself
+            //if(options.isLocalPlayer)
+            //var randomTile = getRandomStartPosition();
+            //var startTile = {
+            //    "x": options.isLocalPlayer && randomTile.x * 16 || 16,
+            //    "y": options.isLocalPlayer && randomTile.y * 16 || 16,
+            //}
+            var player = phaserGame.add.sprite(options.location.x, options.location.y, 'player', 1);
             player.animations.add('left', [8, 9], 10, true);
             player.animations.add('right', [1, 2], 10, true);
             player.animations.add('up', [11, 12, 13], 10, true);
             player.animations.add('down', [4, 5, 6], 10, true);
-            player.animations.add('idle', [15, 16, 17,18], 5, true);
+            player.animations.add('idle', [15, 16, 17, 18], 5, true);
             player.smoothed = false;
 
             phaserGame.physics.enable(player, Phaser.Physics.ARCADE);
