@@ -70,7 +70,7 @@
 <!-- All in game views -->
 <template name="game">
     <!-- Container for countdown -->
-    <div id="countdown"><span id="seconds">00</span>.<span id="hundredths">00</span></div>
+    <div id="countdown"><span id="seconds">{{timeLeftInGame.seconds}}</span>.<span id="hundredths">{{timeLeftInGame.hundredths}}</span></div>
 
     <!-- Logout button for player | Not currently necessary -->
     <!--<input type="button" value="Log Out" class="logoutButton" onclick="userLogout()" />-->

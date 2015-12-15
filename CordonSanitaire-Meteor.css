@@ -135,7 +135,8 @@ start of game */
 
 #countdown {
     /*display: none;*/
-    visibility: hidden;
+    /*visibility: hidden;*/
+    z-index: 101;
     position: absolute;
     top: 0;
     right: 0;
