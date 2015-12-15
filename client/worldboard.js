@@ -319,12 +319,19 @@ Template.worldBoard.onRendered(function () {
          * @param sprite
          * @param tile
          */
+
+        var prevPhysics = {};
+
         function promptAtIntersection(sprite, tile) {
 
             /** TODO: move this logic for checks elsewhere, the function
              * should simply display the correct prompt (i.e. buttons when needed)
              *
              */
+
+            // show buttons
+            Session.set("showing build buttons", true);
+
             var intersectionId = SanitaireMaps.getIntersectionId(tile.x, tile.y, currentMapInfo.intersections);
             if (lastIntersectionId === intersectionId)
                 return;
@@ -347,6 +354,17 @@ Template.worldBoard.onRendered(function () {
             // TODO: build quarantine around entire intersection
             // getIntersectionTiles(tile);
 
+            prevPhysics = {
+                direction: player_direction,
+                position: {
+                    x: sprite.position.x,
+                    y: sprite.position.y
+                },
+                velocity: {
+                    x: sprite.body.velocity.x,
+                    y: sprite.body.velocity.y
+                }
+            }
             // stop our player (stops animation and movement)
             player_direction = '';
 
@@ -361,6 +379,9 @@ Template.worldBoard.onRendered(function () {
 
 // place build a quarantine on the corner that a player arrives at
         addQuarantine = function () {
+
+            // hide buttons
+            Session.set("showing build buttons", false);
 
             if (_.isUndefined(lastPromptTile)) {
                 return;
@@ -387,9 +408,26 @@ Template.worldBoard.onRendered(function () {
             }
         };
 
+        keepRunning = function () {
+
+            // TODO: make the buttons actually hide, not sure why they aren't right now
+            // hide buttons
+            Session.set("showing build buttons", false);
+
+            if(!!prevPhysics) {
+                Meteor.call('updatePositionAndVelocity', gameId, {
+                    x: prevPhysics.position.x,
+                    y: prevPhysics.position.y
+                }, {
+                    x: prevPhysics.velocity.x,
+                    y: prevPhysics.velocity.y
+                }, TimeSync.serverTime(new Date()));
+            }
+        };
+
         function addWallTile(positionX, positionY) {
             map.fill(13, positionX, positionY, 1, 1);
-        };
+        }
 
 // when the player begins to swipe we only save mouse/finger coordinates, remove the touch/click
 // input listener and add a new listener to be fired when the mouse/finger has been released,
@@ -479,8 +517,14 @@ Template.worldBoard.onRendered(function () {
 ;
 
 Template.game.events({
-    'click #mainToggleButton': function () {
+    'click #buildButton': function () {
         // TODO: Make this smarter (it should be calling a meteor method)
         addQuarantine();
+    },
+
+    'click #cancelButton': function () {
+        // TODO: Make this smarter (it should be calling a meteor method)
+        keepRunning();
     }
+
 });

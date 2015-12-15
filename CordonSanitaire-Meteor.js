@@ -63,6 +63,10 @@ if (Meteor.isClient) {
                 "hundredths": Math.floor((timeLeft / 10.0) % 100)
             };
             return result;
+        },
+
+        showingBuildButtons: function () {
+            return Session.get("showing build buttons");
         }
     });
 
