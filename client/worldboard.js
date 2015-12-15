@@ -214,6 +214,21 @@ Template.worldBoard.onRendered(function () {
                     }, TimeSync.serverTime(new Date()));
                 });
 
+                // check if user has run to the end of the canvas and stop them if so
+                if(playerId === localPlayerId) {
+                    if( sprite.body.position.x < 0
+                        || sprite.body.position.y < 0
+                        || sprite.body.position.x > map.widthInPixels - map.tileWidth
+                        || sprite.body.position.y > map.heightInPixels - map.tileHeight)
+                        Meteor.call('updatePositionAndVelocity', gameId, {
+                            x: sprite.position.x,
+                            y: sprite.position.y
+                        }, {
+                            x: 0,
+                            y: 0
+                        }, TimeSync.serverTime(new Date()));
+                }
+
                 // TODO: Update position on collide.
 
                 // Do animations
