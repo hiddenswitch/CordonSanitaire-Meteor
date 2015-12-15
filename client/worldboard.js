@@ -286,7 +286,7 @@ Template.worldBoard.onRendered(function () {
 
             var velocity = {x: 0, y: 0};
 
-            var speed = 150;    // TODO: attach this to a player wrt health
+            var speed = 100;    // TODO: attach this to a player wrt health
 
             switch (direction) {
                 case 'left':
