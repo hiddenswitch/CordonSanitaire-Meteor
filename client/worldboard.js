@@ -11,8 +11,10 @@ Template.worldBoard.onRendered(function () {
         var game = Games.findOne(gameId);
         var localPlayer = Players.findOne(localPlayerId);
 
-        var width = window.innerWidth; // (window.devicePixelRatio * 2);  // everything double scale
-        var height = window.innerHeight; // (window.devicePixelRatio * 2);
+        // scale everything a bit to up performance when moving the map
+        var scaleValue = 1.75;
+        var width = window.innerWidth / scaleValue;
+        var height = window.innerHeight / scaleValue;
 
         var sprites = {};
 
@@ -55,7 +57,10 @@ Template.worldBoard.onRendered(function () {
 
                 this.playerUpdate = Players.find({gameId: Router.current().data().gameId}).observe({
                     added: function (player) {
-                        sprites[player._id] = createSpriteForPlayer(localPlayerId, {isLocalPlayer: player._id == localPlayerId, location: {"x":16, "y":96}});
+                        sprites[player._id] = createSpriteForPlayer(localPlayerId, {
+                            isLocalPlayer: player._id == localPlayerId,
+                            location: {"x": 16, "y": 96}
+                        });
                         updatePlayer(player);
                     },
                     changed: function (player) {
@@ -88,7 +93,6 @@ Template.worldBoard.onRendered(function () {
         });
 
         function preload() {
-
             // load path to map from settings
             var filename = "London.csv";
             var mapPath = "/assets/tilemaps/csv/" + filename;
@@ -115,6 +119,10 @@ Template.worldBoard.onRendered(function () {
             phaserGame.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
             phaserGame.stage.smoothed = false;
             // game.scale.setScreenSize(true);
+
+            // nearest neighbor pixel rendering
+            //Phaser.Canvas.setImageRenderingCrisp(true);
+            //Phaser.Canvas.setSmoothingEnabled(this.game.context, false);
         }
 
         function create() {
@@ -149,36 +157,22 @@ Template.worldBoard.onRendered(function () {
 
             cursors = phaserGame.input.keyboard.createCursorKeys();
 
+            // beginSwipe function
+            phaserGame.input.onDown.add(beginSwipe, this);
+
             // Useful for adding an HUD
             // var help = game.add.text(16, 16, 'Arrows to move', { font: '14px Arial', fill: '#ffffff' });
             // help.fixedToCamera = true;
 
-            // beginSwipe function
-            phaserGame.input.onDown.add(beginSwipe, this);
-
-            //// add button for building quarantines
+            //// add button for building quarantines (currently Handled in DOM)
             //button = phaserGame.add.button(width / 2 - 90, height - 80, 'button', addQuarantine, this, 2, 1, 0);
             //button.fixedToCamera = true;
 
-            //console.log(phaserGame.world.height);
-
-
-
             currentMapInfo = SanitaireMaps.getMapInfo(map);
-
-            // get all of the crossswalk tiles related to a specific tile
-
-
-            // get id of intersection from a bordering tile
-
-
-            // pick center tile of random street to start our players location
-
 
             //TODO: create a node/edge representation of intersections and roads
             // This is sort of already done by adding intersections to the roads array
             // each road is an edge, containing the two nodes it connects
-            // console.log(roads);
 
             initializeMeteor();
         }
@@ -215,8 +209,8 @@ Template.worldBoard.onRendered(function () {
                 });
 
                 // check if user has run to the end of the canvas and stop them if so
-                if(playerId === localPlayerId) {
-                    if( sprite.body.position.x < 0
+                if (playerId === localPlayerId) {
+                    if (sprite.body.position.x < 0
                         || sprite.body.position.y < 0
                         || sprite.body.position.x > map.widthInPixels - map.tileWidth
                         || sprite.body.position.y > map.heightInPixels - map.tileHeight)
@@ -329,7 +323,7 @@ Template.worldBoard.onRendered(function () {
              *
              */
 
-            // show buttons
+                // show buttons
             Session.set("showing build buttons", true);
 
             var intersectionId = SanitaireMaps.getIntersectionId(tile.x, tile.y, currentMapInfo.intersections);
@@ -414,7 +408,7 @@ Template.worldBoard.onRendered(function () {
             // hide buttons
             Session.set("showing build buttons", false);
 
-            if(!!prevPhysics) {
+            if (!!prevPhysics) {
                 Meteor.call('updatePositionAndVelocity', gameId, {
                     x: prevPhysics.position.x,
                     y: prevPhysics.position.y
@@ -482,7 +476,7 @@ Template.worldBoard.onRendered(function () {
         var createSpriteForPlayer = function (playerId, options) {
             options = _.extend({
                 isLocalPlayer: false,
-                location: {"x":0, "y":0}
+                location: {"x": 0, "y": 0}
             }, options);
 
             // set random position for yourself
