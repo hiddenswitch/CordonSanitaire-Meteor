@@ -45,7 +45,7 @@ SanitaireMaps.getMapInfo = function (phaserTileMapInterface) {
 
     // create a dictionary of all map tiles
     var mapInfo = {};
-    var mapTiles = mapInfo.mapTiles = new Array();
+    var mapTiles = mapInfo.mapTiles = [];
     var NONEXISTENT = -1;
 
     for (var i = 0; i < phaserTileMapInterface.width; i++) {
@@ -128,12 +128,12 @@ SanitaireMaps.getMapInfo = function (phaserTileMapInterface) {
 
     // create a dictionary of all intersections, inner tiles and border tiles
     var numIntersections = intersection_index;
-    var intersections = mapInfo.intersections = new Array();
+    var intersections = mapInfo.intersections = [];
 
     for (var i = 0; i < numIntersections; i++) {
 
-        var innerTiles = new Array();
-        var borderTiles = new Array();
+        var innerTiles = [];
+        var borderTiles = [];
 
         for (var j = 0; j < phaserTileMapInterface.width; j++) {
             for (var k = 0; k < phaserTileMapInterface.height; k++) {
@@ -155,13 +155,13 @@ SanitaireMaps.getMapInfo = function (phaserTileMapInterface) {
 
     // create a dictionary of all roads
     var numRoads = road_index;
-    var roads = mapInfo.roads = new Array();
+    var roads = mapInfo.roads = [];
 
     for (var i = 0; i < numRoads; i++) {
 
-        var innerTiles = new Array();
-        var borderTiles = new Array();
-        var intersectionIds = new Array();
+        var innerTiles = [];
+        var borderTiles = [];
+        var intersectionIds = [];
 
         for (var j = 0; j < phaserTileMapInterface.width; j++) {
             for (var k = 0; k < phaserTileMapInterface.height; k++) {

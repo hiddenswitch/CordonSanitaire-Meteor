@@ -48,7 +48,8 @@ SanitaireMaps.IPhaserTileMap = function(mapDocument) {
     // TODO: Remove the hard coding of tile width and height here
     this.tileWidth = 16;
     this.tileHeight = 16;
-    this.__document = mapDocument;
+    this._document = mapDocument;
+    this.tiles = mapDocument.tiles;
 };
 
 SanitaireMaps.IPhaserTile = function(x, y, index) {
@@ -58,5 +59,5 @@ SanitaireMaps.IPhaserTile = function(x, y, index) {
 };
 
 SanitaireMaps.IPhaserTileMap.prototype.getTile = function(x, y, layer) {
-    return new SanitaireMaps.IPhaserTile(x, y, this.__document.tiles[y][x]);
+    return new SanitaireMaps.IPhaserTile(x, y, this._document.tiles[y][x]);
 };
