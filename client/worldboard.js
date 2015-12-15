@@ -106,7 +106,7 @@ Template.worldBoard.onRendered(function () {
         var button;
 
         var lastPromptTile = {index: 0, x: 0, y: 0};
-
+        var lastIntersectionId = -1;
 
 // function to scale up the game to full screen
         function goFullScreen() {
@@ -330,6 +330,17 @@ Template.worldBoard.onRendered(function () {
                 return null;
             }
 
+            // get id of intersection from a bordering tile
+            getIntersectionId = function (x, y) {
+                for (var i = 0; i < intersections.length; i++) {
+                    for (var j = 0; j < intersections[i].borderTiles.length; j++) {
+                        if (intersections[i].borderTiles[j].x === x && intersections[i].borderTiles[j].y === y)
+                            return intersections[i].id;
+                    }
+                }
+                return null;
+            }
+
             //TODO: create a node/edge representation of intersections and roads
             // This is sort of already done by adding intersections to the roads array
             // each road is an edge, containing the two nodes it connects
@@ -381,7 +392,8 @@ Template.worldBoard.onRendered(function () {
                 } else if (sprite.body.velocity.y < 0) {
                     sprite.play('up');
                 } else {
-                    sprite.animations.stop();
+                    sprite.play('idle');
+                    //sprite.animations.stop();
                 }
             }
 
@@ -464,9 +476,13 @@ Template.worldBoard.onRendered(function () {
              * should simply display the correct prompt (i.e. buttons when needed)
              *
              */
+            var intersectionId = getIntersectionId(tile.x, tile.y);
+            if (lastIntersectionId === intersectionId)
+                return;
+            lastIntersectionId = intersectionId;
 
-            if ((tile.x == lastPromptTile.x || tile.x == (lastPromptTile.x - 1) || tile.x == (lastPromptTile.x + 1))
-                && (tile.y == lastPromptTile.y || tile.y == (lastPromptTile.y - 1) || tile.y == (lastPromptTile.y + 1)))
+            if ((tile.x === lastPromptTile.x || tile.x === (lastPromptTile.x - 1) || tile.x === (lastPromptTile.x + 1))
+                && (tile.y === lastPromptTile.y || tile.y === (lastPromptTile.y - 1) || tile.y === (lastPromptTile.y + 1)))
                 return;
 
             lastPromptTile.index = tile.index;
@@ -484,6 +500,14 @@ Template.worldBoard.onRendered(function () {
 
             // stop our player (stops animation and movement)
             player_direction = '';
+
+            Meteor.call('updatePositionAndVelocity', gameId, {
+                x: sprite.position.x,
+                y: sprite.position.y
+            }, {
+                x: 0,
+                y: 0
+            }, TimeSync.serverTime(new Date()));
         }
 
 // place build a quarantine on the corner that a player arrives at
@@ -504,12 +528,12 @@ Template.worldBoard.onRendered(function () {
 
             return;
             //horizontal
-            if (lastPromptTile.index == 8 || lastPromptTile.index == 9) {
+            if (lastPromptTile.index === 8 || lastPromptTile.index === 9) {
                 map.fill(13, lastPromptTile.x, lastPromptTile.y, 1, 1);
             }
 
             // vertical
-            if (lastPromptTile.index == 10 || lastPromptTile.index == 11) {
+            if (lastPromptTile.index === 10 || lastPromptTile.index === 11) {
                 map.fill(14, lastPromptTile.x, lastPromptTile.y, 1, 1);
             }
         };
@@ -578,6 +602,7 @@ Template.worldBoard.onRendered(function () {
             player.animations.add('right', [1, 2], 10, true);
             player.animations.add('up', [11, 12, 13], 10, true);
             player.animations.add('down', [4, 5, 6], 10, true);
+            player.animations.add('idle', [15, 16, 17,18], 5, true);
             player.smoothed = false;
 
             phaserGame.physics.enable(player, Phaser.Physics.ARCADE);
