@@ -70,7 +70,8 @@
 <!-- All in game views -->
 <template name="game">
     <!-- Container for countdown -->
-    <div id="countdown"><span id="seconds">{{timeLeftInGame.seconds}}</span>.<span id="hundredths">{{timeLeftInGame.hundredths}}</span></div>
+    <div id="countdown"><span id="seconds">{{timeLeftInGame.seconds}}</span>.<span
+            id="hundredths">{{timeLeftInGame.hundredths}}</span></div>
 
     <!-- Logout button for player | Not currently necessary -->
     <!--<input type="button" value="Log Out" class="logoutButton" onclick="userLogout()" />-->
@@ -94,8 +95,13 @@
 
     <div id="bottom_container">
         {{#if showingBuildButtons}}
-            <a href="#" id="buildButton" class="rightButton quarantineButton">BUILD</a>
-            <a href="#" id="cancelButton" class="leftButton quarantineButton">RUN</a>
+            {{#if showingDestroyButton}}
+                <a href="#" id="destroyButton" class="rightButton quarantineButton destroyButton">DEMO</a>
+                <a href="#" id="cancelButton" class="leftButton quarantineButton cancelButton">CANCEL</a>
+            {{else}}
+                <a href="#" id="buildButton" class="rightButton quarantineButton buildButton">BUILD</a>
+                <a href="#" id="cancelButton" class="leftButton quarantineButton cancelButton">RUN</a>
+            {{/if}}}
         {{/if}}
         <!--<a href="#" id="mainToggleButton" class="mainButton toggleButton">JOIN</a>-->
         <!--<a href="#" id="shoutButton" class="mainButton shoutButton" onclick="sendShout()">SHOUT!</a>-->
