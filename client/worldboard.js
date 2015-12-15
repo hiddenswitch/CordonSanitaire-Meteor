@@ -17,6 +17,30 @@ Template.worldBoard.onRendered(function () {
         var height = window.innerHeight / scaleValue;
 
         var sprites = {};
+        var patientZeroSprite = null;
+        var patientZeroWaypoint = 0;
+
+        var updatePatientZeroVelocity = function (waypoint, path, speed) {
+            return;
+            var velocity = {x: 0, y: 0};
+
+            var nextPoint = path[Math.min(waypoint + 1, path.length - 1)];
+            var currentPoint = path[Math.min(waypoint, path.length - 1)];
+            velocity.x = Math.max(-1, Math.min(1, (nextPoint.x - currentPoint.x))) * speed;
+            velocity.y = Math.max(-1, Math.min(1, (nextPoint.y - currentPoint.y))) * speed;
+
+            if (waypoint >= path.length - 1) {
+                velocity.x = 0;
+                velocity.y = 0;
+            }
+            patientZeroSprite.body.velocity.x = velocity.x;
+            patientZeroSprite.body.velocity.y = velocity.y;
+        };
+
+        var updatePatientZeroPosition = function (tilePosition) {
+            patientZeroSprite.position.x = tilePosition.x * 16;
+            patientZeroSprite.position.y = tilePosition.y * 16;
+        };
 
         var initializeMeteor = function () {
             renderer.autorun(function () {
@@ -46,11 +70,41 @@ Template.worldBoard.onRendered(function () {
                 };
 
                 var updateGame = function (id, fields) {
-                    // See if a quarantine tile has been added
-                    _.each(fields, function (position, k) {
+                    _.each(fields, function (v, k) {
+                        // See if a quarantine tile has been added
                         if (/^quarantine/.test(k)
-                            && !_.isUndefined(position)) {
-                            addWallTile(position.x, position.y);
+                            && !_.isUndefined(v)) {
+                            addWallTile(v.x, v.y);
+                        }
+
+                        // Has the patient zero updated at time changed? Do some moving
+                        if (k === 'patientZero') {
+                            var game = Games.findOne(gameId, {reactive: false});
+                            // If we haven't created patient zero yet, create him
+                            if (!patientZeroSprite) {
+                                var patientZeroCurrentLocation = SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, game.patientZero.path, game.patientZero.pathUpdatedAt, {
+                                    time: new Date()
+                                });
+
+                                var patientZero = patientZeroSprite = phaserGame.add.sprite(patientZeroCurrentLocation.x * 16, patientZeroCurrentLocation.y * 16, 'player', 1);
+                                phaserGame.physics.enable(patientZero, Phaser.Physics.ARCADE);
+                                patientZero.body.setSize(10, 14, 2, 1);
+                            }
+
+                            var speed = game.patientZero.speed;
+
+                            var path = v.path || game.patientZero.path;
+                            var pathUpdatedAt = v.pathUpdatedAt || game.patientZero.pathUpdatedAt;
+                            var currentPosition = SanitairePatientZero.estimatePositionFromPath(speed, path, pathUpdatedAt, {
+                                time: TimeSync.serverTime(new Date())
+                            });
+
+                            patientZeroWaypoint = currentPosition.i;
+
+                            Deps.afterFlush(function () {
+                                updatePatientZeroPosition(currentPosition);
+                                updatePatientZeroVelocity(currentPosition.i, path, speed);
+                            });
                         }
                     });
                 };
@@ -100,6 +154,7 @@ Template.worldBoard.onRendered(function () {
             phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map.png');
             phaserGame.load.spritesheet('player', '/assets/sprites/cdc_man.png', 16, 16);
             phaserGame.load.spritesheet('button', '/assets/buttons/button_sprite_sheet.png', 193, 71);
+            phaserGame.stage.disableVisibilityChange = true;
         }
 
         var map;
@@ -183,6 +238,24 @@ Template.worldBoard.onRendered(function () {
         var lastLocalPlayerWallCollisionHandled = null;
 
         function update() {
+
+            // Do patient zero
+            var game = Games.findOne(gameId, {reactive: false});
+            var path = game.patientZero.path;
+            updatePatientZeroPosition(SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, path, game.patientZero.pathUpdatedAt, {time: TimeSync.serverTime(new Date())}));
+
+            //var destination = path[Math.max(Math.min(patientZeroWaypoint + 1, path.length - 1), 0)];
+            //destination.x *= 16;
+            //destination.y *= 16;
+            //var distanceToDestination = Math.sqrt(Math.pow(patientZeroSprite.position.x - destination.x, 2) + Math.pow(patientZeroSprite.position.y - destination.y, 2));
+            //if (distanceToDestination < 4) {
+            //    patientZeroSprite.position.x = destination.x;
+            //    patientZeroSprite.position.y = destination.y;
+            //    patientZeroWaypoint++;
+            //    updatePatientZeroVelocity(patientZeroWaypoint, path, game.patientZero.speed);
+            //}
+
+
             for (var playerId in sprites) {
                 var sprite = sprites[playerId];
 
@@ -242,27 +315,6 @@ Template.worldBoard.onRendered(function () {
                     //sprite.animations.stop();
                 }
             }
-
-            //return;
-            //
-            //
-            //localPlayerSprite.body.velocity.set(0);
-            //
-            //if (player_direction == 'left' || cursors.left.isDown) {
-            //    move('left');
-            //}
-            //else if (player_direction == 'right' || cursors.right.isDown) {
-            //    move('right');
-            //}
-            //else if (player_direction == 'up' || cursors.up.isDown) {
-            //    move('up');
-            //}
-            //else if (player_direction == 'down' || cursors.down.isDown) {
-            //    move('down');
-            //}
-            //else {
-            //    localPlayerSprite.animations.stop();
-            //}
 
         }
 
@@ -555,6 +607,7 @@ Template.worldBoard.onRendered(function () {
 
             return player;
         };
+
     }
 )
 ;
@@ -567,7 +620,7 @@ Template.game.events({
 
     'click #cancelButton': function () {
         // TODO: Make this smarter (it should be calling a meteor method)
-        if(Session.get("showing destroy button"))
+        if (Session.get("showing destroy button"))
             cancelDestroy();
         else
             keepRunning();
