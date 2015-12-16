@@ -153,7 +153,7 @@ Template.worldBoard.onRendered(function () {
             phaserGame.load.tilemap('map', mapPath, null, Phaser.Tilemap.CSV);
             phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map.png');
             phaserGame.load.spritesheet('player', '/assets/sprites/cdc_man.png', 16, 16);
-            phaserGame.load.spritesheet('patientZero', '/assets/sprites/patient_zero.png', 16, 16);
+            phaserGame.load.spritesheet('patientZero', '/assets/sprites/patient_zero_0.png', 16, 16);
             phaserGame.load.spritesheet('button', '/assets/buttons/button_sprite_sheet.png', 193, 71);
             phaserGame.stage.disableVisibilityChange = true;
         }
