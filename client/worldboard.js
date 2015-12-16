@@ -86,7 +86,7 @@ Template.worldBoard.onRendered(function () {
                                     time: new Date()
                                 });
 
-                                var patientZero = patientZeroSprite = phaserGame.add.sprite(patientZeroCurrentLocation.x * 16, patientZeroCurrentLocation.y * 16, 'player', 1);
+                                var patientZero = patientZeroSprite = phaserGame.add.sprite(patientZeroCurrentLocation.x * 16, patientZeroCurrentLocation.y * 16, 'patient_zero', 1);
                                 phaserGame.physics.enable(patientZero, Phaser.Physics.ARCADE);
                                 patientZero.body.setSize(10, 14, 2, 1);
                             }

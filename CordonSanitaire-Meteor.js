@@ -54,7 +54,7 @@ if (Meteor.isClient) {
             timerDependency.depend();   // keeps this called every 10ms
             var game = Games.findOne(this.gameId, {fields: {startedAt: 1}});
             var timeSinceGameStarted = new Date() - game.startedAt;
-            var gameDurationSeconds = 45; //Meteor.settings && Meteor.settings.durationSeconds || 45;
+            var gameDurationSeconds = Meteor.settings && Meteor.settings.durationSeconds || 45;
             var timeLeft = gameDurationSeconds * 1000.0 - timeSinceGameStarted;
             timeLeft = Math.max(0, Math.min(gameDurationSeconds * 1000, timeLeft));
             var result = {
