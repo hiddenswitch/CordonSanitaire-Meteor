@@ -111,9 +111,9 @@ Template.worldBoard.onRendered(function () {
 
                 this.playerUpdate = Players.find({gameId: Router.current().data().gameId}).observe({
                     added: function (player) {
-                        sprites[player._id] = createSpriteForPlayer(localPlayerId, {
-                            isLocalPlayer: player._id == localPlayerId,
-                            location: {"x": 16, "y": 96}
+                        sprites[player._id] = createSpriteForPlayer(player._id, {
+                            isLocalPlayer: player._id === localPlayerId
+                            //location: {"x": 16, "y": 96}
                         });
                         updatePlayer(player);
                     },
@@ -373,7 +373,10 @@ Template.worldBoard.onRendered(function () {
         var prevPhysics = {};
 
         function promptAtIntersection(sprite, tile) {
-
+            // Only process the callback for local player
+            if (sprite.playerId !== localPlayerId) {
+                return;
+            }
             /** TODO: move this logic for checks elsewhere, the function
              * should simply display the correct prompt (i.e. buttons when needed)
              *
@@ -420,6 +423,10 @@ Template.worldBoard.onRendered(function () {
         }
 
         function promptAtQuarantine(sprite, tile) {
+            // Only process the callback for local player
+            if (sprite.playerId !== localPlayerId) {
+                return;
+            }
 
             var intersectionId = SanitaireMaps.getIntersectionId(tile.x, tile.y, currentMapInfo.intersections);
             if (lastIntersectionId === intersectionId)
