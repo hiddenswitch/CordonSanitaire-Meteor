@@ -1,0 +1,5 @@
+{
+  "maxPlayers": 4,
+  "durationSeconds": 60,
+  "countdownSeconds": 10
+}
