@@ -76,18 +76,25 @@ Template.worldBoard.onRendered(function () {
                             && !_.isUndefined(v)) {
                             addWallTile(v.x, v.y);
 
-                            // TODO: check patient zero status
-                            //var playerRoadIds = {};
-                            //for (var playerId in sprites) {
-                            //    var sprite = sprites[playerId];
-                            //    var roadID = SanitaireMaps.getRoadIdForPosition(Math.floor(sprite.x / tileWidth), Math.floor(sprite.y / tileHeight));
-                            //    if (!_.contains(playerRoadIds, roadID))
-                            //        playerRoadIds.push(roadID);
-                            //}
-                            //var patientZeroRoadId = 0; // TODO: get actual road id from this game!!!!!!!
-                            //var game = Games.findOne(gameId, {reactive: false});
-                            //var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
-                            //GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId);
+                            // Check patient zero status
+                            var game = Games.findOne(gameId, {reactive: false});
+
+                            var playerRoadIds = _.map(sprites, function(sprite) {
+                                return SanitaireMaps.getRoadIdForTilePosition(
+                                    sprite.x/16,
+                                    sprite.y/16,
+                                    currentMapInfo
+                                );
+                            });
+
+                            var patientZeroCurrentLocation = SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, game.patientZero.path, game.patientZero.pathUpdatedAt, {
+                                time: new Date()
+                            });
+
+                            var patientZeroRoadId = SanitaireMaps.getRoadIdForTilePosition(patientZeroCurrentLocation.x, patientZeroCurrentLocation.y, currentMapInfo); // TODO: get actual road id from this game!!!!!!!
+                            var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
+                            var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId);
+                            console.log("patient zero is " + isPZeroContained?"isolated":"on the loose");
                         }
 
                         // Has the patient zero updated at time changed? Do some moving
@@ -530,7 +537,7 @@ Template.worldBoard.onRendered(function () {
 
             // update all crosswalk tiles associated with this intersection
             var crosswalks = SanitaireMaps.getCrosswalkTiles(lastPromptTile.x, lastPromptTile.y, currentMapInfo.intersections);
-            var intersectionId = SanitaireMaps.getIntersectionIdForPosition(crosswalks[0].x, crosswalks[0].y, currentMapInfo)
+            var intersectionId = SanitaireMaps.getIntersectionIdForTilePosition(crosswalks[0].x, crosswalks[0].y, currentMapInfo)
             for (var i = 0; i < crosswalks.length; i++) {
                 Meteor.call('addQuarantine', gameId, {x: crosswalks[i].x, y: crosswalks[i].y}, intersectionId);
             }
