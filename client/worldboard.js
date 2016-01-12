@@ -75,6 +75,19 @@ Template.worldBoard.onRendered(function () {
                         if (/^quarantine/.test(k)
                             && !_.isUndefined(v)) {
                             addWallTile(v.x, v.y);
+
+                            // TODO: check patient zero status
+                            //var playerRoadIds = {};
+                            //for (var playerId in sprites) {
+                            //    var sprite = sprites[playerId];
+                            //    var roadID = SanitaireMaps.getRoadIdForPosition(Math.floor(sprite.x / tileWidth), Math.floor(sprite.y / tileHeight));
+                            //    if (!_.contains(playerRoadIds, roadID))
+                            //        playerRoadIds.push(roadID);
+                            //}
+                            //var patientZeroRoadId = 0; // TODO: get actual road id from this game!!!!!!!
+                            //var game = Games.findOne(gameId, {reactive: false});
+                            //var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
+                            //GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId);
                         }
 
                         // Has the patient zero updated at time changed? Do some moving
@@ -233,7 +246,42 @@ Template.worldBoard.onRendered(function () {
             // This is sort of already done by adding intersections to the roads array
             // each road is an edge, containing the two nodes it connects
 
+            var game = Games.findOne(gameId, {reactive: false});
+            var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
+
             initializeMeteor();
+        }
+
+        // return a graph of the map in the following form
+        //
+        //     var exampleGraph = {
+        //         'intersection id 1': ['interesction id 2', 'intersection id 4', 'intersection id 10'],
+        //         // notice that id 1 is connected to 4 and 4 is connected to 1
+        //         'intersection id 4': ['intersection id 1', 'intersection id 8'],
+        //…
+        //     }
+        getGraphRepresentationOfMap = function(currentMapInfo, game) {
+            var graph = {};
+            var blockedIntersectionIds = new Set(game.intersectionIds);
+
+            currentMapInfo.roads.forEach(function (roadV) {
+                if (!graph[roadV.id]) {
+                    graph[roadV.id] = [];
+                }
+
+                roadV.intersectionIds.forEach(function (intersectionId) {
+                    if (blockedIntersectionIds.has(intersectionId)) {
+                        return;
+                    }
+
+                    var intersection = currentMapInfo.intersectionsById[intersectionId];
+                    intersection.roadIds.forEach(function (roadUId) {
+                        graph[roadV.id] = _.uniq([roadUId].concat(graph[roadV.id]));
+                    });
+                });
+            });
+
+            return graph;
         }
 
         var lastLocalPlayerWallCollisionHandled = null;
@@ -482,8 +530,9 @@ Template.worldBoard.onRendered(function () {
 
             // update all crosswalk tiles associated with this intersection
             var crosswalks = SanitaireMaps.getCrosswalkTiles(lastPromptTile.x, lastPromptTile.y, currentMapInfo.intersections);
+            var intersectionId = SanitaireMaps.getIntersectionIdForPosition(crosswalks[0].x, crosswalks[0].y, currentMapInfo)
             for (var i = 0; i < crosswalks.length; i++) {
-                Meteor.call('addQuarantine', gameId, {x: crosswalks[i].x, y: crosswalks[i].y});
+                Meteor.call('addQuarantine', gameId, {x: crosswalks[i].x, y: crosswalks[i].y}, intersectionId);
             }
             //Meteor.call('addQuarantine', gameId, {x: lastPromptTile.x, y: lastPromptTile.y});
 
@@ -528,6 +577,11 @@ Template.worldBoard.onRendered(function () {
         function addWallTile(positionX, positionY) {
             map.fill(13, positionX, positionY, 1, 1);
         }
+
+        // TODO: shows progress for specific intersection
+        //function showBuildProgress (intersectionId) {
+        //
+        //}
 
 // when the player begins to swipe we only save mouse/finger coordinates, remove the touch/click
 // input listener and add a new listener to be fired when the mouse/finger has been released,
