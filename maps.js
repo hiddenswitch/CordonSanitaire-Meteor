@@ -22,24 +22,33 @@ SanitaireMaps.getIntersectionId = function (x, y, intersections) {
 SanitaireMaps.getCrosswalkTiles = function (x, y, intersections) {
     for (var i = 0; i < intersections.length; i++) {
         for (var j = 0; j < intersections[i].borderTiles.length; j++) {
-            if (intersections[i].borderTiles[j].x === x && intersections[i].borderTiles[j].y === y)
+            if (intersections[i].borderTiles[j].x === x && intersections[i].borderTiles[j].y === y) {
                 return intersections[i].borderTiles;
+            }
         }
     }
     return null;
 };
 
-SanitaireMaps.getRoadIdForPosition = function (x, y, mapInfo) {
+SanitaireMaps.getRoadIdForTilePosition = function (x, y, mapInfo) {
+    //make sure x and y are integers
+    x = Math.floor(x);//x|0;
+    y = Math.floor(y);//y|0;
     var key = "(" + x + "," + y + ")";
-    if(mapInfo.mapTiles[key].roadId);
+    if(mapInfo.mapTiles[key].roadId) {
         return mapInfo.mapTiles[key].roadId;
+    }
     return null;
 };
 
-SanitaireMaps.getIntersectionIdForPosition = function (x, y, mapInfo) {
+SanitaireMaps.getIntersectionIdForTilePosition = function (x, y, mapInfo) {
+    //make sure x and y are integers
+    x = Math.floor(x);//x|0;
+    y = Math.floor(y);//y|0;
     var key = "(" + x + "," + y + ")";
-    if(mapInfo.mapTiles[key].intersectionId);
+    if(mapInfo.mapTiles[key].intersectionId) {
         return mapInfo.mapTiles[key].intersectionId;
+    }
     return null;
 };
 
