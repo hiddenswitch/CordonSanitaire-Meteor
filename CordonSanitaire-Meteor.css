@@ -325,25 +325,31 @@ start of game */
 .quarantineButton {
     z-index: 999;
     position: absolute;
-    height: 40px;
+    height: 50px;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
 
-    -moz-border-radius: 40px;
-    -webkit-border-radius: 40px;
-    border-radius: 40px;
+    -moz-border-radius: 50px;
+    -webkit-border-radius: 50px;
+    border-radius: 50px;
     border: 3px solid #000000;
     display: inline-block;
     cursor: pointer;
-    font-size: 24px;
+    font-size: 28px;
     color: #000000;
     font-family: Trebuchet, Arial, sans-serif;
     font-weight: bold;
     padding: 0px;
     text-decoration: none;
     text-align: center;
-    line-height: 40px;
+    line-height: 50px;
+}
+
+.centerButton {
+    bottom: 40px;
+    width: 50%;
+    margin: 0 25% 0 25%;
 }
 
 .leftButton {
@@ -356,6 +362,17 @@ start of game */
     bottom: 20px;
     width: 30%;
     margin: 0 15% 0 55%;
+}
+
+.buttonSubtext {
+    position: fixed;
+    bottom: 20px;
+    width: 80%;
+    margin: 0 10% 0 10%;
+    font-size: 14px;
+    font-weight: bold;
+    color: rgba(164,182,200,1.0);
+    text-align: center;
 }
 
 .cancelButton {
