@@ -29,6 +29,20 @@ SanitaireMaps.getCrosswalkTiles = function (x, y, intersections) {
     return null;
 };
 
+SanitaireMaps.getRoadIdForPosition = function (x, y, mapInfo) {
+    var key = "(" + x + "," + y + ")";
+    if(mapInfo.mapTiles[key].roadId);
+        return mapInfo.mapTiles[key].roadId;
+    return null;
+};
+
+SanitaireMaps.getIntersectionIdForPosition = function (x, y, mapInfo) {
+    var key = "(" + x + "," + y + ")";
+    if(mapInfo.mapTiles[key].intersectionId);
+        return mapInfo.mapTiles[key].intersectionId;
+    return null;
+};
+
 SanitaireMaps.getMapInfo = function (phaserTileMapInterface) {
     function isTileCrosswalk(tile) {
         // index of crosswalk tiles
@@ -57,8 +71,8 @@ SanitaireMaps.getMapInfo = function (phaserTileMapInterface) {
             var key = "(" + i + "," + j + ")";
             mapTiles[key] = {
                 index: phaserTileMapInterface.getTile(i, j, 0).index,
-                intersection: NONEXISTENT,
-                road: NONEXISTENT
+                intersectionId: NONEXISTENT,
+                roadId: NONEXISTENT
             };
         }
     }
@@ -82,27 +96,27 @@ SanitaireMaps.getMapInfo = function (phaserTileMapInterface) {
                 // order from nw -> w -> sw -> n, same as the scan
                 if (mapTiles[nw_key] &&
                     ( isTileIntersection(mapTiles[nw_key]) || isTileCrosswalk(mapTiles[nw_key]))
-                    && mapTiles[nw_key].intersection != NONEXISTENT) {
-                    mapTiles[key].intersection = mapTiles[nw_key].intersection;
+                    && mapTiles[nw_key].intersectionId != NONEXISTENT) {
+                    mapTiles[key].intersectionId = mapTiles[nw_key].intersectionId;
                 }
                 else if (mapTiles[w_key] &&
                     ( isTileIntersection(mapTiles[w_key]) || isTileCrosswalk(mapTiles[w_key]))
-                    && mapTiles[w_key].intersection != NONEXISTENT) {
-                    mapTiles[key].intersection = mapTiles[w_key].intersection;
+                    && mapTiles[w_key].intersectionId != NONEXISTENT) {
+                    mapTiles[key].intersectionId = mapTiles[w_key].intersectionId;
                 }
                 else if (mapTiles[sw_key] &&
                     ( isTileIntersection(mapTiles[sw_key]) || isTileCrosswalk(mapTiles[sw_key]))
-                    && mapTiles[sw_key].intersection != NONEXISTENT) {
-                    mapTiles[key].intersection = mapTiles[sw_key].intersection;
+                    && mapTiles[sw_key].intersectionId != NONEXISTENT) {
+                    mapTiles[key].intersectionId = mapTiles[sw_key].intersectionId;
                 }
                 else if (mapTiles[n_key] &&
                     ( isTileIntersection(mapTiles[n_key]) || isTileCrosswalk(mapTiles[n_key]))
-                    && mapTiles[n_key].intersection != NONEXISTENT) {
-                    mapTiles[key].intersection = mapTiles[n_key].intersection;
+                    && mapTiles[n_key].intersectionId != NONEXISTENT) {
+                    mapTiles[key].intersectionId = mapTiles[n_key].intersectionId;
                 }
                 else {
                     // intersection is of a new group
-                    mapTiles[key].intersection = intersection_index;
+                    mapTiles[key].intersectionId = intersection_index;
                     intersection_index++;
                 }
             }
@@ -113,17 +127,17 @@ SanitaireMaps.getMapInfo = function (phaserTileMapInterface) {
 
                 if (mapTiles[n_key] &&
                     ( isTileRoad(mapTiles[n_key]) || isTileCrosswalk(mapTiles[n_key]))
-                    && mapTiles[n_key].road != NONEXISTENT) {
-                    mapTiles[key].road = mapTiles[n_key].road;
+                    && mapTiles[n_key].roadId != NONEXISTENT) {
+                    mapTiles[key].roadId = mapTiles[n_key].roadId;
                 }
                 else if (mapTiles[w_key] &&
                     ( isTileRoad(mapTiles[w_key]) || isTileCrosswalk(mapTiles[w_key]))
-                    && mapTiles[w_key].road != NONEXISTENT) {
-                    mapTiles[key].road = mapTiles[w_key].road;
+                    && mapTiles[w_key].roadId != NONEXISTENT) {
+                    mapTiles[key].roadId = mapTiles[w_key].roadId;
                 }
                 else {
                     // road is of a new group
-                    mapTiles[key].road = road_index;
+                    mapTiles[key].roadId = road_index;
                     road_index++;
                 }
             }
@@ -133,7 +147,7 @@ SanitaireMaps.getMapInfo = function (phaserTileMapInterface) {
     // create a dictionary of all intersections, inner tiles and border tiles
     var numIntersections = intersection_index;
     var intersections = mapInfo.intersections = [];
-
+    var intersectionsById = mapInfo.intersectionsById = {};
     for (var i = 0; i < numIntersections; i++) {
 
         var innerTiles = [];
@@ -142,7 +156,7 @@ SanitaireMaps.getMapInfo = function (phaserTileMapInterface) {
         for (var j = 0; j < phaserTileMapInterface.width; j++) {
             for (var k = 0; k < phaserTileMapInterface.height; k++) {
                 var key = "(" + j + "," + k + ")";
-                if (mapTiles[key].intersection === i) {
+                if (mapTiles[key].intersectionId === i) {
                     if (isTileIntersection(mapTiles[key]))
                         innerTiles.push({x: j, y: k});
                     else if (isTileCrosswalk(mapTiles[key]))
@@ -170,12 +184,12 @@ SanitaireMaps.getMapInfo = function (phaserTileMapInterface) {
         for (var j = 0; j < phaserTileMapInterface.width; j++) {
             for (var k = 0; k < phaserTileMapInterface.height; k++) {
                 var key = "(" + j + "," + k + ")";
-                if (mapTiles[key].road === i) {
+                if (mapTiles[key].roadId === i) {
                     if (isTileRoad(mapTiles[key]))
                         innerTiles.push({x: j, y: k});
                     else if (isTileCrosswalk(mapTiles[key])) {
                         borderTiles.push({x: j, y: k});
-                        intersectionIds.push(mapTiles[key].intersection);
+                        intersectionIds.push(mapTiles[key].intersectionId);
                     }
                 }
             }
@@ -189,8 +203,21 @@ SanitaireMaps.getMapInfo = function (phaserTileMapInterface) {
             id: i,
             innerTiles: innerTiles,
             borderTiles: borderTiles,
-            intersectionsIds: intersectionIds
+            intersectionIds: intersectionIds
         });
+    }
+
+    // add roadIds to intersections, this will be helpful when constructing a graph
+    for (var i = 0; i < intersections.length; i++) {
+        var roadIds = [];
+        for(var j = 0; j < intersections[i].borderTiles.length; j++) {
+            var borderTile = intersections[i].borderTiles[j];
+            var key = "(" + borderTile.x + "," + borderTile.y + ")";
+            if (!_.contains(roadIds, mapTiles[key].roadId))   // only add if unique
+                roadIds.push(mapTiles[key].roadId);
+        }
+        intersections[i].roadIds = roadIds;
+        intersectionsById[intersections[i].id] = intersections[i];
     }
 
     return mapInfo;
