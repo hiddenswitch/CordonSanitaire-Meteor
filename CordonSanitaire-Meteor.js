@@ -40,6 +40,9 @@ if (Meteor.isClient) {
         numberOfPlayersPresent: function () {
             var game = Games.findOne(this.gameId, {fields: {playerCount: 1}});
             return game.playerCount;
+        },
+        timeTilStart: function () {
+            // TODO: returns the current time til start for the lobby
         }
     });
 
@@ -64,11 +67,9 @@ if (Meteor.isClient) {
             };
             return result;
         },
-
         showingBuildButtons: function () {
             return Session.get("showing build buttons");
         },
-
         showingDestroyButton: function () {
             return Session.get("showing destroy button");
         }
