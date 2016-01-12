@@ -51,13 +51,13 @@ Meteor.methods({
         return Sanitaire.updatePlayerPositionAndVelocity(thisPlayer._id, position, velocity, updatedAt);
     },
 
-    addQuarantine: function(gameId, position) {
+    addQuarantine: function(gameId, position, intersectionId) {
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
         }
 
         // TODO: Security
 
-        return Sanitaire.addQuarantine(gameId, position);
+        return Sanitaire.addQuarantine(gameId, position, intersectionId);
     }
 });
