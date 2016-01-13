@@ -94,7 +94,7 @@ Template.worldBoard.onRendered(function () {
                             var patientZeroRoadId = SanitaireMaps.getRoadIdForTilePosition(patientZeroCurrentLocation.x, patientZeroCurrentLocation.y, currentMapInfo); // TODO: get actual road id from this game!!!!!!!
                             var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
                             var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId);
-                            console.log("patient zero is " + isPZeroContained?"isolated":"on the loose");
+                            console.log("patient zero is " + (isPZeroContained?"isolated":"on the loose"));
                         }
 
                         // Has the patient zero updated at time changed? Do some moving
