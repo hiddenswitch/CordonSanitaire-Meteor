@@ -65,33 +65,52 @@ Meteor.methods({
         return Sanitaire.addQuarantine(gameId, position, intersectionId);
     },
 
-    startConstruction: function(gameId, position, intersectionId, startTime) {
+    startConstruction: function(gameId, intersectionId, startTime) {
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
         }
 
-        return Sanitaire.addConstructionMessageToLog(gameId, playerId, messageType, time);
+        // Reconstruct all the necessary information
+        var thisPlayer = Players.findOne({gameId: gameId, userId: this.userId});
+        var messageType = Sanitaire.START_BUILD;
+
+        return Sanitaire.addConstructionMessageToLog(gameId, thisPlayer._id, intersectionId, messageType, startTime);
     },
 
-    stopConstruction: function(gameId, position, intersectionId, stopTime) {
+    stopConstruction: function(gameId, intersectionId, stopTime) {
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
         }
 
+        // Reconstruct all the necessary information
+        var thisPlayer = Players.findOne({gameId: gameId, userId: this.userId});
+        var messageType = Sanitaire.STOP_BUILD;
+
+        return Sanitaire.addConstructionMessageToLog(gameId, thisPlayer._id, intersectionId, messageType, stopTime);
     },
 
-    startDeconstruciton: function(gameId, position, intersectionId, startTime) {
+    startDeconstruciton: function(gameId, intersectionId, startTime) {
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
         }
 
+        // Reconstruct all the necessary information
+        var thisPlayer = Players.findOne({gameId: gameId, userId: this.userId});
+        var messageType = Sanitaire.START_DEMOLISH;
+
+        return Sanitaire.addConstructionMessageToLog(gameId, thisPlayer._id, intersectionId, messageType, startTime);
     },
 
-    stopDeconstruciton: function(gameId, position, intersectionId, stopTime) {
+    stopDeconstruciton: function(gameId, intersectionId, stopTime) {
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
         }
 
+        // Reconstruct all the necessary information
+        var thisPlayer = Players.findOne({gameId: gameId, userId: this.userId});
+        var messageType = Sanitaire.STOP_DEMOLISH;
+
+        return Sanitaire.addConstructionMessageToLog(gameId, thisPlayer._id, intersectionId, messageType, stopTime);
     }
 
 });
