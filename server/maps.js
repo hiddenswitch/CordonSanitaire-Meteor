@@ -12,13 +12,8 @@ Meteor.startup(function () {
     // These are the map IDs to use for new games
     var mapInfos = _.map([
         'London.csv',
-        'London_City.csv',
-        'London_Floor.csv',
         'Tokyo.csv',
-        'Tokyo_Building.csv',
-        'Tokyo_Ground.csv',
-        'cordon_gradient.csv',
-        'cordon_test_01.csv'
+        'Simple_40.csv'
     ], function (mapName) {
         return {url: 'assets/tilemaps/csv/' + mapName, _id: mapName};
     });

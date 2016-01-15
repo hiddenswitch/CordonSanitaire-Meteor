@@ -168,7 +168,7 @@ Template.worldBoard.onRendered(function () {
 
         function preload() {
             // load path to map from settings
-            var filename = "London.csv";
+            var filename = "London.csv";    //"Simple_40.csv";
             var mapPath = "/assets/tilemaps/csv/" + filename;
             phaserGame.load.tilemap('map', mapPath, null, Phaser.Tilemap.CSV);
             phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map.png');
@@ -394,6 +394,10 @@ Template.worldBoard.onRendered(function () {
                 x: sprites[localPlayerId].position.x,
                 y: sprites[localPlayerId].position.y
             };
+
+            // round the position to always be on the grid
+            position.x = Math.floor((position.x + 8)/16) * 16;
+            position.y = Math.floor((position.y + 8)/16) * 16;
 
             var velocity = {x: 0, y: 0};
 
