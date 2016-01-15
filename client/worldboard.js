@@ -533,7 +533,7 @@ Template.worldBoard.onRendered(function () {
                 return;
             }
 
-            // TODO: Call meteor method instead
+            // Call meteor method instead
 
             // update all crosswalk tiles associated with this intersection
             var crosswalks = SanitaireMaps.getCrosswalkTiles(lastPromptTile.x, lastPromptTile.y, currentMapInfo.intersections);
@@ -541,7 +541,9 @@ Template.worldBoard.onRendered(function () {
             for (var i = 0; i < crosswalks.length; i++) {
                 Meteor.call('addQuarantine', gameId, {x: crosswalks[i].x, y: crosswalks[i].y}, intersectionId);
             }
-            //Meteor.call('addQuarantine', gameId, {x: lastPromptTile.x, y: lastPromptTile.y});
+
+            // tell game we are starting to build a quarantine
+            Meteor.call('startConstruction', gameId, intersectionId, new Date());
 
             return;
             //horizontal
