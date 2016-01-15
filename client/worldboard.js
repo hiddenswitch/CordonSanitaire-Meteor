@@ -94,7 +94,19 @@ Template.worldBoard.onRendered(function () {
                             var patientZeroRoadId = SanitaireMaps.getRoadIdForTilePosition(patientZeroCurrentLocation.x, patientZeroCurrentLocation.y, currentMapInfo); // TODO: get actual road id from this game!!!!!!!
                             var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
                             var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId);
-                            console.log("patient zero is " + (isPZeroContained?"isolated":"on the loose"));
+
+                            //console.log("patient zero is " + (isPZeroContained?"isolated":"on the loose"));
+                            // Update visible patient zero status
+                            if(isPZeroContained) {
+                                Session.set("patient zero isolated", true);
+                                Session.set("patient zero contained", false);
+                                Session.set("patient zero loose", false);
+                            }
+                            else {
+                                Session.set("patient zero isolated", false);
+                                Session.set("patient zero contained", false);
+                                Session.set("patient zero loose", true);
+                            }
                         }
 
                         // Has the patient zero updated at time changed? Do some moving
@@ -168,7 +180,7 @@ Template.worldBoard.onRendered(function () {
 
         function preload() {
             // load path to map from settings
-            var filename = "London.csv";    //"Simple_40.csv";
+            var filename = "Simple_40.csv";
             var mapPath = "/assets/tilemaps/csv/" + filename;
             phaserGame.load.tilemap('map', mapPath, null, Phaser.Tilemap.CSV);
             phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map.png');

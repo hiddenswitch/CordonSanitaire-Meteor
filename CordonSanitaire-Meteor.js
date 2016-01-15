@@ -72,8 +72,16 @@ if (Meteor.isClient) {
         },
         showingDestroyButton: function () {
             return Session.get("showing destroy button");
+        },
+        showPatientZeroIsolated: function () {
+            return Session.get("patient zero isolated");
+        },
+        showPatientZeroContained: function () {
+            return Session.get("patient zero contained");
+        },
+        showPatientZeroLoose: function () {
+            return Session.get("patient zero loose");
         }
-
     });
 
     Template.conclusion.helpers({});

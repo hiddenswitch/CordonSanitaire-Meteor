@@ -243,13 +243,13 @@ start of game */
 }
 
 #p0_contained {
-    display: none;
+    /*display: none;*/
     z-index: 100;
     width: 200px;
 }
 
 #p0_isolated {
-    display: none;
+    /*display: none;*/
     z-index: 100;
     width: 200px;
 }
