@@ -7,17 +7,32 @@
     <meta http-equiv='expires' content='0'>
     <meta http-equiv='pragma' content='no-cache'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
 </head>
 
 <!--Sign Up-->
 <template name="signup">
     {{> loginButtons}}
-    <button id="guest">Guest</button>
-    <!--<h2>Create an account</h2>-->
-    <!--<input id="username" type="text" placeholder="username">-->
-    <!--<input id="email" type="text" placeholder="email">-->
-    <!--<input id="password" type="text" placeholder="password">-->
-    <!--<button id="signUp" onclick="signUp()">Create Account</button>-->
+    <div class="textCenter">
+        <div id="signup_header">
+            <h1> CORDON SANITAIRE</h1>
+            <p>
+                Cordon Sanitaire is a collaborative game in which players seek to isolate an infectious “patient zero”
+                from
+                the larger population. The game lasts for two minute. In 60 seconds, players must choose either to help
+                form
+                the front line of a quarantine, or remain passive.
+            </p>
+        </div>
+
+        <div id="signup_body">
+            <button class="inputButton fbButton" id="fbLogin">Sign in with Facebook</button>
+            <br>
+            <p class="lilMargin">or</p><br>
+            <button class="inputButton guestButton" id="guest">Play as guest</button>
+            <!--<input class="inputButton guestButton" id="guest" type="button" onClick=""  value="Play as guest">-->
+        </div>
+    </div>
 </template>
 
 <!--Log In-->
@@ -31,39 +46,50 @@
 
 <template name="mainmenu">
     {{> loginButtons}}
-    <button id="play">Play</button>
-    <button id="profile">Profile</button>
+    <div class="textCenter">
+        <div class="textCenter vertCenter">
+            <button class="inputButton playButton" id="play">Play now</button>
+            <button class="inputButton profileButton" id="profile">My profile</button>
+            <button class="inputButton tutButton" id="tutorial">Tutorial</button>
+        </div>
+    </div>
 </template>
 
 <!-- Pregame or Lobby View -->
 <template name="lobby">
-    <!-- Container for timer and intro text-->
-    <div id="overlay">
-        <div id="intro">
-            <h1>CORDON SANITAIRE <span id="version">v546</span></h1>
-
-            <div id="lobby_count">
-                <div class="minibox">
-                    <h2>{{numberOfPlayersNeeded}} people needed</h2>
-                </div>
-                <p>{{numberOfPlayersPresent}}present</p>
-            </div>
-
-            <div id="lobby_wait">
-                <div class="minibox">
-                    <h2><span id="timerbox" class="countdown_til_start">0</span></h2>
-                </div>
-                <p>til the search begins</p>
-            </div>
+    <div class="textCenter">
+        <h1>CORDON SANITAIRE</h1>
+        <br>
+        <h2>RESPONSE TEAM</h2>
+        <h4>squad: {{gameId}}</h4>
+        <br>
+        <div>
+            <p class="lobbyP"><span id="respondersPresent">{{numberOfPlayersPresent}}</span> responders present</p>
+            <p class="lobbyP">Waiting for <span id="respondersToJoin">{{numberOfPlayersNeeded}}</span> more</p>
         </div>
-    </div>
-
-    <h3>Game {{gameId}}</h3>
-    <!-- List of players in lobby-->
-    <div id="players">
-        {{#each players}}
-            <p>{{this.name}}</p>
-        {{/each}}
+        <br>
+        <!-- List of players in lobby-->
+        <div id="players">
+            <ul>
+                {{#each players}}
+                    <li>{{this.name}}</li>
+                {{/each}}
+                <li>Guest 1</li>
+                <li>Guest 2</li>
+                <li>Guest 3</li>
+                <li>Guest 4</li>
+                <li>Guest 5</li>
+                <li>Guest 6</li>
+                <li>Guest 7</li>
+                <li>Guest 8</li>
+                <li>Guest 9</li>
+                <li>Guest 10</li>
+                <li>Guest 11</li>
+                <li>Guest 12</li>
+                <li>Guest 13</li>
+                <li>Guest 14</li>
+            </ul>
+        </div>
     </div>
 </template>
 
@@ -119,10 +145,6 @@
     <div id="intro_container">
     </div>
 
-    <!-- Container for Two.js canvas -->
-    <div id="two">
-    </div>
-
     <!-- Container for Google Map -->
     <div id="map-container">
         {{> worldBoard gameId=gameId}}
@@ -143,7 +165,7 @@
         <li>people passive: {{num_passive}}</li>
     </ul>
 
-    
+
     <button id="mainmenu">back</button>
 </template>
 
