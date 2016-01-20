@@ -493,6 +493,11 @@ Template.worldBoard.onRendered(function () {
             }, TimeSync.serverTime(new Date()));
         }
 
+        /**
+         * shows the correct prompt when arriving at a barricade/quarantine
+         * @param sprite {Phaser.Sprite} a sprite object of the player at the barricade
+         * @param tile {Phaser.Tile} the tile that triggered the prompt
+         */
         function promptAtQuarantine(sprite, tile) {
             // Only process the callback for local player
             if (sprite.playerId !== localPlayerId) {
@@ -539,7 +544,9 @@ Template.worldBoard.onRendered(function () {
             }, TimeSync.serverTime(new Date()));
         }
 
-// place build a quarantine on the corner that a player arrives at
+        /**
+         * place build a quarantine on the corner that a player arrives at
+         */
         addQuarantine = function () {
 
             // hide buttons
@@ -573,9 +580,29 @@ Template.worldBoard.onRendered(function () {
             }
         };
 
+        /**
+         * Send a message to log demolishing a barricade has begun
+         */
+        demolishBarricade = function() {
+            // hide buttons
+            Session.set("showing build buttons", false);
+            Session.set("showing destroy button", false);
+
+            if (_.isUndefined(lastPromptTile)) {
+                return;
+            }
+            // tell game we are starting to demolish a quarantine
+            var crosswalks = SanitaireMaps.getCrosswalkTiles(lastPromptTile.x, lastPromptTile.y, currentMapInfo.intersections);
+            var intersectionId = SanitaireMaps.getIntersectionIdForTilePosition(crosswalks[0].x, crosswalks[0].y, currentMapInfo)
+            Meteor.call('startDeconstruciton', gameId, intersectionId, new Date());
+        };
+
+        /**
+         * Cancels the action (if this gui is available) and continues the player running in their
+         * previous direction and velocity
+         */
         keepRunning = function () {
 
-            // TODO: make the buttons actually hide, not sure why they aren't right now
             // hide buttons
             Session.set("showing build buttons", false);
             Session.set("showing destroy button", false);
@@ -591,6 +618,10 @@ Template.worldBoard.onRendered(function () {
             }
         };
 
+        /**
+         * Dismisses the option to demolish a barricade, and leave player standing still
+         * if the GUI option is available
+         */
         cancelDestroy = function () {
 
             // TODO: make the buttons actually hide, not sure why they aren't right now
@@ -620,6 +651,8 @@ Template.worldBoard.onRendered(function () {
 
 // function to be called when the player releases the mouse/finger
         function endSwipe() {
+            // Todo: if was in process of build or demo, send a message to stop the build action
+
             // hide buttons
             Session.set("showing build buttons", false);
 
@@ -703,6 +736,11 @@ Template.game.events({
     'click #buildButton': function () {
         // TODO: Make this smarter (it should be calling a meteor method)
         addQuarantine();
+    },
+
+    'click #destroyButton': function () {
+        // TODO: Make this smarter (it should be calling a meteor method)
+        demolishBarricade();
     },
 
     'click #cancelButton': function () {
