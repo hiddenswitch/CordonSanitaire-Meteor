@@ -10,6 +10,13 @@ Template.worldBoard.onRendered(function () {
         var localPlayerId = routeData.playerId;
         var game = Games.findOne(gameId);
         var localPlayer = Players.findOne(localPlayerId);
+        var localPlayerState = {
+            construction: {
+                isBuilding: false,
+                intersectionId: -1
+            },
+            health: 1.0
+        };
 
         // scale everything a bit to up performance when moving the map
         var scaleValue = 1.75;
@@ -567,6 +574,9 @@ Template.worldBoard.onRendered(function () {
 
             // tell game we are starting to build a quarantine
             Meteor.call('startConstruction', gameId, intersectionId, new Date());
+            // update state of player
+            localPlayerState.construction.isBuilding = true;
+            localPlayerState.construction.intersectionId = intersectionId;
 
             return;
             //horizontal
@@ -595,6 +605,9 @@ Template.worldBoard.onRendered(function () {
             var crosswalks = SanitaireMaps.getCrosswalkTiles(lastPromptTile.x, lastPromptTile.y, currentMapInfo.intersections);
             var intersectionId = SanitaireMaps.getIntersectionIdForTilePosition(crosswalks[0].x, crosswalks[0].y, currentMapInfo)
             Meteor.call('startDeconstruciton', gameId, intersectionId, new Date());
+            // update state of player
+            localPlayerState.construction.isBuilding = true;
+            localPlayerState.construction.intersectionId = intersectionId;
         };
 
         /**
@@ -651,7 +664,13 @@ Template.worldBoard.onRendered(function () {
 
 // function to be called when the player releases the mouse/finger
         function endSwipe() {
-            // Todo: if was in process of build or demo, send a message to stop the build action
+            // if was in process of build or demo, send a message to stop the build action
+            if(localPlayerState.construction.isBuilding === true) {
+                Meteor.call('stopConstruction', gameId, localPlayerState.construction.intersectionId, new Date());
+                // make no longer in progress
+                localPlayerState.construction.isBuilding = false;
+                localPlayerState.construction.intersectionId = -1;
+            }
 
             // hide buttons
             Session.set("showing build buttons", false);
