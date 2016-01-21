@@ -18,7 +18,7 @@ Router.route('/signup', function () {
     } else {
         this.render('signup');
     }
-    $(document.body).css('background-color', '#eeeeee');
+    $(document.body).css('background-color', '#ffffff');
 }, {name: "signup"});
 
 Router.route('/login', function () {
@@ -36,12 +36,18 @@ Router.route('/mainmenu', function () {
     }
 
     this.render('mainmenu');
-    $(document.body).css('background-color', '#cccccc');
+    $(document.body).css('background-color', '#ffffff');
 }, {name: 'mainmenu'});
+
+Router.route('/tutorial', function () {
+    this.render('tutorial');
+    $(document.body).css('background-color', '#ffffff');
+}, {name: 'tutorial'});
+
 
 Router.route('/profile/:userId', function () {
     this.render('profile');
-    $(document.body).css('background-color', '#33ccff');
+    $(document.body).css('background-color', '#ffffff');
 }, {name: 'profile'});
 
 /**
@@ -65,12 +71,14 @@ Router.route('/g/:gameId', function () {
         return;
     }
 
-    var user = Meteor.users.findOne(userId, {fields: {hasSeenTutorial: 1}});
-    var hasSeenTutorial = user.hasSeenTutorial;
-    if (!hasSeenTutorial) {
-        this.render('tutorial');
-        return;
-    }
+    // Check to see if user has seen the tutorial, and show it before game if not yet seen
+    // (Comment this out if we only want players to access tutorial on their own)
+    //var user = Meteor.users.findOne(userId, {fields: {hasSeenTutorial: 1}});
+    //var hasSeenTutorial = user.hasSeenTutorial;
+    //if (!hasSeenTutorial) {
+    //    this.render('tutorial');
+    //    return;
+    //}
 
     switch (game.state) {
         case Sanitaire.gameStates.LOBBY:

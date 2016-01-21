@@ -484,3 +484,48 @@ start of game */
     padding: 5px 10px 5px 10px;
     border-bottom: solid 1px #000;
 }
+
+/* Profile */
+.bottomDiv {
+    text-align: center;
+    margin: auto;
+    width:100%;
+    display: block;
+    position: fixed;
+    bottom: 0;
+    padding-bottom: 20px;
+    right: 0.3%;
+}
+
+.profImg {
+    background-color: black;
+    border-radius: 30px;
+    height:60px;
+    width:60px;
+    margin: 0 auto;
+    margin-top: 10px;
+}
+
+.playerStatsList {
+    list-style-type:none;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 400;
+    padding: 0;
+    list-style: none;
+    height: 60%;
+    margin-top: 3px;
+
+}
+
+.playerStatsList li {
+    border-bottom: solid #000000 1px;
+    text-align: left;
+
+}
+
+.statsIcon {
+    display: inline-block;
+    width:15%;
+    vertical-align: middle;
+}
+
