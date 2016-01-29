@@ -32,6 +32,8 @@ Meteor.startup(function () {
                     return parseInt(tile);
                 });
             });
+
+            //Todo: add the graph representation of the map here
             Maps.insert({_id: mapName, tiles: tiles});
         });
     });

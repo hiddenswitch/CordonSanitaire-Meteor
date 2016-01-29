@@ -25,8 +25,10 @@ if (Meteor.isClient) {
         },
         'click button#profile': function () {
             Router.go('profile', {userId: Meteor.userId()});
+        },
+        'click button#tutorial': function () {
+            Router.go('tutorial');
         }
-
     });
 
     Template.lobby.helpers({
@@ -84,7 +86,23 @@ if (Meteor.isClient) {
         }
     });
 
-    Template.conclusion.helpers({});
+    Template.conclusion.helpers({
+        endGameSynopsis: function () {
+            return -1;
+        },
+        pZeroStatus: function () {
+            return -1;
+        },
+        numQuarantines: function () {
+            return -1;
+        },
+        numBarricades: function () {
+            return -1;
+        },
+        numInjured: function () {
+            return -1;
+        }
+    });
 
     Template.conclusion.events({
         'click button#mainmenu': function () {
@@ -93,7 +111,32 @@ if (Meteor.isClient) {
         }
     });
 
-    Template.profile.helpers({});
+    Template.profile.helpers({
+        username: function () {
+            return Meteor.userId();
+        },
+        gamesPlayed: function () {
+            return -1;
+        },
+        gamesSuccesses: function () {
+            return -1;
+        },
+        quarantinesCompleted: function () {
+            return -1;
+        },
+        barricadesBuilt: function () {
+            return -1;
+        },
+        respondersTrapped: function () {
+            return -1;
+        },
+        respondersReleased: function () {
+            return -1;
+        },
+        timesInjured: function () {
+            return -1;
+        }
+    });
 
     Template.profile.events({
         'click button#mainmenu': function () {

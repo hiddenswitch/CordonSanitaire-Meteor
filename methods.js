@@ -69,9 +69,8 @@ Meteor.methods({
      *
      * @param gameId {String} instance of a game
      * @param intersectionId {Number} id of specific intersection under construction
-     * @param startTime {Date} date object of the time construction started
      */
-    startConstruction: function(gameId, intersectionId, startTime) {
+    startConstruction: function(gameId, intersectionId) {
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
         }
@@ -80,16 +79,15 @@ Meteor.methods({
         var thisPlayer = Players.findOne({gameId: gameId, userId: this.userId});
         var messageType = Sanitaire.barricadeActions.START_BUILD;
 
-        return Sanitaire.addConstructionMessageToLog(gameId, thisPlayer._id, intersectionId, messageType, startTime);
+        return Sanitaire.addConstructionMessageToLog(gameId, thisPlayer._id, intersectionId, messageType, new Date());
     },
 
     /**
      *
      * @param gameId {String} instance of a game
      * @param intersectionId {Number} id of a specifi intersection under construction
-     * @param stopTime {Date} data object of the time construction stopped
      */
-    stopConstruction: function(gameId, intersectionId, stopTime) {
+    stopConstruction: function(gameId, intersectionId) {
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
         }
@@ -98,7 +96,7 @@ Meteor.methods({
         var thisPlayer = Players.findOne({gameId: gameId, userId: this.userId});
         var messageType = Sanitaire.barricadeActions.STOP_BUILD;
 
-        return Sanitaire.addConstructionMessageToLog(gameId, thisPlayer._id, intersectionId, messageType, stopTime);
+        return Sanitaire.addConstructionMessageToLog(gameId, thisPlayer._id, intersectionId, messageType, new Date());
     },
 
     /**

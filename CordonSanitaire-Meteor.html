@@ -153,20 +153,26 @@
 
 <!-- Display conclusion after the game -->
 <template name="conclusion">
-    <h2>{{game_status}}</h2>
-
-    <p>{{game_summary}}</p>
-
-    <h3>Stats</h3>
-    <ul>
-        <li>patient zero status: {{pZero_status}}</li>
-        <li>quarantines built: {{num_quarantines}}</li>
-        <li>people trapped: {{num_trapped}}</li>
-        <li>people passive: {{num_passive}}</li>
-    </ul>
-
-
-    <button id="mainmenu">back</button>
+    <div class="textCenter">
+        <h2 class="gameOverTitle">Game Over</h2>
+        <p class = "gameOverMessage">Lorem ipsum dolor sit amet, scelerisque erat elit. Vel mauris et tempus pede praesent, luctus mauris laoreet.</p>
+        <p>{{endGameSynopsis}}</p>
+        <div class="finalStats">
+            <ul class="finalStatsList">
+                <li><img class="statsIcon" src="assets/icons/patientIsolated.png">
+                    <p class="statsDesc">Patient Zero {{pZeroStatus}}</p></li>
+                <li><img class="statsIcon" src="assets/icons/quarantineCreated.png">
+                    <p class="statsDesc">{{numQuarantines}} quarantine zones built</p></li>
+                <li><img class="statsIcon" src="assets/icons/barricadeBuilt.png">
+                    <p class="statsDesc">{{numBarricades}} barricades built</p></li>
+                <li><img class="statsIcon" src="assets/icons/respondentInjured.png">
+                    <p class="statsDesc">{{numInjured}}respondents injured</p></li>
+            </ul>
+        </div>
+        <div class="bottomDiv">
+            <button id="mainmenu" class="inputButton">Main Menu</button>
+        </div>
+    </div>
 </template>
 
 <!-- A page for profile information i.e. username, stats, ... -->
@@ -177,19 +183,19 @@
         <h3 id="username">{{username}}</h3>
         <div>
             <ul class="playerStatsList">
-                <li>games played: {{games_played}}</li>
+                <li>games played: {{gamesPlayed}}</li>
                 <li><img class="statsIcon" src="assets/icons/patientIsolated.png">
-                    <p class="statsDesc">{{games_successes}} P0 isolations</p></li>
+                    <p class="statsDesc">{{gamesSuccesses}} P0 isolations</p></li>
                 <li><img class="statsIcon" src="assets/icons/quarantineCreated.png">
-                    <p class="statsDesc">{{quarantines_completed}} quarantine zones completed</p></li>
+                    <p class="statsDesc">{{quarantinesCompleted}} quarantine zones completed</p></li>
                 <li><img class="statsIcon" src="assets/icons/barricadeBuilt.png">
-                    <p class="statsDesc">{{barricades_built}} barricades built</p></li>
+                    <p class="statsDesc">{{barricadesBuilt}} barricades built</p></li>
                 <li><img class="statsIcon" src="assets/icons/respondentInjured.png">
-                    <p class="statsDesc">{{responders_trapped}} respondents trapped</p></li>
+                    <p class="statsDesc">{{respondersTrapped}} respondents trapped</p></li>
                 <li><img class="statsIcon" src="assets/icons/respondentInjured.png">
-                    <p class="statsDesc">{{responders_released}} respondents released</p></li>
+                    <p class="statsDesc">{{respondersReleased}} respondents released</p></li>
                 <li><img class="statsIcon" src="assets/icons/respondentInjured.png">
-                    <p class="statsDesc">{{times_injured}} times injured by P0</p></li>
+                    <p class="statsDesc">{{timesInjured}} times injured by P0</p></li>
             </ul>
         </div>
         <div class="bottomDiv">
