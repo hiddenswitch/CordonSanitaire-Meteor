@@ -24,6 +24,7 @@ Template.worldBoard.onRendered(function () {
     var height = window.innerHeight / scaleValue;
 
     var sprites = {};
+    var barricades = [];
     var patientZeroSprite = null;
     var patientZeroWaypoint = 0;
 
@@ -250,6 +251,7 @@ function preload() {
     var mapPath = "/assets/tilemaps/csv/" + filename;
     phaserGame.load.tilemap('map', mapPath, null, Phaser.Tilemap.CSV);
     phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map.png');
+    phaserGame.load.image('barricade_horiz', '/assets/sprites/barricade_horiz.png');
     phaserGame.load.spritesheet('player', '/assets/sprites/cdc_man.png', 16, 16);
     phaserGame.load.spritesheet('patientZero', '/assets/sprites/patient_zero_0.png', 16, 16);
     phaserGame.load.spritesheet('button', '/assets/buttons/button_sprite_sheet.png', 193, 71);
@@ -297,8 +299,9 @@ function create() {
     layer.resizeWorld();
 
     //  Simplified list of things that the player collides into
-    map.setCollisionBetween(0, 7);  // walls + buildings
-    map.setCollisionBetween(13, 14); // barricades
+    //map.setCollisionBetween(0, 7, true, layer, true);  // walls + buildings
+    //map.setCollisionBetween(13, 14, true, layer, true); // barricades
+    map.setCollisionByExclusion([8,9,10,11,12,15], true, layer, true);
 
     //  Handle special tiles on gameboard (i.e. intersections)
     map.setTileIndexCallback(8, promptAtIntersection, this);
@@ -310,7 +313,7 @@ function create() {
     map.setTileIndexCallback(14, promptAtQuarantine, this);
 
     //  Un-comment this on to see the collision tiles
-    // layer.debug = true;
+     layer.debug = true;
 
     cursors = phaserGame.input.keyboard.createCursorKeys();
 
@@ -395,7 +398,7 @@ function update() {
     for (var playerId in sprites) {
         var sprite = sprites[playerId];
 
-        // Do physics
+        // Do physics w/ layer
         phaserGame.physics.arcade.collide(sprite, layer, function () {
             // Only process the callback for local player
             if (playerId !== localPlayerId) {
@@ -420,7 +423,35 @@ function update() {
             }, TimeSync.serverTime(new Date()));
         });
 
-        // check if user has run to the end of the canvas and stop them if so
+        // Do physics w/ barricades
+        _.each(barricades, function(barricade) {
+            phaserGame.physics.arcade.collide(sprite, barricade, function () {
+                // Only process the callback for local player
+                if (playerId !== localPlayerId) {
+                    return;
+                }
+
+                // Have I already handled this particular collision event before?
+                if (lastLocalPlayerWallCollisionHandled != null
+                    && lastLocalPlayerWallCollisionHandled.x === sprite.position.x
+                    && lastLocalPlayerWallCollisionHandled.y === sprite.position.y) {
+                    return;
+                }
+                // If so, don't repeat a message to meteor.
+                // Otherwise, tell meteor about my change in velocity.
+
+                Meteor.call('updatePositionAndVelocity', gameId, {
+                    x: sprite.position.x,
+                    y: sprite.position.y
+                }, {
+                    x: 0,
+                    y: 0
+                }, TimeSync.serverTime(new Date()));
+            });
+        });
+
+
+            // check if user has run to the end of the canvas and stop them if so
         if (playerId === localPlayerId) {
             if (sprite.body.position.x < 0
                 || sprite.body.position.y < 0
@@ -687,12 +718,18 @@ cancelDestroy = function () {
 }
 
 function addWallTile(positionX, positionY) {
-    map.fill(13, positionX, positionY, 1, 1);
+    //map.fill(13, positionX, positionY, 1, 1);
+    // add a sprite barricade
+    var barricade = phaserGame.add.tileSprite(positionX*16, positionY*16, 16, 16, 'barricade_horiz');
+    barricades.push(barricade);
+    phaserGame.physics.enable([sprites[localPlayerId], barricade], Phaser.Physics.ARCADE);
+    barricade.body.moves = false;
 }
 
 function removeWallTile(positionX, positionY) {
     // Todo: get smart about crosswalk tile replacement
-    map.fill(8, positionX, positionY, 1, 1);
+    //map.fill(8, positionX, positionY, 1, 1);
+    // Todo: find sprite at this position, remove this sprite.
 }
 
 // TODO: shows progress for specific intersection
