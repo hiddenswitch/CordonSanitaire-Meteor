@@ -313,7 +313,7 @@ function create() {
     map.setTileIndexCallback(14, promptAtQuarantine, this);
 
     //  Un-comment this on to see the collision tiles
-     layer.debug = true;
+    // layer.debug = true;
 
     cursors = phaserGame.input.keyboard.createCursorKeys();
 
@@ -583,9 +583,15 @@ function promptAtIntersection(sprite, tile) {
     // stop our player (stops animation and movement)
     player_direction = '';
 
+    // round the position to always be on the grid
+    var pos ={
+        x:Math.floor((sprite.position.x + 8) / 16) * 16,
+        y:Math.floor((sprite.position.y + 8) / 16) * 16
+    };
+
     Meteor.call('updatePositionAndVelocity', gameId, {
-        x: sprite.position.x,
-        y: sprite.position.y
+        x: pos.x,
+        y: pos.y
     }, {
         x: 0,
         y: 0
@@ -634,9 +640,15 @@ function promptAtQuarantine(sprite, tile) {
     // stop our player (stops animation and movement)
     player_direction = '';
 
+    // round the position to always be on the grid
+    var pos ={
+        x:Math.floor((sprite.position.x + 8) / 16) * 16,
+        y:Math.floor((sprite.position.y + 8) / 16) * 16
+    };
+
     Meteor.call('updatePositionAndVelocity', gameId, {
-        x: sprite.position.x,
-        y: sprite.position.y
+        x: pos.x,
+        y: pos.y
     }, {
         x: 0,
         y: 0
@@ -718,18 +730,40 @@ cancelDestroy = function () {
 }
 
 function addWallTile(positionX, positionY) {
-    //map.fill(13, positionX, positionY, 1, 1);
+    map.fill(13, positionX, positionY, 1, 1);
     // add a sprite barricade
     var barricade = phaserGame.add.tileSprite(positionX*16, positionY*16, 16, 16, 'barricade_horiz');
     barricades.push(barricade);
     phaserGame.physics.enable([sprites[localPlayerId], barricade], Phaser.Physics.ARCADE);
     barricade.body.moves = false;
+
+    //Todo: To remove player from trapped position
+    //Meteor.setTimeout(function() {
+    //    // If I am in an illegal space, find the closest legal space to occupy
+    //    var mySprite = sprites[localPlayerId];
+    //    var currentTile = map.getTile(mySprite.x, mySprite.y, layer);
+    //    if(currentTile.index != 12) { // if we aren't on a road
+    //        if (currentTile.index == 15) {  // if we are in an intersection
+    //            var intersectionId = SanitaireMaps.getIntersectionIdForTilePosition(positionX, positionY, currentMapInfo);
+    //            //Todo: check if intersection is barricaded
+    //            //if(intersectionId )
+    //            // if so...
+    //            // Iterate through neighboring tiles until you find a legal tile
+    //            // Call the appropriate meteor method to place me in the legal tile}
+    //        }
+    //    }
+    //},100);
 }
 
 function removeWallTile(positionX, positionY) {
     // Todo: get smart about crosswalk tile replacement
-    //map.fill(8, positionX, positionY, 1, 1);
+    map.fill(8, positionX, positionY, 1, 1);
     // Todo: find sprite at this position, remove this sprite.
+    _.each(barricades, function(barricade) {
+        if(barricade.x === positionX*16 && barricade.y === positionY*16) {
+            barricade.kill();  // maybe destroy
+        }
+    });
 }
 
 // TODO: shows progress for specific intersection
