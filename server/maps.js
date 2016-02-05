@@ -13,7 +13,7 @@ Meteor.startup(function () {
     var mapInfos = _.map([
         'London.csv',
         'Tokyo.csv',
-        'Simple_40.csv'
+        'London_single_lane.csv'
     ], function (mapName) {
         return {url: 'assets/tilemaps/csv/' + mapName, _id: mapName};
     });

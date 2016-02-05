@@ -247,10 +247,10 @@ var phaserGame = new Phaser.Game(width, height, Phaser.AUTO, 'gameboard', {
 
 function preload() {
     // load path to map from settings
-    var filename = "Simple_40.csv";
+    var filename = "London_single_lane.csv";
     var mapPath = "/assets/tilemaps/csv/" + filename;
     phaserGame.load.tilemap('map', mapPath, null, Phaser.Tilemap.CSV);
-    phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map.png');
+    phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map_Single_Lane_HACK.png');
     phaserGame.load.image('barricade_horiz', '/assets/sprites/barricade_horiz.png');
     phaserGame.load.spritesheet('player', '/assets/sprites/cdc_man.png', 16, 16);
     phaserGame.load.spritesheet('patientZero', '/assets/sprites/patient_zero_0.png', 16, 16);
@@ -585,8 +585,10 @@ function promptAtIntersection(sprite, tile) {
 
     // round the position to always be on the grid
     var pos ={
-        x:Math.floor((sprite.position.x + 8) / 16) * 16,
-        y:Math.floor((sprite.position.y + 8) / 16) * 16
+        x: tile.x * 16,  // KEVIN HACK - Freeze player in the middle of the intersection
+        y: tile.y * 16
+        //x:Math.floor((sprite.position.x + 8) / 16) * 16,
+        //y:Math.floor((sprite.position.y + 8) / 16) * 16
     };
 
     Meteor.call('updatePositionAndVelocity', gameId, {
@@ -642,8 +644,10 @@ function promptAtQuarantine(sprite, tile) {
 
     // round the position to always be on the grid
     var pos ={
-        x:Math.floor((sprite.position.x + 8) / 16) * 16,
-        y:Math.floor((sprite.position.y + 8) / 16) * 16
+        x: tile.x * 16,  // KEVIN HACK - Freeze player in the middle of the intersection
+        y: tile.y * 16
+        //x:Math.floor((sprite.position.x + 8) / 16) * 16,
+        //y:Math.floor((sprite.position.y + 8) / 16) * 16
     };
 
     Meteor.call('updatePositionAndVelocity', gameId, {
@@ -732,10 +736,10 @@ cancelDestroy = function () {
 function addWallTile(positionX, positionY) {
     map.fill(13, positionX, positionY, 1, 1);
     // add a sprite barricade
-    var barricade = phaserGame.add.tileSprite(positionX*16, positionY*16, 16, 16, 'barricade_horiz');
-    barricades.push(barricade);
-    phaserGame.physics.enable([sprites[localPlayerId], barricade], Phaser.Physics.ARCADE);
-    barricade.body.moves = false;
+    //var barricade = phaserGame.add.tileSprite(positionX*16, positionY*16, 16, 16, 'barricade_horiz');
+    //barricades.push(barricade);
+    //phaserGame.physics.enable([sprites[localPlayerId], barricade], Phaser.Physics.ARCADE);
+    //barricade.body.moves = false;
 
     //Todo: To remove player from trapped position
     //Meteor.setTimeout(function() {
@@ -759,11 +763,11 @@ function removeWallTile(positionX, positionY) {
     // Todo: get smart about crosswalk tile replacement
     map.fill(8, positionX, positionY, 1, 1);
     // Todo: find sprite at this position, remove this sprite.
-    _.each(barricades, function(barricade) {
-        if(barricade.x === positionX*16 && barricade.y === positionY*16) {
-            barricade.kill();  // maybe destroy
-        }
-    });
+    //_.each(barricades, function(barricade) {
+    //    if(barricade.x === positionX*16 && barricade.y === positionY*16) {
+    //        barricade.kill();  // maybe destroy
+    //    }
+    //});
 }
 
 // TODO: shows progress for specific intersection
