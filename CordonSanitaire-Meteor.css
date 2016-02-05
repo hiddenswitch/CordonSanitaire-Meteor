@@ -90,6 +90,10 @@ start of game */
     color: #ffff00;
 }
 
+.lobbyCountdown {
+    position: ;
+}
+
 #lobby_count {
     display: block;
 }

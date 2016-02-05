@@ -31,6 +31,12 @@ if (Meteor.isClient) {
         }
     });
 
+    // let's keep the time left in game up to date by attaching an interval
+    var timerDependency = new Tracker.Dependency();
+    Meteor.setInterval(function () {
+        timerDependency.changed();
+    }, 10);
+
     Template.lobby.helpers({
         players: function () {
             return Players.find({gameId: Router.current().params.gameId}, {fields: {name: 1}});
@@ -43,23 +49,33 @@ if (Meteor.isClient) {
             var game = Games.findOne(this.gameId, {fields: {playerCount: 1}});
             return game.playerCount;
         },
-        timeTilStart: function () {
-            // TODO: returns the current time til start for the lobby
+        showLobbyCountdown: function () {
+            var game = Games.findOne(this.gameId, {fields: {playerCount: 1}});
+            return (Sanitaire.MAX_PLAYERS - game.playerCount) === 0;
+        },
+        lobbyCountdownSeconds: function () {
+            // returns the current time til start for the lobby
+            timerDependency.depend();   // keeps this called every 10ms
+            var game = Games.findOne(this.gameId, {fields: {startedAt: 1}});
+            var timeTilGameStarts = game.countdownStartTime - new Date();
+            //var countdownSeconds = Meteor.settings && Meteor.settings.public && Meteor.settings.public.countdownSeconds || 10;
+            //timeLeft = gameDurationSeconds * 1000.0 - timeSinceGameStarted;
+            //timeLeft = Math.min(0, Math.max(gameDurationSeconds * 1000, timeLeft));
+            //var result = {
+            //    "minutes": Math.floor((timeLeft / (60 * 1000.0)) % (60 * 60 * 1000)),
+            //    "seconds": Math.floor((timeLeft / 1000.0) % (60 * 1000)),
+            //    "hundredths": Math.floor((timeLeft / 10.0) % 100)
+            //};
+            return timeTilGameStarts/1000;  // Todo: come back to this :)
         }
     });
-
-    // let's keep the time left in game up to date by attaching an interval
-    var timerDependency = new Tracker.Dependency();
-    Meteor.setInterval(function () {
-        timerDependency.changed();
-    }, 10);
 
     Template.game.helpers({
         timeLeftInGame: function () {
             timerDependency.depend();   // keeps this called every 10ms
             var game = Games.findOne(this.gameId, {fields: {startedAt: 1}});
             var timeSinceGameStarted = new Date() - game.startedAt;
-            var gameDurationSeconds = Meteor.settings && Meteor.settings.durationSeconds || 45;
+            var gameDurationSeconds = Meteor.settings && Meteor.settings.public && Meteor.settings.public.durationSeconds || 45;
             var timeLeft = gameDurationSeconds * 1000.0 - timeSinceGameStarted;
             timeLeft = Math.max(0, Math.min(gameDurationSeconds * 1000, timeLeft));
             var result = {

@@ -57,6 +57,12 @@
 
 <!-- Pregame or Lobby View -->
 <template name="lobby">
+    {{#if showLobbyCountdown}}
+        <div class="textCenter lobbyCountdown">
+            <p>Time til start</p>
+            <h1 class="lobbyCountdownSeconds">{{lobbyCountdownSeconds}}</h1>
+        </div>
+    {{/if}}
     <div class="textCenter">
         <h1>CORDON SANITAIRE</h1>
         <br>
@@ -74,20 +80,6 @@
                 {{#each players}}
                     <li>{{this.name}}</li>
                 {{/each}}
-                <li>Guest 1</li>
-                <li>Guest 2</li>
-                <li>Guest 3</li>
-                <li>Guest 4</li>
-                <li>Guest 5</li>
-                <li>Guest 6</li>
-                <li>Guest 7</li>
-                <li>Guest 8</li>
-                <li>Guest 9</li>
-                <li>Guest 10</li>
-                <li>Guest 11</li>
-                <li>Guest 12</li>
-                <li>Guest 13</li>
-                <li>Guest 14</li>
             </ul>
         </div>
     </div>
