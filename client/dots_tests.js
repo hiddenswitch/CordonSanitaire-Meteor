@@ -4,7 +4,7 @@
  **/
 
 DotsTest1 = function () {
-    var dotsCanvas = new DotsCanvas(document.body, {width: '100%', height: '100%'});
+    var dotsCanvas = new DotsCanvas(document.getElementById('two'), {width: '100%', height: '100%'});
     var player1 = {_id: '1', location: {x: 0, y: 1}, name: 'player 1'};
     var player2 = {_id: '2', location: {x: 3, y: 2}, name: 'player 2'};
 
@@ -38,7 +38,7 @@ DotsTest2 = function () {
         _Players.insert(a)
     });
 
-    var dotsCanvas = new DotsCanvas(document.body, {width: '100%', height: '100%'});
+    var dotsCanvas = new DotsCanvas(document.getElementById('two'), {width: '100%', height: '100%'});
 
     // My internal mapping from my model dots to canvas's dots
     var _dots = {};

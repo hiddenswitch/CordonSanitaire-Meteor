@@ -98,7 +98,7 @@ Template.gameBoard.onRendered(function () {
                 changed: function (newPlayer, oldPlayer) {
                     if (newPlayer.connectedToPlayerId !== oldPlayer.connectedToPlayerId) {
                         _disconnect(oldPlayer._id, oldPlayer.connectedToPlayerId, true);
-                        delete _connections[_connectionKey(oldPlayer._id, oldPlayer.connectedToPlayerId)];
+                        _connections[_connectionKey(oldPlayer._id, oldPlayer.connectedToPlayerId)] = null;
                         _connect(newPlayer._id, newPlayer.connectedToPlayerId, true);
                     }
                 },
@@ -106,11 +106,11 @@ Template.gameBoard.onRendered(function () {
                     // Remove all the connections with this player
                     Players.find({connectedToPlayerId: player._id}).forEach(function (otherPlayer) {
                         _disconnect(otherPlayer._id, player._id, false);
-                        delete _connections[_connectionKey(otherPlayer._id, player._id)];
+                        _connections[_connectionKey(otherPlayer._id, player._id)] = null;
                     });
 
                     dotsCanvas.removeDot(player._id);
-                    delete _dots[player._id];
+                    _dots[player._id] = null;
                 }
             });
 
