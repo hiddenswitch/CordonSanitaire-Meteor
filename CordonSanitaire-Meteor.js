@@ -56,17 +56,12 @@ if (Meteor.isClient) {
         lobbyCountdownSeconds: function () {
             // returns the current time til start for the lobby
             timerDependency.depend();   // keeps this called every 10ms
-            var game = Games.findOne(this.gameId, {fields: {startedAt: 1}});
-            var timeTilGameStarts = game.countdownStartTime - new Date();
-            //var countdownSeconds = Meteor.settings && Meteor.settings.public && Meteor.settings.public.countdownSeconds || 10;
-            //timeLeft = gameDurationSeconds * 1000.0 - timeSinceGameStarted;
-            //timeLeft = Math.min(0, Math.max(gameDurationSeconds * 1000, timeLeft));
-            //var result = {
-            //    "minutes": Math.floor((timeLeft / (60 * 1000.0)) % (60 * 60 * 1000)),
-            //    "seconds": Math.floor((timeLeft / 1000.0) % (60 * 1000)),
-            //    "hundredths": Math.floor((timeLeft / 10.0) % 100)
-            //};
-            return timeTilGameStarts/1000;  // Todo: come back to this :)
+            var game = Games.findOne(this.gameId, {fields: {countdownStartTime:1}});
+            var millisSinceCountdownStarted = new Date() - game.countdownStartTime;
+            var totalCountdownSeconds = Meteor.settings && Meteor.settings.public && Meteor.settings.public.countdownSeconds || 10;
+
+            var countdown = totalCountdownSeconds - Math.floor(millisSinceCountdownStarted/1000);
+            return countdown;
         }
     });
 
