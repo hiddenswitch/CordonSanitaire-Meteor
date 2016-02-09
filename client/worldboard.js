@@ -87,8 +87,10 @@ Template.worldBoard.onRendered(function () {
                             var now = new Date(TimeSync.serverTime(new Date()));
                             _.each(barriers, function (barrier) {
                                 var intersectionId = barrier.intersectionId;
-                                if (barrier.barrierExistsTime <= now
-                                    && now <= barrier.barrierStopsExistingTime) {
+                                if ((barrier.barrierExistsTime <= now
+                                    && now <= barrier.barrierStopsExistingTime)
+                                || (barrier.barrierExistsTime > now
+                                    && now > barrier.barrierStopsExistingTime )) {
                                     // Draw a barrier for the given intersection
                                     var intersection = currentMapInfo.intersectionsById[intersectionId];
                                     for (var i = 0; i < intersection.borderTiles.length; i++) {
