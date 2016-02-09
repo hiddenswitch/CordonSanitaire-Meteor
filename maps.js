@@ -11,8 +11,14 @@ SanitaireMaps.getRandomStartPosition = function (roads) {
 
 SanitaireMaps.getIntersectionId = function (x, y, intersections) {
     for (var i = 0; i < intersections.length; i++) {
+        // border tiles
         for (var j = 0; j < intersections[i].borderTiles.length; j++) {
             if (intersections[i].borderTiles[j].x === x && intersections[i].borderTiles[j].y === y)
+                return intersections[i].id;
+        }
+        // inner tiles
+        for (var j = 0; j < intersections[i].innerTiles.length; j++) {
+            if (intersections[i].innerTiles[j].x === x && intersections[i].innerTiles[j].y === y)
                 return intersections[i].id;
         }
     }
