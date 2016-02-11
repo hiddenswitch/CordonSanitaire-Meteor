@@ -3,6 +3,191 @@
  * © 2015 All Rights Reserved
  **/
 
+/**
+ * Draws a barricade
+ * @param map {Phaser.Map} A phaser map
+ * @param state {Number} A state from Sanitiare.barricadeStates
+ * @param intersectionId {String|Number} An intersection ID
+ * @param mapInfo {*} Map info containing all the lookup tables
+ */
+var drawBarricade = function (map, state, intersectionId, mapInfo) {
+    var tile = mapInfo.intersectionsById[intersectionId].innerTiles[0];
+
+    switch (state) {
+        case Sanitaire.barricadeStates.BUILT:
+            map.fill(13, tile.x, tile.y, 1, 1);
+            break;
+        case Sanitaire.barricadeStates.EMPTY:
+            map.fill(15, tile.x, tile.y, 1, 1);
+            break;
+        case Sanitaire.barricadeStates.UNDER_CONSTRUCTION:
+            // TODO: Choose a tile that represents under construction
+            // TODO: Configure some animation
+            // Currently using a tile with the number 1 written on it
+            map.fill(17, tile.x, tile.y, 1, 1);
+            break;
+        case Sanitaire.barricadeStates.UNDER_DECONSTRUCTION:
+            // TODO: Choose a tile that represents under deconstruction
+            // TODO: Configure some animation
+            // Currently using a tile with the number 2 written on it
+            map.fill(18, tile.x, tile.y, 1, 1);
+            break;
+    }
+};
+
+/**
+ * Update the position of patient zero
+ * @param patientZeroSprite {Phaser.Sprite} A Phaser sprite
+ * @param tilePosition {{x: Number, y: Number}} A position in tile space where patient zero should be
+ */
+var updatePatientZeroPosition = function (patientZeroSprite, tilePosition) {
+    if (!tilePosition) return;
+    patientZeroSprite.position.x = tilePosition.x * 16;
+    patientZeroSprite.position.y = tilePosition.y * 16;
+};
+
+/**
+ * Update the sprites based on the given player document
+ * @param sprites {Object.<String, Phaser.Sprite>} A dictionary of phaser sprites keyed by playerId
+ * @param player {String} A playerId (found in the players collection)
+ */
+var updatePlayer = function (sprites, player) {
+    var sprite = sprites[player._id];
+    sprite.body.velocity.x = player.velocity.x;
+    sprite.body.velocity.y = player.velocity.y;
+
+    // TODO: Whenever position changes, interpolate between the current estimated position and the new position from the server
+    // TODO: Smooth to this position. Also, this position is by default something that comes from the network
+    var diffX = 0;
+    var diffY = 0;
+    if (!_.isUndefined(player.updatedAt)) {
+        var deltaTime = (TimeSync.serverTime(new Date()) - player.updatedAt) / 1000.0;
+        // Fudged additional position change. It will be sensitive to physics.
+        // TODO: Handle physics problems here...
+        diffX = deltaTime * sprite.body.velocity.x;
+        diffY = deltaTime * sprite.body.velocity.y;
+    }
+
+    sprite.position.x = player.position.x + diffX;
+    sprite.position.y = player.position.y + diffY;
+};
+
+/**
+ * Update the barriers
+ * @param barriers
+ * @param barricadeTimers
+ * @param map
+ * @param gameId
+ * @param sprites
+ * @returns {*}
+ */
+var updateBarriers = function (barriers, barricadeTimers, map, gameId, sprites) {
+    // These barricades come from Sanitaire.addConstructionMessageToLog
+
+    // Clear the previous timers
+    _.each(barricadeTimers, function (timer) {
+        Meteor.clearTimeout(timer);
+    });
+
+    barricadeTimers = [];
+
+    _.each(barriers, function (barricade) {
+        var intersectionId = barricade.intersectionId;
+        // Interpret the barricade's current state, and set timers for the barricade's next
+        // states.
+        drawBarricade(map, barricade.state, barricade.intersectionId, currentMapInfo);
+
+        // Set new timer
+        if (barricade.time > -Infinity
+            && barricade.time < Infinity) {
+            var transitionToNextState = function () {
+                drawBarricade(map, barricade.nextState, barricade.intersectionId, currentMapInfo);
+            };
+            // Convert to local time
+            var time = barricade.time - TimeSync.serverOffset();
+            // If the transition would have already occured according to server time,
+            // make the next transition the one
+            if (time < (new Date()).getTime()) {
+                // Transition into the next state now
+                transitionToNextState()
+            } else {
+                // Schedule a transition into the next state
+                barricadeTimers.push(Meteor.setTimeout(function () {
+                    transitionToNextState();
+                }, time - (new Date().getTime())))
+            }
+        }
+    });
+
+    // Recalculate patient zero
+    var game = Games.findOne(gameId, {reactive: false});
+
+    var playerRoadIds = _.map(sprites, function (sprite) {
+        return SanitaireMaps.getRoadIdForTilePosition(
+            sprite.x / 16,
+            sprite.y / 16,
+            currentMapInfo
+        );
+    });
+
+    var patientZeroCurrentLocation = SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, game.patientZero.path, game.patientZero.pathUpdatedAt, {
+        time: new Date()
+    });
+
+    var patientZeroRoadId = SanitaireMaps.getRoadIdForTilePosition(patientZeroCurrentLocation.x, patientZeroCurrentLocation.y, currentMapInfo); // TODO: get actual road id from this game!!!!!!!
+    var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
+    var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId);
+
+    // Update visible patient zero status
+    if (isPZeroContained) {
+        Session.set("patient zero isolated", true);
+        Session.set("patient zero contained", false);
+        Session.set("patient zero loose", false);
+    }
+    else {
+        Session.set("patient zero isolated", false);
+        Session.set("patient zero contained", false);
+        Session.set("patient zero loose", true);
+    }
+    return barriers;
+};
+
+/**
+ * Update patient zero
+ * @param gameId
+ * @param patientZeroSprite
+ * @param phaserGame
+ * @param patientZeroFromGameDocument
+ * @returns {{patientZeroSprite: *}}
+ */
+var updatePatientZero = function (gameId, patientZeroSprite, phaserGame, patientZeroFromGameDocument) {
+    var game = Games.findOne(gameId, {reactive: false});
+    // If we haven't created patient zero yet, create him
+    if (!patientZeroSprite) {
+        var patientZeroCurrentLocation = SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, game.patientZero.path, game.patientZero.pathUpdatedAt, {
+            time: new Date()
+        });
+
+        patientZeroSprite = phaserGame.add.sprite(patientZeroCurrentLocation.x * 16, patientZeroCurrentLocation.y * 16, 'patientZero', 1);
+        phaserGame.physics.enable(patientZeroSprite, Phaser.Physics.ARCADE);
+        patientZeroSprite.body.setSize(10, 14, 2, 1);
+    }
+
+    var speed = game.patientZero.speed;
+
+    var path = patientZeroFromGameDocument.path || game.patientZero.path;
+    var pathUpdatedAt = patientZeroFromGameDocument.pathUpdatedAt || game.patientZero.pathUpdatedAt;
+    var currentPosition = SanitairePatientZero.estimatePositionFromPath(speed, path, pathUpdatedAt, {
+        time: TimeSync.serverTime(new Date())
+    });
+
+    Deps.afterFlush(function () {
+        updatePatientZeroPosition(patientZeroSprite, currentPosition);
+    });
+
+    return {patientZeroSprite: patientZeroSprite};
+};
+
 Template.worldBoard.onRendered(function () {
         var renderer = this;
         var routeData = Router.current().data();
@@ -25,31 +210,9 @@ Template.worldBoard.onRendered(function () {
 
         var sprites = {};
         var barricades = [];
+        // This is a list of timers that are used to schedule when the barricade state transition occurs
+        var barricadeTimers = [];
         var patientZeroSprite = null;
-        var patientZeroWaypoint = 0;
-
-        var updatePatientZeroVelocity = function (waypoint, path, speed) {
-            return;
-            var velocity = {x: 0, y: 0};
-
-            var nextPoint = path[Math.min(waypoint + 1, path.length - 1)];
-            var currentPoint = path[Math.min(waypoint, path.length - 1)];
-            velocity.x = Math.max(-1, Math.min(1, (nextPoint.x - currentPoint.x))) * speed;
-            velocity.y = Math.max(-1, Math.min(1, (nextPoint.y - currentPoint.y))) * speed;
-
-            if (waypoint >= path.length - 1) {
-                velocity.x = 0;
-                velocity.y = 0;
-            }
-            patientZeroSprite.body.velocity.x = velocity.x;
-            patientZeroSprite.body.velocity.y = velocity.y;
-        };
-
-        var updatePatientZeroPosition = function (tilePosition) {
-            if (!tilePosition) return;
-            patientZeroSprite.position.x = tilePosition.x * 16;
-            patientZeroSprite.position.y = tilePosition.y * 16;
-        };
 
         var initializeMeteor = function () {
             renderer.autorun(function () {
@@ -57,171 +220,29 @@ Template.worldBoard.onRendered(function () {
                     return;
                 }
 
-                var updatePlayer = function (player) {
-                    var sprite = sprites[player._id];
-                    sprite.body.velocity.x = player.velocity.x;
-                    sprite.body.velocity.y = player.velocity.y;
-
-                    // TODO: Whenever position changes, interpolate between the current estimated position and the new position from the server
-                    // TODO: Smooth to this position. Also, this position is by default something that comes from the network
-                    var diffX = 0;
-                    var diffY = 0;
-                    if (!_.isUndefined(player.updatedAt)) {
-                        var deltaTime = (TimeSync.serverTime(new Date()) - player.updatedAt) / 1000.0;
-                        // Fudged additional position change. It will be sensitive to physics.
-                        // TODO: Handle physics problems here...
-                        diffX = deltaTime * sprite.body.velocity.x;
-                        diffY = deltaTime * sprite.body.velocity.y;
-                    }
-
-                    sprite.position.x = player.position.x + diffX;
-                    sprite.position.y = player.position.y + diffY;
-                };
-
                 var updateGame = function (id, fields) {
                     _.each(fields, function (v, k) {
                         // See if a quarantine tile has been added
                         if (k === 'barriers') {
-                            // Do the barriers update
-                            var barriers = v;
-                            var now = new Date(TimeSync.serverTime(new Date()));
-                            _.each(barriers, function (barrier) {
-                                var intersectionId = barrier.intersectionId;
-                                if ((barrier.barrierExistsTime <= now
-                                    && now <= barrier.barrierStopsExistingTime)) {
-                                    // Draw a barrier for the given intersection
-                                    var intersection = currentMapInfo.intersectionsById[intersectionId];
-                                    //for (var i = 0; i < intersection.borderTiles.length; i++) {
-                                    //    var borderTile = intersection.borderTiles[i];
-                                    //    addWallTile(borderTile.x, borderTile.y);
-                                    //}
-                                    var innerTile = intersection.innerTiles[0];
-                                    addWallTile(innerTile.x, innerTile.y);
-                                } else {
-                                    // Remove a barrier
-                                    var intersection = currentMapInfo.intersectionsById[intersectionId];
-                                    //for (var i = 0; i < intersection.borderTiles.length; i++) {
-                                    //    var borderTile = intersection.borderTiles[i];
-                                    //    removeWallTile(borderTile.x, borderTile.y);
-                                    //}
-                                    var innerTile = intersection.innerTiles[0];
-                                    removeWallTile(innerTile.x, innerTile.y);
-                                }
-                            });
-
-                            // Recalculate patient zero
-                            var game = Games.findOne(gameId, {reactive: false});
-
-                            var playerRoadIds = _.map(sprites, function (sprite) {
-                                return SanitaireMaps.getRoadIdForTilePosition(
-                                    sprite.x / 16,
-                                    sprite.y / 16,
-                                    currentMapInfo
-                                );
-                            });
-
-                            var patientZeroCurrentLocation = SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, game.patientZero.path, game.patientZero.pathUpdatedAt, {
-                                time: new Date()
-                            });
-
-                            var patientZeroRoadId = SanitaireMaps.getRoadIdForTilePosition(patientZeroCurrentLocation.x, patientZeroCurrentLocation.y, currentMapInfo); // TODO: get actual road id from this game!!!!!!!
-                            var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
-                            var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId);
-
-                            //console.log("patient zero is " + (isPZeroContained?"isolated":"on the loose"));
-                            // Update visible patient zero status
-                            if (isPZeroContained) {
-                                Session.set("patient zero isolated", true);
-                                Session.set("patient zero contained", false);
-                                Session.set("patient zero loose", false);
-                            }
-                            else {
-                                Session.set("patient zero isolated", false);
-                                Session.set("patient zero contained", false);
-                                Session.set("patient zero loose", true);
-                            }
-                        }
-
-                        //if (/^quarantine/.test(k)
-                        //    && !_.isUndefined(v)) {
-                        //    addWallTile(v.x, v.y);
-                        //
-                        //    // Check patient zero status
-                        //    var game = Games.findOne(gameId, {reactive: false});
-                        //
-                        //    var playerRoadIds = _.map(sprites, function (sprite) {
-                        //        return SanitaireMaps.getRoadIdForTilePosition(
-                        //            sprite.x / 16,
-                        //            sprite.y / 16,
-                        //            currentMapInfo
-                        //        );
-                        //    });
-                        //
-                        //    var patientZeroCurrentLocation = SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, game.patientZero.path, game.patientZero.pathUpdatedAt, {
-                        //        time: new Date()
-                        //    });
-                        //
-                        //    var patientZeroRoadId = SanitaireMaps.getRoadIdForTilePosition(patientZeroCurrentLocation.x, patientZeroCurrentLocation.y, currentMapInfo); // TODO: get actual road id from this game!!!!!!!
-                        //    var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
-                        //    var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId);
-                        //
-                        //    //console.log("patient zero is " + (isPZeroContained?"isolated":"on the loose"));
-                        //    // Update visible patient zero status
-                        //    if (isPZeroContained) {
-                        //        Session.set("patient zero isolated", true);
-                        //        Session.set("patient zero contained", false);
-                        //        Session.set("patient zero loose", false);
-                        //    }
-                        //    else {
-                        //        Session.set("patient zero isolated", false);
-                        //        Session.set("patient zero contained", false);
-                        //        Session.set("patient zero loose", true);
-                        //    }
-                        //}
-
+                            updateBarriers(v, barricadeTimers, map, gameId, sprites);
+                        } else
                         // Has the patient zero updated at time changed? Do some moving
                         if (k === 'patientZero') {
-                            var game = Games.findOne(gameId, {reactive: false});
-                            // If we haven't created patient zero yet, create him
-                            if (!patientZeroSprite) {
-                                var patientZeroCurrentLocation = SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, game.patientZero.path, game.patientZero.pathUpdatedAt, {
-                                    time: new Date()
-                                });
-
-                                var patientZero = patientZeroSprite = phaserGame.add.sprite(patientZeroCurrentLocation.x * 16, patientZeroCurrentLocation.y * 16, 'patientZero', 1);
-                                phaserGame.physics.enable(patientZero, Phaser.Physics.ARCADE);
-                                patientZero.body.setSize(10, 14, 2, 1);
-                            }
-
-                            var speed = game.patientZero.speed;
-
-                            var path = v.path || game.patientZero.path;
-                            var pathUpdatedAt = v.pathUpdatedAt || game.patientZero.pathUpdatedAt;
-                            var currentPosition = SanitairePatientZero.estimatePositionFromPath(speed, path, pathUpdatedAt, {
-                                time: TimeSync.serverTime(new Date())
-                            });
-
-                            patientZeroWaypoint = currentPosition.i;
-
-                            Deps.afterFlush(function () {
-                                updatePatientZeroPosition(currentPosition);
-                                updatePatientZeroVelocity(currentPosition.i, path, speed);
-                            });
+                            var __ret = updatePatientZero(gameId, patientZeroSprite, phaserGame, v);
+                            patientZeroSprite = __ret.patientZeroSprite;
                         }
                     });
-                }
-
+                };
 
                 this.playerUpdate = Players.find({gameId: Router.current().data().gameId}).observe({
                     added: function (player) {
                         sprites[player._id] = createSpriteForPlayer(player._id, {
                             isLocalPlayer: player._id === localPlayerId
-                            //location: {"x": 16, "y": 96}
                         });
-                        updatePlayer(player);
+                        updatePlayer(sprites, player);
                     },
                     changed: function (player) {
-                        updatePlayer(player);
+                        updatePlayer(sprites, player);
                     },
                     removed: function (player) {
 
@@ -271,7 +292,7 @@ Template.worldBoard.onRendered(function () {
 
         var lastPromptTile = {index: 0, x: 0, y: 0};
         var lastIntersectionId = -1;
-        var movesSincePrompt = 0;
+        var movesSincePrompt = 2;
 
 // function to scale up the game to full screen
         function goFullScreen() {
@@ -314,6 +335,8 @@ Template.worldBoard.onRendered(function () {
             //map.setTileIndexCallback(9, promptAtIntersection, this);
             //map.setTileIndexCallback(10, promptAtIntersection, this);
             //map.setTileIndexCallback(11, promptAtIntersection, this);
+            // TODO: Set callbacks for tiles under construction / under deconstruction
+
             // quarantine tiles
             map.setTileIndexCallback(13, promptAtQuarantine, this);
             map.setTileIndexCallback(14, promptAtQuarantine, this);
@@ -387,19 +410,9 @@ Template.worldBoard.onRendered(function () {
             // Todo: temporary solution for end of game
             if (game) {
                 var path = game.patientZero.path;
-                updatePatientZeroPosition(SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, path, game.patientZero.pathUpdatedAt, {time: TimeSync.serverTime(new Date())}));
+                var patientZeroPosition = SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, path, game.patientZero.pathUpdatedAt, {time: TimeSync.serverTime(new Date())});
+                updatePatientZeroPosition(patientZeroSprite, patientZeroPosition);
             }
-            //var destination = path[Math.max(Math.min(patientZeroWaypoint + 1, path.length - 1), 0)];
-            //destination.x *= 16;
-            //destination.y *= 16;
-            //var distanceToDestination = Math.sqrt(Math.pow(patientZeroSprite.position.x - destination.x, 2) + Math.pow(patientZeroSprite.position.y - destination.y, 2));
-            //if (distanceToDestination < 4) {
-            //    patientZeroSprite.position.x = destination.x;
-            //    patientZeroSprite.position.y = destination.y;
-            //    patientZeroWaypoint++;
-            //    updatePatientZeroVelocity(patientZeroWaypoint, path, game.patientZero.speed);
-            //}
-
 
             for (var playerId in sprites) {
                 var sprite = sprites[playerId];
@@ -678,9 +691,9 @@ Template.worldBoard.onRendered(function () {
             if (_.isUndefined(lastPromptTile)) {
                 return;
             }
-            // update all crosswalk tiles associated with this intersection
-            //var crosswalks = SanitaireMaps.getCrosswalkTiles(lastPromptTile.x, lastPromptTile.y, currentMapInfo.intersections);
-            var intersectionId = SanitaireMaps.getIntersectionIdForTilePosition(lastPromptTile.x, lastPromptTile.y, currentMapInfo)
+            // Get the intersection we are interested in
+
+            var intersectionId = SanitaireMaps.getIntersectionIdForTilePosition(lastPromptTile.x, lastPromptTile.y, currentMapInfo);
             // tell game we are starting to build a quarantine
             Meteor.call('startConstruction', gameId, intersectionId);
             // update state of player
@@ -699,10 +712,10 @@ Template.worldBoard.onRendered(function () {
             if (_.isUndefined(lastPromptTile)) {
                 return;
             }
+
             // tell game we are starting to demolish a quarantine
-            //var crosswalks = SanitaireMaps.getCrosswalkTiles(lastPromptTile.x, lastPromptTile.y, currentMapInfo.intersections);
-            var intersectionId = SanitaireMaps.getIntersectionIdForTilePosition(lastPromptTile.x, lastPromptTile.y, currentMapInfo)
-            Meteor.call('startDeconstruciton', gameId, intersectionId, new Date());
+            var intersectionId = SanitaireMaps.getIntersectionIdForTilePosition(lastPromptTile.x, lastPromptTile.y, currentMapInfo);
+            Meteor.call('startDeconstruction', gameId, intersectionId, new Date());
             // update state of player
             localPlayerState.construction.isBuilding = true;
             localPlayerState.construction.intersectionId = intersectionId;

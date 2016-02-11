@@ -7,6 +7,10 @@
  **/
 
 Meteor.methods({
+    /**
+     * Find or create a game (match make) for a user and join that user into the game
+     * @returns {{gameId: String, playerId: String}} The game and player ids of the joined game
+     */
     matchMakeAndJoin: function () {
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
@@ -14,17 +18,10 @@ Meteor.methods({
 
         return Sanitaire.matchMakeAndJoin(this.userId);
     },
-    connectToPlayer: function (destinationPlayerId) {
-        if (!this.userId) {
-            throw new Meteor.Error(403, 'Permission denied.');
-        }
-
-        // Reconstruct all the necessary information
-        var destinationPlayer = Players.findOne(destinationPlayerId);
-        var gameId = destinationPlayer.gameId;
-        var thisPlayer = Players.findOne({gameId: gameId, userId: this.userId});
-        return Sanitaire.tryConnectPlayers(thisPlayer._id, destinationPlayer._id);
-    },
+    /**
+     * Quit the provided user from the provided game
+     * @param gameId {String}
+     */
     quitGame: function (gameId) {
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
@@ -32,6 +29,10 @@ Meteor.methods({
 
         return Sanitaire.quitGame(gameId, this.userId);
     },
+    /**
+     * Mark the user as having finished the first time user experience
+     * @returns {*}
+     */
     finishTutorial: function () {
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
@@ -44,7 +45,15 @@ Meteor.methods({
         });
     },
 
-    updatePositionAndVelocity: function(gameId, position, velocity, updatedAt) {
+    /**
+     * Updates the player's position and velocity in the player object
+     * @param gameId {String} The game ID the user is interested in updating
+     * @param position {{x: number, y: number}} The new position of the player
+     * @param velocity {{x: number, y: number}} The new Phaser physics velocity
+     * @param updatedAt {Date} The server time when the client issued this command
+     * @returns {boolean} True if the record was successfully updated
+     */
+    updatePositionAndVelocity: function (gameId, position, velocity, updatedAt) {
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
         }
@@ -55,22 +64,12 @@ Meteor.methods({
         return Sanitaire.updatePlayerPositionAndVelocity(thisPlayer._id, position, velocity, updatedAt);
     },
 
-    addQuarantine: function(gameId, position, intersectionId) {
-        if (!this.userId) {
-            throw new Meteor.Error(403, 'Permission denied.');
-        }
-
-        // TODO: Security
-
-        return Sanitaire.addQuarantine(gameId, position, intersectionId);
-    },
-
     /**
      *
      * @param gameId {String} instance of a game
      * @param intersectionId {Number} id of specific intersection under construction
      */
-    startConstruction: function(gameId, intersectionId) {
+    startConstruction: function (gameId, intersectionId) {
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
         }
@@ -87,7 +86,7 @@ Meteor.methods({
      * @param gameId {String} instance of a game
      * @param intersectionId {Number} id of a specifi intersection under construction
      */
-    stopConstruction: function(gameId, intersectionId) {
+    stopConstruction: function (gameId, intersectionId) {
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
         }
@@ -103,9 +102,9 @@ Meteor.methods({
      *
      * @param gameId {String} instance of a game
      * @param intersectionId {Number} id of a specific intersection under deconstruction
-     * @param stopTime {Date} data object of the time deconstruction started
+     * @param startTime {Date} data object of the time deconstruction started
      */
-    startDeconstruciton: function(gameId, intersectionId, startTime) {
+    startDeconstruction: function (gameId, intersectionId, startTime) {
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
         }
@@ -123,7 +122,7 @@ Meteor.methods({
      * @param intersectionId {Number} id of a specific intersection under deconstruction
      * @param stopTime {Date} data object of the time deconstruction stopped
      */
-    stopDeconstruciton: function(gameId, intersectionId, stopTime) {
+    stopDeconstruction: function (gameId, intersectionId, stopTime) {
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
         }
