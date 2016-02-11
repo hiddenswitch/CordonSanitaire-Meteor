@@ -112,9 +112,11 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, sprites) 
                 transitionToNextState()
             } else {
                 // Schedule a transition into the next state
-                barricadeTimers.push(Meteor.setTimeout(function () {
-                    transitionToNextState();
-                }, time - (new Date().getTime())))
+                Deps.afterFlush(function () {
+                    barricadeTimers.push(Meteor.setTimeout(function () {
+                        transitionToNextState();
+                    }, time - (new Date().getTime())))
+                });
             }
         }
     });
