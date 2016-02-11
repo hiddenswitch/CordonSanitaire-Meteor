@@ -1,7 +1,7 @@
 {
   "public": {
-    "maxPlayers": 4,
-    "durationSeconds": 45,
+    "maxPlayers": 3,
+    "durationSeconds": 60,
     "countdownSeconds": 10
   }
 }

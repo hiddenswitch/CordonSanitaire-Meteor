@@ -91,17 +91,21 @@ Template.worldBoard.onRendered(function () {
                                     && now <= barrier.barrierStopsExistingTime)) {
                                     // Draw a barrier for the given intersection
                                     var intersection = currentMapInfo.intersectionsById[intersectionId];
-                                    for (var i = 0; i < intersection.borderTiles.length; i++) {
-                                        var borderTile = intersection.borderTiles[i];
-                                        addWallTile(borderTile.x, borderTile.y);
-                                    }
+                                    //for (var i = 0; i < intersection.borderTiles.length; i++) {
+                                    //    var borderTile = intersection.borderTiles[i];
+                                    //    addWallTile(borderTile.x, borderTile.y);
+                                    //}
+                                    var innerTile = intersection.innerTiles[0];
+                                    addWallTile(innerTile.x, innerTile.y);
                                 } else {
                                     // Remove a barrier
                                     var intersection = currentMapInfo.intersectionsById[intersectionId];
-                                    for (var i = 0; i < intersection.borderTiles.length; i++) {
-                                        var borderTile = intersection.borderTiles[i];
-                                        removeWallTile(borderTile.x, borderTile.y);
-                                    }
+                                    //for (var i = 0; i < intersection.borderTiles.length; i++) {
+                                    //    var borderTile = intersection.borderTiles[i];
+                                    //    removeWallTile(borderTile.x, borderTile.y);
+                                    //}
+                                    var innerTile = intersection.innerTiles[0];
+                                    removeWallTile(innerTile.x, innerTile.y);
                                 }
                             });
 
@@ -247,10 +251,10 @@ Template.worldBoard.onRendered(function () {
 
         function preload() {
             // load path to map from settings
-            var filename = "London_single_lane.csv";
+            var filename = "Simple_Single_02.csv";
             var mapPath = "/assets/tilemaps/csv/" + filename;
             phaserGame.load.tilemap('map', mapPath, null, Phaser.Tilemap.CSV);
-            phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map_Single_Lane_HACK.png');
+            phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map.png');
             phaserGame.load.image('barricade_horiz', '/assets/sprites/barricade_horiz.png');
             phaserGame.load.spritesheet('player', '/assets/sprites/cdc_man.png', 16, 16);
             phaserGame.load.spritesheet('patientZero', '/assets/sprites/patient_zero_0.png', 16, 16);
@@ -305,10 +309,11 @@ Template.worldBoard.onRendered(function () {
             map.setCollisionByExclusion([8, 9, 10, 11, 12, 15], true, layer, true);
 
             //  Handle special tiles on gameboard (i.e. intersections)
-            map.setTileIndexCallback(8, promptAtIntersection, this);
-            map.setTileIndexCallback(9, promptAtIntersection, this);
-            map.setTileIndexCallback(10, promptAtIntersection, this);
-            map.setTileIndexCallback(11, promptAtIntersection, this);
+            map.setTileIndexCallback(15, promptAtIntersection, this);
+            //map.setTileIndexCallback(8, promptAtIntersection, this);
+            //map.setTileIndexCallback(9, promptAtIntersection, this);
+            //map.setTileIndexCallback(10, promptAtIntersection, this);
+            //map.setTileIndexCallback(11, promptAtIntersection, this);
             // quarantine tiles
             map.setTileIndexCallback(13, promptAtQuarantine, this);
             map.setTileIndexCallback(14, promptAtQuarantine, this);
@@ -674,8 +679,8 @@ Template.worldBoard.onRendered(function () {
                 return;
             }
             // update all crosswalk tiles associated with this intersection
-            var crosswalks = SanitaireMaps.getCrosswalkTiles(lastPromptTile.x, lastPromptTile.y, currentMapInfo.intersections);
-            var intersectionId = SanitaireMaps.getIntersectionIdForTilePosition(crosswalks[0].x, crosswalks[0].y, currentMapInfo)
+            //var crosswalks = SanitaireMaps.getCrosswalkTiles(lastPromptTile.x, lastPromptTile.y, currentMapInfo.intersections);
+            var intersectionId = SanitaireMaps.getIntersectionIdForTilePosition(lastPromptTile.x, lastPromptTile.y, currentMapInfo)
             // tell game we are starting to build a quarantine
             Meteor.call('startConstruction', gameId, intersectionId);
             // update state of player
@@ -695,8 +700,8 @@ Template.worldBoard.onRendered(function () {
                 return;
             }
             // tell game we are starting to demolish a quarantine
-            var crosswalks = SanitaireMaps.getCrosswalkTiles(lastPromptTile.x, lastPromptTile.y, currentMapInfo.intersections);
-            var intersectionId = SanitaireMaps.getIntersectionIdForTilePosition(crosswalks[0].x, crosswalks[0].y, currentMapInfo)
+            //var crosswalks = SanitaireMaps.getCrosswalkTiles(lastPromptTile.x, lastPromptTile.y, currentMapInfo.intersections);
+            var intersectionId = SanitaireMaps.getIntersectionIdForTilePosition(lastPromptTile.x, lastPromptTile.y, currentMapInfo)
             Meteor.call('startDeconstruciton', gameId, intersectionId, new Date());
             // update state of player
             localPlayerState.construction.isBuilding = true;
@@ -764,7 +769,7 @@ Template.worldBoard.onRendered(function () {
 
         function removeWallTile(positionX, positionY) {
             // Todo: get smart about crosswalk tile replacement
-            map.fill(8, positionX, positionY, 1, 1);
+            map.fill(15, positionX, positionY, 1, 1);
             // Todo: find sprite at this position, remove this sprite.
             //_.each(barricades, function(barricade) {
             //    if(barricade.x === positionX*16 && barricade.y === positionY*16) {
