@@ -556,6 +556,22 @@ Template.worldBoard.onRendered(function () {
             }
 
             Meteor.call('updatePositionAndVelocity', Router.current().data().gameId, position, velocity, TimeSync.serverTime(new Date()));
+
+            // if we are in the middls of building send a message that we stopped building
+            var game = Games.findOne(Router.current().data().gameId);
+            // get latest log entry from local user
+            var myLastBarriersLogEntry = _.find(_.sortBy(game.barriersLog, function(logEntry) { return -logEntry.time; }),
+                function(logEntry){ return logEntry.playerId === localPlayerId; });
+
+            // if log entry exists and is of type start build or demolish, then send a message to stop
+            if(myLastBarriersLogEntry) {
+                if(myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD) {
+                    Meteor.call('stopConstruction', Router.current().data().gameId, myLastBarriersLogEntry.intersectionId);
+                }
+                else if(myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
+                    Meteor.call('stopDeconstruction', Router.current().data().gameId, myLastBarriersLogEntry.intersectionId);
+                }
+            }
         }
 
         /**
