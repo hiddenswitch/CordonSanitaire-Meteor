@@ -212,6 +212,8 @@ Template.worldBoard.onRendered(function () {
 
         var sprites = {};
         var barricades = [];
+        // keep an array of build progress bars for each intersection
+        var buildProgressBars = [];
         // This is a list of timers that are used to schedule when the barricade state transition occurs
         var barricadeTimers = [];
         var patientZeroSprite = null;
@@ -351,34 +353,30 @@ Template.worldBoard.onRendered(function () {
             // beginSwipe function
             phaserGame.input.onDown.add(beginSwipe, this);
 
-            // Useful for adding an HUD
-            // var help = game.add.text(16, 16, 'Arrows to move', { font: '14px Arial', fill: '#ffffff' });
-            // help.fixedToCamera = true;
-
-            //// add button for building quarantines (currently Handled in DOM)
-            //button = phaserGame.add.button(width / 2 - 90, height - 80, 'button', addQuarantine, this, 2, 1, 0);
-            //button.fixedToCamera = true;
-
             currentMapInfo = SanitaireMaps.getMapInfo(map);
 
-            //TODO: create a node/edge representation of intersections and roads
+            // create a node/edge representation of intersections and roads
             // This is sort of already done by adding intersections to the roads array
             // each road is an edge, containing the two nodes it connects
 
             var game = Games.findOne(gameId, {reactive: false});
             var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
 
+            // add a bunch of building progress bars
+            _.each(currentMapInfo.intersections, function(intersection) {
+                addBuildProgressBar(intersection.id, intersection.innerTiles[0].x*16, intersection.innerTiles[0].y*16, phaserGame);
+            });
+
             initializeMeteor();
         }
 
-// return a graph of the map in the following form
-//
-//     var exampleGraph = {
-//         'intersection id 1': ['interesction id 2', 'intersection id 4', 'intersection id 10'],
-//         // notice that id 1 is connected to 4 and 4 is connected to 1
-//         'intersection id 4': ['intersection id 1', 'intersection id 8'],
-//…
-//     }
+        // TODO: Use this or remove this (think it's gonna get wiped next commit)
+        /**
+         *  return a graph of the map in the following form
+         *  var exampleGraph = { 'intersection id 1': ['interesction id 2', 'intersection id 4', 'intersection id 10'],
+         *  notice that id 1 is connected to 4 and 4 is connected to 1
+         *  'intersection id 4': ['intersection id 1', 'intersection id 8'],
+         */
         getGraphRepresentationOfMap = function (currentMapInfo, game) {
             var graph = {};
             var blockedIntersectionIds = new Set(game.intersectionIds);
@@ -909,6 +907,84 @@ Template.worldBoard.onRendered(function () {
             return player;
         };
 
+
+        /**
+         * Building progress bars - show status of build
+         * @param intersectionId {Number} which intersection we represent
+         * @param x {Number} position to place in the x coord
+         * @param y {Number} position to place in the y coord
+         * @param game {Phaser.Game} the game to add the bars to
+         */
+        var addBuildProgressBar = function(intersectionId, x, y, game) {
+            // move the bar to the top middle of the square
+            x += 8;
+
+            var properties = {
+                height: 3,
+                width: 20,
+                padding: 1,
+            };
+            var bmd = phaserGame.add.bitmapData(properties.width, properties.height);
+            bmd.ctx.beginPath();
+            bmd.ctx.rect(0, 0, properties.width, properties.height);
+            bmd.ctx.fillStyle = '#1E1E22';
+            bmd.ctx.fill();
+
+            var background = phaserGame.add.sprite(x, y, bmd);
+            background.anchor.set(0.5);
+
+            bmd = phaserGame.add.bitmapData(properties.width/4 - properties.padding * 2, properties.height - properties.padding * 2);
+            bmd.ctx.beginPath();
+            bmd.ctx.rect(0, 0, properties.width, properties.height);
+            bmd.ctx.fillStyle = '#F2E266';
+            bmd.ctx.fill();
+
+            var foreground = phaserGame.add.sprite(x - background.width/2, y, bmd);
+            foreground.anchor.y = 0.5;
+
+            var progressBar = {
+                x: x,
+                y: y,
+                intersectionId: intersectionId,
+                background: background,
+                foreground: foreground
+            };
+
+            buildProgressBars[intersectionId] = progressBar;
+        }
+
+        /**
+         * Update the value of the build progress bar
+         * @param intersectionId {Number} the intersection to be updated
+         * @param percent {Number} 0-1, normalized value of build progress
+         */
+        var updateBuildProgressBar = function(intersectionId, percent) {
+            // clamp percent between 0 and 1
+            percent = Math.max(Math.min(percent, 1), 0);
+            // update the foreground of the build progress bar to show construction
+            var buildWidth = percent * buildProgressBars[intersectionId].background.width;
+            phaserGame.add.tween(buildProgressBars[intersectionId].foreground.width).to( { width: buildWidth },0.1, Phaser.Easing.Linear.None, true);
+        };
+
+        /**
+         * Show build progress
+         * @param intersectionId {Number} id of an intersection to show progress at
+         */
+        var showBuildProgressBar = function(intersectionId) {
+            // make build progress visible
+            //buildProgressBars[intersectionId].background.visible = true;
+            //buildProgressBars[intersectionId].foreground.visible = true;
+        };
+
+        /**
+         * Hide build progress
+         * @param intersectionId {Number} id of an intersection to hide progress at
+         */
+        var hideBuildProgressBar = function(intersectionId) {
+            // make build progress visible
+            //buildProgressBars[intersectionId].background.visible = false;
+            //buildProgressBars[intersectionId].foreground.visible = false;
+        };
     }
 )
 ;
