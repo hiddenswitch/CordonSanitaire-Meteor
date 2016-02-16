@@ -20,14 +20,22 @@ if (Meteor.isClient) {
                 var gameId = info.gameId;
                 var playerId = info.playerId;
                 // load lobby to wait for start of game
-                Router.go('game', {gameId: gameId});
+                Router.go('game', {gameId: gameId}, {query: {playerId: playerId}});
             });
         },
         'click button#profile': function () {
             Router.go('profile', {userId: Meteor.userId()});
+        },
+        'click button#tutorial': function () {
+            Router.go('tutorial');
         }
-
     });
+
+    // let's keep the time left in game up to date by attaching an interval
+    var timerDependency = new Tracker.Dependency();
+    Meteor.setInterval(function () {
+        timerDependency.changed();
+    }, 10);
 
     Template.lobby.helpers({
         players: function () {
@@ -40,10 +48,72 @@ if (Meteor.isClient) {
         numberOfPlayersPresent: function () {
             var game = Games.findOne(this.gameId, {fields: {playerCount: 1}});
             return game.playerCount;
+        },
+        showLobbyCountdown: function () {
+            var game = Games.findOne(this.gameId, {fields: {playerCount: 1}});
+            return (Sanitaire.MAX_PLAYERS - game.playerCount) === 0;
+        },
+        lobbyCountdownSeconds: function () {
+            // returns the current time til start for the lobby
+            timerDependency.depend();   // keeps this called every 10ms
+            var game = Games.findOne(this.gameId, {fields: {countdownStartTime:1}});
+            var millisSinceCountdownStarted = new Date() - game.countdownStartTime;
+            var totalCountdownSeconds = Meteor.settings && Meteor.settings.public && Meteor.settings.public.countdownSeconds || 10;
+
+            var countdown = totalCountdownSeconds - Math.floor(millisSinceCountdownStarted/1000);
+            return countdown;
         }
     });
 
-    Template.conclusion.helpers({});
+    Template.game.helpers({
+        timeLeftInGame: function () {
+            timerDependency.depend();   // keeps this called every 10ms
+            var game = Games.findOne(this.gameId, {fields: {startedAt: 1}});
+            var timeSinceGameStarted = new Date() - game.startedAt;
+            var gameDurationSeconds = Meteor.settings && Meteor.settings.public && Meteor.settings.public.durationSeconds || 45;
+            var timeLeft = gameDurationSeconds * 1000.0 - timeSinceGameStarted;
+            timeLeft = Math.max(0, Math.min(gameDurationSeconds * 1000, timeLeft));
+            var result = {
+                "minutes": Math.floor((timeLeft / (60 * 1000.0)) % (60 * 60 * 1000)),
+                "seconds": Math.floor((timeLeft / 1000.0) % (60 * 1000)),
+                "hundredths": Math.floor((timeLeft / 10.0) % 100)
+            };
+            return result;
+        },
+        showingBuildButtons: function () {
+            return Session.get("showing build buttons");
+        },
+        showingDestroyButton: function () {
+            return Session.get("showing destroy button");
+        },
+        showPatientZeroIsolated: function () {
+            return Session.get("patient zero isolated");
+        },
+        showPatientZeroContained: function () {
+            return Session.get("patient zero contained");
+        },
+        showPatientZeroLoose: function () {
+            return Session.get("patient zero loose");
+        }
+    });
+
+    Template.conclusion.helpers({
+        endGameSynopsis: function () {
+            return -1;
+        },
+        pZeroStatus: function () {
+            return -1;
+        },
+        numQuarantines: function () {
+            return -1;
+        },
+        numBarricades: function () {
+            return -1;
+        },
+        numInjured: function () {
+            return -1;
+        }
+    });
 
     Template.conclusion.events({
         'click button#mainmenu': function () {
@@ -52,7 +122,32 @@ if (Meteor.isClient) {
         }
     });
 
-    Template.profile.helpers({});
+    Template.profile.helpers({
+        username: function () {
+            return Meteor.userId();
+        },
+        gamesPlayed: function () {
+            return -1;
+        },
+        gamesSuccesses: function () {
+            return -1;
+        },
+        quarantinesCompleted: function () {
+            return -1;
+        },
+        barricadesBuilt: function () {
+            return -1;
+        },
+        respondersTrapped: function () {
+            return -1;
+        },
+        respondersReleased: function () {
+            return -1;
+        },
+        timesInjured: function () {
+            return -1;
+        }
+    });
 
     Template.profile.events({
         'click button#mainmenu': function () {

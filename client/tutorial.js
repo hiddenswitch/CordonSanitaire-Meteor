@@ -4,6 +4,7 @@
  **/
 Template.tutorial.events({
     'click #finish': function () {
-        Meteor.call('finishTutorial');
+        //Meteor.call('finishTutorial');
+        Router.go('mainmenu');
     }
 });

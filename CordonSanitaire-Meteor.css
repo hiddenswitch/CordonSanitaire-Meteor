@@ -2,17 +2,18 @@
 * {
     margin: 0px;
     padding: 0px;
-    font-family: sans-serif;
+    /*font-family: sans-serif;*/
+    font-family: 'Open Sans', sans-serif;
 }
 
 h1 {
-    font-weight: lighter;
-    font-size: 2em;
+    /*font-weight: lighter;*/
+    /*font-size: 2em;*/
 }
 
 h2 {
-    font-weight: lighter;
-    font-size: 1em;
+    /*font-weight: lighter;*/
+    /*font-size: 1em;*/
 }
 
 h3 {
@@ -89,6 +90,10 @@ start of game */
     color: #ffff00;
 }
 
+.lobbyCountdown {
+    position: ;
+}
+
 #lobby_count {
     display: block;
 }
@@ -135,7 +140,8 @@ start of game */
 
 #countdown {
     /*display: none;*/
-    visibility: hidden;
+    /*visibility: hidden;*/
+    z-index: 101;
     position: absolute;
     top: 0;
     right: 0;
@@ -213,6 +219,9 @@ start of game */
     z-index: -1;
 }
 
+#map-container {
+}
+
 /* End Game Message */
 #top_container {
     visibility: hidden;
@@ -231,22 +240,26 @@ start of game */
 #p0_status {
     margin: 5%;
     z-index: 100;
-    display: none;
+    position: absolute;
+    /*display: none;*/
 }
 
 #p0_loose {
-    display: none;
+    /*display: none;*/
     z-index: 100;
+    width: 200px;
 }
 
 #p0_contained {
-    display: none;
+    /*display: none;*/
     z-index: 100;
+    width: 200px;
 }
 
 #p0_isolated {
-    display: none;
+    /*display: none;*/
     z-index: 100;
+    width: 200px;
 }
 
 #end_game {
@@ -265,55 +278,71 @@ start of game */
     bottom: 0px;
 }
 
-#left_comms {
+/* Quarantine button styling */
+.quarantineButton {
+    z-index: 999;
     position: absolute;
-    width: 40px;
-    float: left;
-    bottom: 20px;
-    left:20px;
-    padding: 5px;
-}
-#right_comms {
-    position: absolute;
-    clear:both;
-    width: 40px;
-    float: right;
-    bottom: 20px;
-    right:20px;
-    padding: 5px;
-}
-
-.commButton {
-    visibility: visible;
-    z-index: 99;
-    width: 30px;
-    height: 30px;
-    margin: 5%;
+    height: 50px;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
 
-    background-color: #ffffff;
-    -moz-border-radius: 40px;
-    -webkit-border-radius: 40px;
-    border-radius: 40px;
+    -moz-border-radius: 50px;
+    -webkit-border-radius: 50px;
+    border-radius: 50px;
     border: 3px solid #000000;
     display: inline-block;
     cursor: pointer;
-    font-size: 24px;
+    font-size: 28px;
     color: #000000;
     font-family: Trebuchet, Arial, sans-serif;
     font-weight: bold;
     padding: 0px;
     text-decoration: none;
     text-align: center;
-    line-height: 30px;
+    line-height: 50px;
 }
 
-.commButton:active {
-    background-color: #000000;
-    color: #ffffff;
-    border: 3px solid #ffffff;
+.centerButton {
+    bottom: 40px;
+    width: 50%;
+    margin: 0 25% 0 25%;
+}
+
+.leftButton {
+    bottom: 20px;
+    width: 30%;
+    margin: 0 55% 0 15%;
+}
+
+.rightButton {
+    bottom: 20px;
+    width: 30%;
+    margin: 0 15% 0 55%;
+}
+
+.buttonSubtext {
+    position: fixed;
+    bottom: 20px;
+    width: 80%;
+    margin: 0 10% 0 10%;
+    font-size: 14px;
+    font-weight: bold;
+    color: rgba(164,182,200,1.0);
+    text-align: center;
+}
+
+.cancelButton {
+    background-color: rgba(164,182,200,0.9);
+}
+
+.buildButton {
+    background-color: rgba(253,238,74,0.9);
+}
+
+.destroyButton {
+    background-color: rgba(63,72,83,0.9);
+    color: rgba(164,182,200,0.9);
 }
 
 /* Main button styling */
@@ -343,33 +372,6 @@ start of game */
     text-decoration: none;
     text-align: center;
     line-height: 50px;
-}
-
-/* Hello button styling */
-.helloButton{
-    color: #000000;
-    background-color: #ffffff;
-}
-
-.helloButton:active {
-    background-color: #000000;
-    color: #ffffff;
-    border: 3px solid #ffffff;
-}
-
-/* Shout button styling */
-.shoutButton {
-    color: #000000;
-    background-color: #ffa352;
-}
-.shoutButton:hover {
-    background-color: #ffbb54;
-}
-
-.shoutButton:active {
-    background-color: #000000;
-    color: #ffffff;
-    border: 3px solid #ffa352;
 }
 
 /* introduction screen styling*/
@@ -403,67 +405,131 @@ start of game */
     color: white;
 }
 
-/* Oh Snap Notifications styling */
-/* ALERTS */
-/* inspired by Twitter Bootstrap */
-/* Oh Snap */
+/* Styling for sign up screen */
+.inputButton {
+    border: 1.5px solid black;
+    background-size: 100%; /* To fill the dimensions of container (button), or */
+    background-size: 40px auto; /* to specify dimensions explicitly */
+    font-family: 'Open Sans', sans-serif;
+    background-color: white;
+    color: #000;
+    font-weight: 700;
+    font-size: 16px;
+    width: 70%;
+    height: 50px;
+    margin-top:20px;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 0px;
+}
 
-#ohsnap {
+.guestButton {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    position: relative;
+    bottom: 18px;
+}
+
+.fbButton {
+    border: 0;
+    background-color: #3b5998;
+    color: white;
+    margin: 0;
+}
+
+#signup_body {
+    text-align: center;
+    margin: auto;
+    width:100%;
+    display: block;
     position: fixed;
-    top: 120px;
-    left: 5px;
-    margin-left: 5px;
-    margin-right: 10px;
-    z-index: 99;
+    bottom: 0;
+    padding-bottom: 20px;
+    right: 0.3%;
 }
 
-.alert {
-    text-align: left;
-    margin-top: 10px;
-    padding: 15px;
-    border: 4px solid white;
-    border-radius: 10px;
-    float: left;
-    clear: left;
-    box-shadow: 5px 5px 10px rgba(0, 0, 0, .5);
+/* spacing */
+.textCenter {
+    text-align: center;
+    width: 90%;
+    position: relative;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+    height: 100%;
 }
 
-.alert-red {
-    color: black;
-    background-color: #ff5555; /*#DA4453;*/
+.vertCenter {
+    margin-top:50%;
 }
 
-.alert-green {
-    color: black;
-    background-color: #55ffb9; /*#37BC9B;*/
+.lilMargin {
+    margin-top: 5px;
+    margin-bottom: 5px;
 }
 
-.alert-blue {
-    color: white;
-    background-color: #4A89DC;
+/* Lobby */
+#players {
+    width: 70%;
+    min-height: 250px;
+    max-height: 300px;
+    overflow: scroll;
+    margin: 0 15%;
+    border: solid 1px #000;
 }
 
-.alert-yellow {
-    color: black;
-    background-color: #fff341; /*#F6BB42;*/
+#players ul {
+   list-style: none;
 }
 
-.alert-orange {
-    color: black;
-    background-color: #ffa352; /*#E9573F;*/
+#players li {
+    text-decoration: none;
+    margin: 0px 20px;
+    padding: 5px 10px 5px 10px;
+    border-bottom: solid 1px #000;
 }
 
-.alert-black {
-    color: white;
+/* Profile */
+.bottomDiv {
+    text-align: center;
+    margin: auto;
+    width:100%;
+    display: block;
+    position: fixed;
+    bottom: 0;
+    padding-bottom: 20px;
+    right: 0.3%;
+}
+
+.profImg {
     background-color: black;
+    border-radius: 30px;
+    height:60px;
+    width:60px;
+    margin: 0 auto;
+    margin-top: 10px;
 }
 
-#ohsnap {
-    text-shadow: none;
+.playerStatsList {
+    list-style-type:none;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 400;
+    padding: 0;
+    list-style: none;
+    height: 60%;
+    margin-top: 3px;
+
 }
 
-@media (max-width: 450px) {
-    .buttons {
-        margin-bottom: 334px;
-    }
+.playerStatsList li {
+    border-bottom: solid #000000 1px;
+    text-align: left;
+
 }
+
+.statsIcon {
+    display: inline-block;
+    width:15%;
+    vertical-align: middle;
+}
+

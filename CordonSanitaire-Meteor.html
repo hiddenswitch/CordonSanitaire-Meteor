@@ -7,17 +7,32 @@
     <meta http-equiv='expires' content='0'>
     <meta http-equiv='pragma' content='no-cache'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
 </head>
 
 <!--Sign Up-->
 <template name="signup">
     {{> loginButtons}}
-    <button id="guest">Guest</button>
-    <!--<h2>Create an account</h2>-->
-    <!--<input id="username" type="text" placeholder="username">-->
-    <!--<input id="email" type="text" placeholder="email">-->
-    <!--<input id="password" type="text" placeholder="password">-->
-    <!--<button id="signUp" onclick="signUp()">Create Account</button>-->
+    <div class="textCenter">
+        <div id="signup_header">
+            <h1> CORDON SANITAIRE</h1>
+            <p>
+                Cordon Sanitaire is a collaborative game in which players seek to isolate an infectious “patient zero”
+                from
+                the larger population. The game lasts for two minute. In 60 seconds, players must choose either to help
+                form
+                the front line of a quarantine, or remain passive.
+            </p>
+        </div>
+
+        <div id="signup_body">
+            <button class="inputButton fbButton" id="fbLogin">Sign in with Facebook</button>
+            <br>
+            <p class="lilMargin">or</p><br>
+            <button class="inputButton guestButton" id="guest">Play as guest</button>
+            <!--<input class="inputButton guestButton" id="guest" type="button" onClick=""  value="Play as guest">-->
+        </div>
+    </div>
 </template>
 
 <!--Log In-->
@@ -31,46 +46,50 @@
 
 <template name="mainmenu">
     {{> loginButtons}}
-    <button id="play">Play</button>
-    <button id="profile">Profile</button>
+    <div class="textCenter">
+        <div class="textCenter vertCenter">
+            <button class="inputButton playButton" id="play">Play now</button>
+            <button class="inputButton profileButton" id="profile">My profile</button>
+            <button class="inputButton tutButton" id="tutorial">Tutorial</button>
+        </div>
+    </div>
 </template>
 
 <!-- Pregame or Lobby View -->
 <template name="lobby">
-    <!-- Container for timer and intro text-->
-    <div id="overlay">
-        <div id="intro">
-            <h1>CORDON SANITAIRE <span id="version">v546</span></h1>
-
-            <div id="lobby_count">
-                <div class="minibox">
-                    <h2>{{numberOfPlayersNeeded}} people needed</h2>
-                </div>
-                <p>{{numberOfPlayersPresent}}present</p>
-            </div>
-
-            <div id="lobby_wait">
-                <div class="minibox">
-                    <h2><span id="timerbox" class="countdown_til_start">0</span></h2>
-                </div>
-                <p>til the search begins</p>
-            </div>
+    {{#if showLobbyCountdown}}
+        <div class="textCenter lobbyCountdown">
+            <p>Time til start</p>
+            <h1 class="lobbyCountdownSeconds">{{lobbyCountdownSeconds}}</h1>
         </div>
-    </div>
-
-    <h3>Game {{gameId}}</h3>
-    <!-- List of players in lobby-->
-    <div id="players">
-        {{#each players}}
-            <p>{{this.name}}</p>
-        {{/each}}
+    {{/if}}
+    <div class="textCenter">
+        <h1>CORDON SANITAIRE</h1>
+        <br>
+        <h2>RESPONSE TEAM</h2>
+        <h4>squad: {{gameId}}</h4>
+        <br>
+        <div>
+            <p class="lobbyP"><span id="respondersPresent">{{numberOfPlayersPresent}}</span> responders present</p>
+            <p class="lobbyP">Waiting for <span id="respondersToJoin">{{numberOfPlayersNeeded}}</span> more</p>
+        </div>
+        <br>
+        <!-- List of players in lobby-->
+        <div id="players">
+            <ul>
+                {{#each players}}
+                    <li>{{this.name}}</li>
+                {{/each}}
+            </ul>
+        </div>
     </div>
 </template>
 
 <!-- All in game views -->
 <template name="game">
     <!-- Container for countdown -->
-    <div id="countdown"><span id="seconds">00</span>.<span id="hundredths">00</span></div>
+    <div id="countdown"><span id="seconds">{{timeLeftInGame.seconds}}</span>.<span
+            id="hundredths">{{timeLeftInGame.hundredths}}</span></div>
 
     <!-- Logout button for player | Not currently necessary -->
     <!--<input type="button" value="Log Out" class="logoutButton" onclick="userLogout()" />-->
@@ -87,13 +106,27 @@
 
     <!-- Container for Patient Zero status -->
     <div id="p0_status">
-        <img id="p0_isolated" src="assets/pzero_status_isolated.svg"/>
-        <img id="p0_contained" src="assets/pzero_status_contained.svg"/>
-        <img id="p0_loose" src="assets/pzero_status_loose.svg"/>
+        {{#if showPatientZeroIsolated}}
+            <img id="p0_isolated" src="/assets/status/pzero_status_isolated.svg"/>
+        {{else}}
+            {{#if showPatientZeroContained}}
+                <img id="p0_contained" src="/assets/status/pzero_status_contained.svg"/>
+            {{else}}
+                <img id="p0_loose" src="/assets/status/pzero_status_loose.svg"/>
+            {{/if}}
+        {{/if}}
     </div>
 
     <div id="bottom_container">
-        <a href="#" id="mainToggleButton" class="mainButton toggleButton" onclick="toggleMe()">JOIN</a>
+        {{#if showingDestroyButton}}
+            <a href="#" id="destroyButton" class="centerButton quarantineButton destroyButton">DEMOLISH</a>
+            <p class="buttonSubtext">or swipe to keep running</p>
+        {{/if}}
+        {{#if showingBuildButtons}}
+                <a href="#" id="buildButton" class="centerButton quarantineButton buildButton">BUILD</a>
+            <p class="buttonSubtext">or swipe to keep running</p>
+        {{/if}}
+        <!--<a href="#" id="mainToggleButton" class="mainButton toggleButton">JOIN</a>-->
         <!--<a href="#" id="shoutButton" class="mainButton shoutButton" onclick="sendShout()">SHOUT!</a>-->
         <!--<a href="#" id="helloButton" class="mainButton helloButton" onclick="sendHello()">HELLO!</a>-->
     </div>
@@ -102,46 +135,63 @@
     <div id="intro_container">
     </div>
 
-    <!-- Container for Two.js canvas -->
-    <div id="two">
-    </div>
-
     <!-- Container for Google Map -->
     <div id="map-container">
-        {{> gameBoard gameId=gameId}}
+        {{> worldBoard gameId=gameId}}
     </div>
 </template>
 
 <!-- Display conclusion after the game -->
 <template name="conclusion">
-    <h2>{{game_status}}</h2>
-
-    <p>{{game_summary}}</p>
-
-    <h3>Stats</h3>
-    <ul>
-        <li>patien zero status: {{pZero_status}}</li>
-        <li>people joined: {{people_joined}}</li>
-        <li>people trapped: {{people_trapped}}</li>
-        <li>people passive: {{people_passive}}</li>
-    </ul>
-
-    {{>gameBoard gameId=gameId}}
-    <button id="mainmenu">back</button>
+    <div class="textCenter">
+        <h2 class="gameOverTitle">Game Over</h2>
+        <p class = "gameOverMessage">Lorem ipsum dolor sit amet, scelerisque erat elit. Vel mauris et tempus pede praesent, luctus mauris laoreet.</p>
+        <p>{{endGameSynopsis}}</p>
+        <div class="finalStats">
+            <ul class="finalStatsList">
+                <li><img class="statsIcon" src="assets/icons/patientIsolated.png">
+                    <p class="statsDesc">Patient Zero {{pZeroStatus}}</p></li>
+                <li><img class="statsIcon" src="assets/icons/quarantineCreated.png">
+                    <p class="statsDesc">{{numQuarantines}} quarantine zones built</p></li>
+                <li><img class="statsIcon" src="assets/icons/barricadeBuilt.png">
+                    <p class="statsDesc">{{numBarricades}} barricades built</p></li>
+                <li><img class="statsIcon" src="assets/icons/respondentInjured.png">
+                    <p class="statsDesc">{{numInjured}}respondents injured</p></li>
+            </ul>
+        </div>
+        <div class="bottomDiv">
+            <button id="mainmenu" class="inputButton">Main Menu</button>
+        </div>
+    </div>
 </template>
 
 <!-- A page for profile information i.e. username, stats, ... -->
 <template name="profile">
-    <img id="profile_pic" src=""/>
-
-    <h2 id="username">{{username}}</h2>
-
-    <h3>Stats</h3>
-    <ul>
-        <li>games played: {{games_played}}</li>
-        <li></li>
-    </ul>
-    <button id="mainmenu">back</button>
+    <div class="textCenter">
+        <h2>My profile</h2>
+        <div class="profImg"></div>
+        <h3 id="username">{{username}}</h3>
+        <div>
+            <ul class="playerStatsList">
+                <li>games played: {{gamesPlayed}}</li>
+                <li><img class="statsIcon" src="assets/icons/patientIsolated.png">
+                    <p class="statsDesc">{{gamesSuccesses}} P0 isolations</p></li>
+                <li><img class="statsIcon" src="assets/icons/quarantineCreated.png">
+                    <p class="statsDesc">{{quarantinesCompleted}} quarantine zones completed</p></li>
+                <li><img class="statsIcon" src="assets/icons/barricadeBuilt.png">
+                    <p class="statsDesc">{{barricadesBuilt}} barricades built</p></li>
+                <li><img class="statsIcon" src="assets/icons/respondentInjured.png">
+                    <p class="statsDesc">{{respondersTrapped}} respondents trapped</p></li>
+                <li><img class="statsIcon" src="assets/icons/respondentInjured.png">
+                    <p class="statsDesc">{{respondersReleased}} respondents released</p></li>
+                <li><img class="statsIcon" src="assets/icons/respondentInjured.png">
+                    <p class="statsDesc">{{timesInjured}} times injured by P0</p></li>
+            </ul>
+        </div>
+        <div class="bottomDiv">
+            <button id="mainmenu" class="inputButton">Main Menu</button>
+        </div>
+    </div>
 </template>
 
 <template name="loading">
