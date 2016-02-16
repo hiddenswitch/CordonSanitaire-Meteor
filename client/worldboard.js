@@ -282,7 +282,7 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
 
     if (!_.isNull(to)) {
         // to(properties, duration, ease, autoStart, delay, repeat, yoyo)
-        var diff = time - new Date().getTime();
+        var diff = time - TimeSync.serverTime(new Date());
         var properties = {width: width * to};
         var duration = Math.max(0.1, diff);
         var ease = Phaser.Easing.Linear.None;
@@ -719,8 +719,8 @@ Template.worldBoard.onRendered(function () {
             var shouldShowDestroyButton = false;
 
             if (!!barricade) {
-                if ((new Date().getTime()) < barricade.time
-                || barricade.time == Infinity) {
+                if (TimeSync.serverTime(new Date()) < barricade.time
+                    || barricade.time == Infinity) {
                     shouldShowBuildButton = barricade.buttons === Sanitaire.barricadeButtons.BUILD;
                     shouldShowDestroyButton = barricade.buttons === Sanitaire.barricadeButtons.DESTROY;
                 } else {
