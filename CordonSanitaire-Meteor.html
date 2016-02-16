@@ -118,14 +118,12 @@
     </div>
 
     <div id="bottom_container">
+        {{#if showingDestroyButton}}
+            <a href="#" id="destroyButton" class="centerButton quarantineButton destroyButton">DEMOLISH</a>
+            <p class="buttonSubtext">or swipe to keep running</p>
+        {{/if}}
         {{#if showingBuildButtons}}
-            {{#if showingDestroyButton}}
-                <a href="#" id="destroyButton" class="centerButton quarantineButton destroyButton">DEMOLISH</a>
-                <!--<a href="#" id="cancelButton" class="leftButton quarantineButton cancelButton">CANCEL</a>-->
-            {{else}}
                 <a href="#" id="buildButton" class="centerButton quarantineButton buildButton">BUILD</a>
-                <!--<a href="#" id="cancelButton" class="leftButton quarantineButton cancelButton">RUN</a>-->
-            {{/if}}
             <p class="buttonSubtext">or swipe to keep running</p>
         {{/if}}
         <!--<a href="#" id="mainToggleButton" class="mainButton toggleButton">JOIN</a>-->

@@ -81,7 +81,7 @@ var updatePlayer = function (sprites, player) {
  * @param sprites
  * @returns {*}
  */
-var updateBarriers = function (barriers, barricadeTimers, map, gameId, sprites) {
+var updateBarriers = function (barriers, barricadeTimers, map, gameId, sprites, mapInfo, buildProgressBars, phaserGame) {
     // These barricades come from Sanitaire.addConstructionMessageToLog
 
     // Clear the previous timers
@@ -89,13 +89,18 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, sprites) 
         Meteor.clearTimeout(timer);
     });
 
-    barricadeTimers = [];
+    // Clear array
+    barricadeTimers.length = 0;
 
     _.each(barriers, function (barricade) {
         var intersectionId = barricade.intersectionId;
         // Interpret the barricade's current state, and set timers for the barricade's next
         // states.
         drawBarricade(map, barricade.state, barricade.intersectionId, currentMapInfo);
+        var from = _.isUndefined(barricade.progress) ? null : barricade.progress;
+        var to = barricade.time == Infinity ? null : (barricade.nextState === Sanitaire.barricadeStates.BUILT ? 1 : 0);
+        updateBuildProgressBar(barricade.intersectionId, from, to, barricade.time, buildProgressBars, phaserGame, mapInfo);
+
 
         // Set new timer
         if (barricade.time > -Infinity
@@ -105,6 +110,12 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, sprites) 
             };
             // Convert to local time
             var time = barricade.time - TimeSync.serverOffset();
+
+            // Freeze the progress
+            if (time === Infinity) {
+                return;
+            }
+
             // If the transition would have already occured according to server time,
             // make the next transition the one
             if (time < (new Date()).getTime()) {
@@ -115,7 +126,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, sprites) 
                 Deps.afterFlush(function () {
                     barricadeTimers.push(Meteor.setTimeout(function () {
                         transitionToNextState();
-                    }, time - (new Date().getTime())))
+                    }, Math.min(0, time - (new Date().getTime()))))
                 });
             }
         }
@@ -190,6 +201,101 @@ var updatePatientZero = function (gameId, patientZeroSprite, phaserGame, patient
     return {patientZeroSprite: patientZeroSprite};
 };
 
+/**
+ * Building progress bars - show status of build
+ * @param intersectionId {Number} which intersection we represent
+ * @param x {Number} position to place in the x coord
+ * @param y {Number} position to place in the y coord
+ * @param game {Phaser.Game} the game to add the bars to
+ * @param [startWidth=0] {Number}
+ */
+var addBuildProgressBar = function (intersectionId, x, y, phaserGame, buildProgressBars, startWidth) {
+    // move the bar to the top middle of the square
+    x += 8;
+
+    var properties = {
+        height: 3,
+        width: 20,
+        padding: 1
+    };
+
+    var bmd = phaserGame.add.bitmapData(properties.width, properties.height);
+    bmd.ctx.beginPath();
+    bmd.ctx.rect(0, 0, properties.width, properties.height);
+    bmd.ctx.fillStyle = '#1E1E22';
+    bmd.ctx.fill();
+
+    var background = phaserGame.add.sprite(x, y, bmd);
+    background.anchor.set(0.5);
+
+    bmd = phaserGame.add.bitmapData(properties.width / 4 - properties.padding * 2, properties.height - properties.padding * 2);
+    bmd.ctx.beginPath();
+    bmd.ctx.rect(0, 0, properties.width, properties.height);
+    bmd.ctx.fillStyle = '#F2E266';
+    bmd.ctx.fill();
+
+    var foreground = phaserGame.add.sprite(x - background.width / 2, y, bmd);
+    foreground.anchor.y = 0.5;
+    foreground.width = startWidth * background.width;
+
+    buildProgressBars[intersectionId] = {
+        x: x,
+        y: y,
+        intersectionId: intersectionId,
+        background: background,
+        foreground: foreground,
+        tween: null
+    };
+};
+
+/**
+ * Update the build progress bar
+ * @param intersectionId {String|Number} The intersection ID
+ * @param from {Number} A value between 0 and 1 representing the normalized progress to start the tween at. If null,
+ * uses the existing value
+ * @param to {Number} A value between 0 and 1 representing the normalized progress to end the tween at. If null,
+ * no tween
+ * @param time {Number} The ticks when the tween should finish. Ignored if to is null
+ * @param buildProgressBars {Object.<Number, *>} A dictionary of progress bar datums set by add build progress bar
+ * @param phaserGame {Phaser.Game} The phaser game
+ * @param mapInfo {*} The map info
+ */
+var updateBuildProgressBar = function (intersectionId, from, to, time, buildProgressBars, phaserGame, mapInfo) {
+    if (!buildProgressBars[intersectionId]) {
+        var innerTile = mapInfo.intersectionsById[intersectionId].innerTiles[0];
+        addBuildProgressBar(intersectionId, innerTile.x * 16, innerTile.y * 16, phaserGame, buildProgressBars);
+    }
+
+    // update the foreground of the build progress bar to show construction
+    var width = buildProgressBars[intersectionId].background.width;
+
+    // Stop the tween if it already exists
+    if (!!buildProgressBars[intersectionId].tween) {
+        buildProgressBars[intersectionId].tween.stop();
+        phaserGame.tweens.remove(buildProgressBars[intersectionId].tween);
+    }
+
+
+    if (!_.isNull(from)) {
+        buildProgressBars[intersectionId].foreground.width = from * width;
+    }
+
+    if (!_.isNull(to)) {
+        // to(properties, duration, ease, autoStart, delay, repeat, yoyo)
+        var diff = time - new Date().getTime();
+        var properties = {width: width * to};
+        var duration = Math.max(0.1, diff);
+        var ease = Phaser.Easing.Linear.None;
+        var autoStart = true;
+        buildProgressBars[intersectionId].tween = phaserGame.add.tween(buildProgressBars[intersectionId].foreground).to(
+            properties,
+            duration,
+            ease,
+            autoStart
+        );
+    }
+};
+
 Template.worldBoard.onRendered(function () {
         var renderer = this;
         var routeData = Router.current().data();
@@ -213,7 +319,7 @@ Template.worldBoard.onRendered(function () {
         var sprites = {};
         var barricades = [];
         // keep an array of build progress bars for each intersection
-        var buildProgressBars = [];
+        var buildProgressBars = {};
         // This is a list of timers that are used to schedule when the barricade state transition occurs
         var barricadeTimers = [];
         var patientZeroSprite = null;
@@ -228,7 +334,7 @@ Template.worldBoard.onRendered(function () {
                     _.each(fields, function (v, k) {
                         // See if a quarantine tile has been added
                         if (k === 'barriers') {
-                            updateBarriers(v, barricadeTimers, map, gameId, sprites);
+                            updateBarriers(v, barricadeTimers, map, gameId, sprites, currentMapInfo, buildProgressBars, phaserGame);
                         } else
                         // Has the patient zero updated at time changed? Do some moving
                         if (k === 'patientZero') {
@@ -334,7 +440,6 @@ Template.worldBoard.onRendered(function () {
             map.setCollisionByExclusion([8, 9, 10, 11, 12, 15], true, layer, true);
 
             //  Handle special tiles on gameboard (i.e. intersections)
-            map.setTileIndexCallback(15, promptAtIntersection, this);
             //map.setTileIndexCallback(8, promptAtIntersection, this);
             //map.setTileIndexCallback(9, promptAtIntersection, this);
             //map.setTileIndexCallback(10, promptAtIntersection, this);
@@ -342,8 +447,10 @@ Template.worldBoard.onRendered(function () {
             // TODO: Set callbacks for tiles under construction / under deconstruction
 
             // quarantine tiles
-            map.setTileIndexCallback(13, promptAtQuarantine, this);
-            map.setTileIndexCallback(14, promptAtQuarantine, this);
+            map.setTileIndexCallback(13, promptAtIntersection, this);
+            map.setTileIndexCallback(15, promptAtIntersection, this);
+            map.setTileIndexCallback(17, promptAtIntersection, this);
+            map.setTileIndexCallback(18, promptAtIntersection, this);
 
             //  Un-comment this on to see the collision tiles
             // layer.debug = true;
@@ -361,11 +468,6 @@ Template.worldBoard.onRendered(function () {
 
             var game = Games.findOne(gameId, {reactive: false});
             var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
-
-            // add a bunch of building progress bars
-            _.each(currentMapInfo.intersections, function(intersection) {
-                addBuildProgressBar(intersection.id, intersection.innerTiles[0].x*16, intersection.innerTiles[0].y*16, phaserGame);
-            });
 
             initializeMeteor();
         }
@@ -558,15 +660,19 @@ Template.worldBoard.onRendered(function () {
             // if we are in the middls of building send a message that we stopped building
             var game = Games.findOne(Router.current().data().gameId);
             // get latest log entry from local user
-            var myLastBarriersLogEntry = _.find(_.sortBy(game.barriersLog, function(logEntry) { return -logEntry.time; }),
-                function(logEntry){ return logEntry.playerId === localPlayerId; });
+            var myLastBarriersLogEntry = _.find(_.sortBy(game.barriersLog, function (logEntry) {
+                    return -logEntry.time;
+                }),
+                function (logEntry) {
+                    return logEntry.playerId === localPlayerId;
+                });
 
             // if log entry exists and is of type start build or demolish, then send a message to stop
-            if(myLastBarriersLogEntry) {
-                if(myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD) {
+            if (myLastBarriersLogEntry) {
+                if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD) {
                     Meteor.call('stopConstruction', Router.current().data().gameId, myLastBarriersLogEntry.intersectionId);
                 }
-                else if(myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
+                else if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
                     Meteor.call('stopDeconstruction', Router.current().data().gameId, myLastBarriersLogEntry.intersectionId);
                 }
             }
@@ -603,8 +709,28 @@ Template.worldBoard.onRendered(function () {
             lastPromptTile.y = tile.y;
 
             // show buttons for building
-            Session.set("showing build buttons", true);
-            Session.set("showing destroy button", false);
+            var game = Games.findOne(gameId);
+            // Something is broken with underscore, indexBy is undefined!
+            var barricade = _.find(game.barriers, function (b) {
+                // Do a double equals compare since once is strings and the other is ints
+                return b.intersectionId == intersectionId;
+            });
+            var shouldShowBuildButton = true;
+            var shouldShowDestroyButton = false;
+
+            if (!!barricade) {
+                if ((new Date().getTime()) < barricade.time
+                || barricade.time == Infinity) {
+                    shouldShowBuildButton = barricade.buttons === Sanitaire.barricadeButtons.BUILD;
+                    shouldShowDestroyButton = barricade.buttons === Sanitaire.barricadeButtons.DESTROY;
+                } else {
+                    shouldShowBuildButton = barricade.nextButtons === Sanitaire.barricadeButtons.BUILD;
+                    shouldShowDestroyButton = barricade.nextButtons === Sanitaire.barricadeButtons.DESTROY;
+                }
+            }
+
+            Session.set("showing build buttons", shouldShowBuildButton);
+            Session.set("showing destroy button", shouldShowDestroyButton);
 
             prevPhysics = {
                 direction: player_direction,
@@ -616,7 +742,8 @@ Template.worldBoard.onRendered(function () {
                     x: sprite.body.velocity.x,
                     y: sprite.body.velocity.y
                 }
-            }
+            };
+
             // stop our player (stops animation and movement)
             player_direction = '';
 
@@ -635,66 +762,7 @@ Template.worldBoard.onRendered(function () {
                 x: 0,
                 y: 0
             }, TimeSync.serverTime(new Date()));
-        }
-
-        /**
-         * shows the correct prompt when arriving at a barricade/quarantine
-         * @param sprite {Phaser.Sprite} a sprite object of the player at the barricade
-         * @param tile {Phaser.Tile} the tile that triggered the prompt
-         */
-        function promptAtQuarantine(sprite, tile) {
-            // Only process the callback for local player
-            if (sprite.playerId !== localPlayerId) {
-                return;
-            }
-
-            var intersectionId = SanitaireMaps.getIntersectionId(tile.x, tile.y, currentMapInfo.intersections);
-            if (lastIntersectionId === intersectionId && movesSincePrompt < 2) {
-                return;
-            }
-            movesSincePrompt = 0;
-            lastIntersectionId = intersectionId;
-
-            // save info about last tile prompted... used for drawing barricade
-            lastPromptTile.index = tile.index;
-            lastPromptTile.x = tile.x;
-            lastPromptTile.y = tile.y;
-
-
-            // show buttons for building
-            Session.set("showing build buttons", true);
-            Session.set("showing destroy button", true);
-
-            prevPhysics = {
-                direction: player_direction,
-                position: {
-                    x: sprite.position.x,
-                    y: sprite.position.y
-                },
-                velocity: {
-                    x: sprite.body.velocity.x,
-                    y: sprite.body.velocity.y
-                }
-            }
-            // stop our player (stops animation and movement)
-            player_direction = '';
-
-            // round the position to always be on the grid
-            var pos = {
-                x: tile.x * 16,  // KEVIN HACK - Freeze player in the middle of the intersection
-                y: tile.y * 16
-                //x:Math.floor((sprite.position.x + 8) / 16) * 16,
-                //y:Math.floor((sprite.position.y + 8) / 16) * 16
-            };
-
-            Meteor.call('updatePositionAndVelocity', gameId, {
-                x: pos.x,
-                y: pos.y
-            }, {
-                x: 0,
-                y: 0
-            }, TimeSync.serverTime(new Date()));
-        }
+        };
 
         /**
          * place build a quarantine on the corner that a player arrives at
@@ -907,70 +975,11 @@ Template.worldBoard.onRendered(function () {
             return player;
         };
 
-
-        /**
-         * Building progress bars - show status of build
-         * @param intersectionId {Number} which intersection we represent
-         * @param x {Number} position to place in the x coord
-         * @param y {Number} position to place in the y coord
-         * @param game {Phaser.Game} the game to add the bars to
-         */
-        var addBuildProgressBar = function(intersectionId, x, y, game) {
-            // move the bar to the top middle of the square
-            x += 8;
-
-            var properties = {
-                height: 3,
-                width: 20,
-                padding: 1,
-            };
-            var bmd = phaserGame.add.bitmapData(properties.width, properties.height);
-            bmd.ctx.beginPath();
-            bmd.ctx.rect(0, 0, properties.width, properties.height);
-            bmd.ctx.fillStyle = '#1E1E22';
-            bmd.ctx.fill();
-
-            var background = phaserGame.add.sprite(x, y, bmd);
-            background.anchor.set(0.5);
-
-            bmd = phaserGame.add.bitmapData(properties.width/4 - properties.padding * 2, properties.height - properties.padding * 2);
-            bmd.ctx.beginPath();
-            bmd.ctx.rect(0, 0, properties.width, properties.height);
-            bmd.ctx.fillStyle = '#F2E266';
-            bmd.ctx.fill();
-
-            var foreground = phaserGame.add.sprite(x - background.width/2, y, bmd);
-            foreground.anchor.y = 0.5;
-
-            var progressBar = {
-                x: x,
-                y: y,
-                intersectionId: intersectionId,
-                background: background,
-                foreground: foreground
-            };
-
-            buildProgressBars[intersectionId] = progressBar;
-        }
-
-        /**
-         * Update the value of the build progress bar
-         * @param intersectionId {Number} the intersection to be updated
-         * @param percent {Number} 0-1, normalized value of build progress
-         */
-        var updateBuildProgressBar = function(intersectionId, percent) {
-            // clamp percent between 0 and 1
-            percent = Math.max(Math.min(percent, 1), 0);
-            // update the foreground of the build progress bar to show construction
-            var buildWidth = percent * buildProgressBars[intersectionId].background.width;
-            phaserGame.add.tween(buildProgressBars[intersectionId].foreground.width).to( { width: buildWidth },0.1, Phaser.Easing.Linear.None, true);
-        };
-
         /**
          * Show build progress
          * @param intersectionId {Number} id of an intersection to show progress at
          */
-        var showBuildProgressBar = function(intersectionId) {
+        var showBuildProgressBar = function (intersectionId) {
             // make build progress visible
             //buildProgressBars[intersectionId].background.visible = true;
             //buildProgressBars[intersectionId].foreground.visible = true;
@@ -980,7 +989,7 @@ Template.worldBoard.onRendered(function () {
          * Hide build progress
          * @param intersectionId {Number} id of an intersection to hide progress at
          */
-        var hideBuildProgressBar = function(intersectionId) {
+        var hideBuildProgressBar = function (intersectionId) {
             // make build progress visible
             //buildProgressBars[intersectionId].background.visible = false;
             //buildProgressBars[intersectionId].foreground.visible = false;
