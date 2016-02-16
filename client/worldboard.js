@@ -9,16 +9,23 @@
  * @param state {Number} A state from Sanitiare.barricadeStates
  * @param intersectionId {String|Number} An intersection ID
  * @param mapInfo {*} Map info containing all the lookup tables
+ * @param playerGroup {Phaser.Group} Group of player sprites
+ * @param prevPosition {Position} x and y properties
+ * @param phaserGame {Phaser.Game}
  */
-var drawBarricade = function (map, state, intersectionId, mapInfo) {
+var drawBarricade = function (map, state, intersectionId, mapInfo, playerGroup, prevPosition, phaserGame) {
     var tile = mapInfo.intersectionsById[intersectionId].innerTiles[0];
 
     switch (state) {
         case Sanitaire.barricadeStates.BUILT:
             map.fill(13, tile.x, tile.y, 1, 1);
+            // actually add a physical sprite
+            //addBarricadeSpriteToTile(tile, prevPosition, playerGroup, phaserGame);
             break;
         case Sanitaire.barricadeStates.EMPTY:
             map.fill(15, tile.x, tile.y, 1, 1);
+            // remove the physical sprite
+            //removeBarricadeSpriteFromTile();
             break;
         case Sanitaire.barricadeStates.UNDER_CONSTRUCTION:
             // TODO: Choose a tile that represents under construction
@@ -33,6 +40,44 @@ var drawBarricade = function (map, state, intersectionId, mapInfo) {
             map.fill(18, tile.x, tile.y, 1, 1);
             break;
     }
+};
+
+/**
+ *
+ * @param tile
+ * @param playerGroup
+ * @param prevPosition
+ * @param phaserGame
+ */
+var addBarricadeSpriteToTile = function(tile, playerGroup, prevPosition, phaserGame) {
+    // create sprite for barricade
+    // add sprite to game (actually phaserGame)
+    var barricade = phaserGame.add.tileSprite(tile.x*16, tile.y*16, 16, 16, 'barricade_horiz');
+    // move our player back to their prevBuildTile
+    Meteor.call('updatePositionAndVelocity', gameId, {
+        x: prevPosition.x*16,
+        y: prevPosition.y*16
+    }, {
+        x: 0,
+        y: 0
+    }, TimeSync.serverTime(new Date()));
+    // add collisions with players
+    phaserGame.physics.enable(playerGroup, barricade);
+};
+
+/**
+ *
+ * @param map
+ * @param intersectionId
+ * @param mapInfo
+ * @param playerSprites
+ * @param localPlayerSprite
+ * @param prevPosition
+ * @param phaserGame
+ */
+var removeBarricadeSpriteFromTile = function() {
+    // find sprite for barricade
+    // remove sprite from game (actually phaserGame)
 };
 
 /**
@@ -78,10 +123,10 @@ var updatePlayer = function (sprites, player) {
  * @param barricadeTimers
  * @param map
  * @param gameId
- * @param sprites
+ * @param playerSprites
  * @returns {*}
  */
-var updateBarriers = function (barriers, barricadeTimers, map, gameId, sprites, mapInfo, buildProgressBars, phaserGame) {
+var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSprites, playerGroup, prevPosition, mapInfo, buildProgressBars, phaserGame) {
     // These barricades come from Sanitaire.addConstructionMessageToLog
 
     // Clear the previous timers
@@ -96,7 +141,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, sprites, 
         var intersectionId = barricade.intersectionId;
         // Interpret the barricade's current state, and set timers for the barricade's next
         // states.
-        drawBarricade(map, barricade.state, barricade.intersectionId, currentMapInfo);
+        drawBarricade(map, barricade.state, barricade.intersectionId, currentMapInfo, playerGroup, prevPosition, phaserGame);
         var from = _.isUndefined(barricade.progress) ? null : barricade.progress;
         var to = barricade.time == Infinity ? null : (barricade.nextState === Sanitaire.barricadeStates.BUILT ? 1 : 0);
         updateBuildProgressBar(barricade.intersectionId, from, to, barricade.time, buildProgressBars, phaserGame, mapInfo);
@@ -135,7 +180,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, sprites, 
     // Recalculate patient zero
     var game = Games.findOne(gameId, {reactive: false});
 
-    var playerRoadIds = _.map(sprites, function (sprite) {
+    var playerRoadIds = _.map(playerSprites, function (sprite) {
         return SanitaireMaps.getRoadIdForTilePosition(
             sprite.x / 16,
             sprite.y / 16,
@@ -305,6 +350,10 @@ Template.worldBoard.onRendered(function () {
         var localPlayer = Players.findOne(localPlayerId);
         var localPlayerState = {
             construction: {
+                prevPosition: {
+                    x:-1,
+                    y:-1,
+                },
                 isBuilding: false,
                 intersectionId: -1
             },
@@ -316,7 +365,8 @@ Template.worldBoard.onRendered(function () {
         var width = window.innerWidth / scaleValue;
         var height = window.innerHeight / scaleValue;
 
-        var sprites = {};
+        var playerSprites = {};   // this is our players list
+        var playerGroup;    // Phaser.Group
         var barricades = [];
         // keep an array of build progress bars for each intersection
         var buildProgressBars = {};
@@ -334,7 +384,7 @@ Template.worldBoard.onRendered(function () {
                     _.each(fields, function (v, k) {
                         // See if a quarantine tile has been added
                         if (k === 'barriers') {
-                            updateBarriers(v, barricadeTimers, map, gameId, sprites, currentMapInfo, buildProgressBars, phaserGame);
+                            updateBarriers(v, barricadeTimers, map, gameId, playerSprites, playerGroup, localPlayerState.construction.prevPosition, currentMapInfo, buildProgressBars, phaserGame);
                         } else
                         // Has the patient zero updated at time changed? Do some moving
                         if (k === 'patientZero') {
@@ -346,13 +396,13 @@ Template.worldBoard.onRendered(function () {
 
                 this.playerUpdate = Players.find({gameId: Router.current().data().gameId}).observe({
                     added: function (player) {
-                        sprites[player._id] = createSpriteForPlayer(player._id, {
+                        playerSprites[player._id] = createSpriteForPlayer(player._id, {
                             isLocalPlayer: player._id === localPlayerId
                         });
-                        updatePlayer(sprites, player);
+                        updatePlayer(playerSprites, player);
                     },
                     changed: function (player) {
-                        updatePlayer(sprites, player);
+                        updatePlayer(playerSprites, player);
                     },
                     removed: function (player) {
 
@@ -434,6 +484,9 @@ Template.worldBoard.onRendered(function () {
             //  Resize the world
             layer.resizeWorld();
 
+            // Create a group to add player sprites to
+            playerGroup = phaserGame.add.group();
+
             //  Simplified list of things that the player collides into
             //map.setCollisionBetween(0, 7, true, layer, true);  // walls + buildings
             //map.setCollisionBetween(13, 14, true, layer, true); // barricades
@@ -446,11 +499,17 @@ Template.worldBoard.onRendered(function () {
             //map.setTileIndexCallback(11, promptAtIntersection, this);
             // TODO: Set callbacks for tiles under construction / under deconstruction
 
-            // quarantine tiles
+            // barricade tiles
             map.setTileIndexCallback(13, promptAtIntersection, this);
             map.setTileIndexCallback(15, promptAtIntersection, this);
             map.setTileIndexCallback(17, promptAtIntersection, this);
             map.setTileIndexCallback(18, promptAtIntersection, this);
+
+            // crosswalks
+            map.setTileIndexCallback(8, promptAtCrosswalk, this);
+            map.setTileIndexCallback(9, promptAtCrosswalk, this);
+            map.setTileIndexCallback(10, promptAtCrosswalk, this);
+            map.setTileIndexCallback(11, promptAtCrosswalk, this);
 
             //  Un-comment this on to see the collision tiles
             // layer.debug = true;
@@ -516,8 +575,8 @@ Template.worldBoard.onRendered(function () {
                 updatePatientZeroPosition(patientZeroSprite, patientZeroPosition);
             }
 
-            for (var playerId in sprites) {
-                var sprite = sprites[playerId];
+            for (var playerId in playerSprites) {
+                var sprite = playerSprites[playerId];
 
                 // Do physics w/ layer
                 phaserGame.physics.arcade.collide(sprite, layer, function () {
@@ -618,7 +677,7 @@ Template.worldBoard.onRendered(function () {
          * @param direction
          */
         function move(direction) {
-            if (!sprites[localPlayerId]) {
+            if (!playerSprites[localPlayerId]) {
                 return;
             }
 
@@ -626,8 +685,8 @@ Template.worldBoard.onRendered(function () {
             movesSincePrompt++;
 
             var position = {
-                x: sprites[localPlayerId].position.x,
-                y: sprites[localPlayerId].position.y
+                x: playerSprites[localPlayerId].position.x,
+                y: playerSprites[localPlayerId].position.y
             };
 
             // round the position to always be on the grid
@@ -665,7 +724,8 @@ Template.worldBoard.onRendered(function () {
                 }),
                 function (logEntry) {
                     return logEntry.playerId === localPlayerId;
-                });
+                }
+            );
 
             // if log entry exists and is of type start build or demolish, then send a message to stop
             if (myLastBarriersLogEntry) {
@@ -680,72 +740,80 @@ Template.worldBoard.onRendered(function () {
 
         /**
          * Displays a prompt when we arrive at a specific tile
-         * @param sprite
-         * @param tile
+         * Shows the build or demolish button (possibly both)
+         * @param sprite {Phaser.Sprite} This is our avatar
+         * @param tile {Phaser.Tile}
          */
-
-        var prevPhysics = {};
-
         function promptAtIntersection(sprite, tile) {
             // Only process the callback for local player
             if (sprite.playerId !== localPlayerId) {
                 return;
             }
-            /** TODO: move this logic for checks elsewhere, the function
-             * should simply display the correct prompt (i.e. buttons when needed)
-             *
-             */
 
             var intersectionId = SanitaireMaps.getIntersectionId(tile.x, tile.y, currentMapInfo.intersections);
+
             if (lastIntersectionId === intersectionId && movesSincePrompt < 2) {
                 return;
             }
-            movesSincePrompt = 0;
-            lastIntersectionId = intersectionId;
 
-            // save info about last tile prompted... used for drawing barricade
-            lastPromptTile.index = tile.index;
-            lastPromptTile.x = tile.x;
-            lastPromptTile.y = tile.y;
-
-            // show buttons for building
             var game = Games.findOne(gameId);
             // Something is broken with underscore, indexBy is undefined!
             var barricade = _.find(game.barriers, function (b) {
                 // Do a double equals compare since once is strings and the other is ints
                 return b.intersectionId == intersectionId;
             });
-            var shouldShowBuildButton = true;
+
+            // decide if to show buttons
+            var shouldShowBuildButton = false;
             var shouldShowDestroyButton = false;
 
-            if (!!barricade) {
-                if (TimeSync.serverTime(new Date()) < barricade.time
-                    || barricade.time == Infinity) {
-                    shouldShowBuildButton = barricade.buttons === Sanitaire.barricadeButtons.BUILD;
-                    shouldShowDestroyButton = barricade.buttons === Sanitaire.barricadeButtons.DESTROY;
-                } else {
-                    shouldShowBuildButton = barricade.nextButtons === Sanitaire.barricadeButtons.BUILD;
-                    shouldShowDestroyButton = barricade.nextButtons === Sanitaire.barricadeButtons.DESTROY;
+            // if the barricade record exists
+            if(!!barricade) {
+                if(barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
+                    || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
+                    || barricade.state === Sanitaire.barricadeStates.BUILT) {
+                    console.log("X: no need to prompt, this should handled from a crosswalk");
+                    return;
                 }
+                else if(barricade.state === Sanitaire.barricadeStates.EMPTY
+                    || barricade.state === Sanitaire.barricadeStates.NONE) {
+                    console.log("X: we should have the option to build at intersection ", intersectionId);
+
+                    if (TimeSync.serverTime(new Date()) < barricade.time
+                        || barricade.time == Infinity) {
+                        shouldShowBuildButton = barricade.buttons === Sanitaire.barricadeButtons.BUILD;
+                        shouldShowDestroyButton = barricade.buttons === Sanitaire.barricadeButtons.DESTROY;
+                    } else {
+                        shouldShowBuildButton = barricade.nextButtons === Sanitaire.barricadeButtons.BUILD;
+                        shouldShowDestroyButton = barricade.nextButtons === Sanitaire.barricadeButtons.DESTROY;
+                    }
+                }
+                else {
+                    console.log("X: how did we get here?");
+                    return;
+                }
+            }else {
+                console.log("X: we should have the option to build at intersection ", intersectionId, ". It has never been built on.");
+
+                shouldShowBuildButton = true;
+                shouldShowDestroyButton = false;
             }
+
+            // reset our catch for same intersection
+            movesSincePrompt = 0;
+            lastIntersectionId = intersectionId;
+
 
             Session.set("showing build buttons", shouldShowBuildButton);
             Session.set("showing destroy button", shouldShowDestroyButton);
 
-            prevPhysics = {
-                direction: player_direction,
-                position: {
-                    x: sprite.position.x,
-                    y: sprite.position.y
-                },
-                velocity: {
-                    x: sprite.body.velocity.x,
-                    y: sprite.body.velocity.y
-                }
-            };
-
             // stop our player (stops animation and movement)
             player_direction = '';
+
+            // record the prompt tile
+            lastPromptTile.index = tile.index;
+            lastPromptTile.x = tile.x;
+            lastPromptTile.y = tile.y;
 
             // round the position to always be on the grid
             var pos = {
@@ -762,6 +830,61 @@ Template.worldBoard.onRendered(function () {
                 x: 0,
                 y: 0
             }, TimeSync.serverTime(new Date()));
+            return;
+
+        };
+
+        /**
+         * Prompts when a player is entering a crosswalk tile
+         * In the case of a barricade build on this intersection, display demo button
+         * In the case of an empty intersection
+         * @param sprite {Phaser.Sprite} this is our avatar, who just stepped on a crosswalk
+         * @param tile {Phaser.Tile} a crosswalk tile that you just stepped on
+         */
+        promptAtCrosswalk = function (sprite, tile) {
+
+            // Only process the callback for local player
+            if (sprite.playerId !== localPlayerId) {
+                return;
+            }
+
+            var intersectionId = SanitaireMaps.getIntersectionId(tile.x, tile.y, currentMapInfo.intersections);
+
+            if (lastIntersectionId === intersectionId && movesSincePrompt < 2) {
+                return;
+            }
+
+            var game = Games.findOne(gameId);
+            // Something is broken with underscore, indexBy is undefined!
+            var barricade = _.find(game.barriers, function (b) {
+                // Do a double equals compare since once is strings and the other is ints
+                return b.intersectionId == intersectionId;
+            });
+
+            // if the barricade is built then offer demolish
+            if(!!barricade) {
+                if(barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
+                    || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
+                    || barricade.state === Sanitaire.barricadeStates.BUILT) {
+                    console.log("CW: prompting from crosswalk at intersection ", intersectionId, " with barricade: ", barricade);
+
+                    // reset our catch for same intersection
+                    movesSincePrompt = 0;
+                    lastIntersectionId = intersectionId;
+                }
+                else if(barricade.state === Sanitaire.barricadeStates.EMPTY
+                    || barricade.state === Sanitaire.barricadeStates.NONE) {
+                    console.log("CW: no need to prompt. Intersection ", intersectionId, " is empty.");
+                    return;
+                }
+                else {
+                    console.log("CW: how did we get here?");
+                    return;
+                }
+            }
+            else {
+                console.log("CW: no need to prompt. Intersection ", intersectionId, " has never been built on.");
+            }
         };
 
         /**
@@ -805,84 +928,12 @@ Template.worldBoard.onRendered(function () {
             localPlayerState.construction.intersectionId = intersectionId;
         };
 
-        /**
-         * Cancels the action (if this gui is available) and continues the player running in their
-         * previous direction and velocity
-         */
-        keepRunning = function () {
-
-            // hide buttons
-            Session.set("showing build buttons", false);
-            Session.set("showing destroy button", false);
-
-            if (!!prevPhysics) {
-                Meteor.call('updatePositionAndVelocity', gameId, {
-                    x: prevPhysics.position.x,
-                    y: prevPhysics.position.y
-                }, {
-                    x: prevPhysics.velocity.x,
-                    y: prevPhysics.velocity.y
-                }, TimeSync.serverTime(new Date()));
-            }
-        };
 
         /**
-         * Dismisses the option to demolish a barricade, and leave player standing still
-         * if the GUI option is available
+         *  when the player begins to swipe we only save mouse/finger coordinates, remove the touch/click
+         *  input listener and add a new listener to be fired when the mouse/finger has been released,
+         *  then we call endSwipe function
          */
-        cancelDestroy = function () {
-
-            // TODO: make the buttons actually hide, not sure why they aren't right now
-            // hide buttons
-            Session.set("showing build buttons", false);
-            Session.set("showing destroy button", false);
-        }
-
-        function addWallTile(positionX, positionY) {
-            map.fill(13, positionX, positionY, 1, 1);
-            // add a sprite barricade
-            //var barricade = phaserGame.add.tileSprite(positionX*16, positionY*16, 16, 16, 'barricade_horiz');
-            //barricades.push(barricade);
-            //phaserGame.physics.enable([sprites[localPlayerId], barricade], Phaser.Physics.ARCADE);
-            //barricade.body.moves = false;
-
-            //Todo: To remove player from trapped position
-            //Meteor.setTimeout(function() {
-            //    // If I am in an illegal space, find the closest legal space to occupy
-            //    var mySprite = sprites[localPlayerId];
-            //    var currentTile = map.getTile(mySprite.x, mySprite.y, layer);
-            //    if(currentTile.index != 12) { // if we aren't on a road
-            //        if (currentTile.index == 15) {  // if we are in an intersection
-            //            var intersectionId = SanitaireMaps.getIntersectionIdForTilePosition(positionX, positionY, currentMapInfo);
-            //            //Todo: check if intersection is barricaded
-            //            //if(intersectionId )
-            //            // if so...
-            //            // Iterate through neighboring tiles until you find a legal tile
-            //            // Call the appropriate meteor method to place me in the legal tile}
-            //        }
-            //    }
-            //},100);
-        }
-
-        function removeWallTile(positionX, positionY) {
-            // Todo: get smart about crosswalk tile replacement
-            map.fill(15, positionX, positionY, 1, 1);
-            // Todo: find sprite at this position, remove this sprite.
-            //_.each(barricades, function(barricade) {
-            //    if(barricade.x === positionX*16 && barricade.y === positionY*16) {
-            //        barricade.kill();  // maybe destroy
-            //    }
-            //});
-        }
-
-// TODO: shows progress for specific intersection
-//function showBuildProgress (intersectionId) {
-//
-//}
-
-// when the player begins to swipe we only save mouse/finger coordinates, remove the touch/click
-// input listener and add a new listener to be fired when the mouse/finger has been released,
-// then we call endSwipe function
         function beginSwipe() {
             startX = phaserGame.input.worldX;
             startY = phaserGame.input.worldY;
@@ -890,16 +941,10 @@ Template.worldBoard.onRendered(function () {
             phaserGame.input.onUp.add(endSwipe);
         }
 
-// function to be called when the player releases the mouse/finger
+        /**
+         *  function to be called when the player releases the mouse/finger
+         */
         function endSwipe() {
-            // if was in process of build or demo, send a message to stop the build action
-            //if (localPlayerState.construction.isBuilding === true) {
-            //    Meteor.call('stopConstruction', gameId, localPlayerState.construction.intersectionId);
-            //    // make no longer in progress
-            //    localPlayerState.construction.isBuilding = false;
-            //    localPlayerState.construction.intersectionId = -1;
-            //}
-
             // hide buttons
             Session.set("showing build buttons", false);
 
@@ -947,14 +992,10 @@ Template.worldBoard.onRendered(function () {
                 location: {"x": 0, "y": 0}
             }, options);
 
-            // set random position for yourself
-            //if(options.isLocalPlayer)
-            //var randomTile = getRandomStartPosition();
-            //var startTile = {
-            //    "x": options.isLocalPlayer && randomTile.x * 16 || 16,
-            //    "y": options.isLocalPlayer && randomTile.y * 16 || 16,
-            //}
             var player = phaserGame.add.sprite(options.location.x, options.location.y, 'player', 1);
+            // add this sprite to a group
+            playerGroup.add(player);
+            // add animations to the sprite
             player.animations.add('left', [8, 9], 10, true);
             player.animations.add('right', [1, 2], 10, true);
             player.animations.add('up', [11, 12, 13], 10, true);
