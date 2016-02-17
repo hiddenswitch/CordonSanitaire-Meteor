@@ -4,6 +4,11 @@
  **/
 
 /**
+ *
+ */
+var walkableTiles = [8, 9, 10, 11, 12, 15];
+
+/**
  * Draws a barricade
  * @param map {Phaser.Map} A phaser map
  * @param state {Number} A state from Sanitiare.barricadeStates
@@ -19,13 +24,9 @@ var drawBarricade = function (map, state, intersectionId, mapInfo, playerGroup, 
     switch (state) {
         case Sanitaire.barricadeStates.BUILT:
             map.fill(13, tile.x, tile.y, 1, 1);
-            // actually add a physical sprite
-            //addBarricadeSpriteToTile(tile, prevPosition, playerGroup, phaserGame);
             break;
         case Sanitaire.barricadeStates.EMPTY:
             map.fill(15, tile.x, tile.y, 1, 1);
-            // remove the physical sprite
-            //removeBarricadeSpriteFromTile();
             break;
         case Sanitaire.barricadeStates.UNDER_CONSTRUCTION:
             // TODO: Choose a tile that represents under construction
@@ -40,44 +41,6 @@ var drawBarricade = function (map, state, intersectionId, mapInfo, playerGroup, 
             map.fill(18, tile.x, tile.y, 1, 1);
             break;
     }
-};
-
-/**
- *
- * @param tile
- * @param playerGroup
- * @param prevPosition
- * @param phaserGame
- */
-var addBarricadeSpriteToTile = function(tile, playerGroup, prevPosition, phaserGame) {
-    // create sprite for barricade
-    // add sprite to game (actually phaserGame)
-    var barricade = phaserGame.add.tileSprite(tile.x*16, tile.y*16, 16, 16, 'barricade_horiz');
-    // move our player back to their prevBuildTile
-    Meteor.call('updatePositionAndVelocity', gameId, {
-        x: prevPosition.x*16,
-        y: prevPosition.y*16
-    }, {
-        x: 0,
-        y: 0
-    }, TimeSync.serverTime(new Date()));
-    // add collisions with players
-    phaserGame.physics.enable(playerGroup, barricade);
-};
-
-/**
- *
- * @param map
- * @param intersectionId
- * @param mapInfo
- * @param playerSprites
- * @param localPlayerSprite
- * @param prevPosition
- * @param phaserGame
- */
-var removeBarricadeSpriteFromTile = function() {
-    // find sprite for barricade
-    // remove sprite from game (actually phaserGame)
 };
 
 /**
@@ -161,7 +124,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                 return;
             }
 
-            // If the transition would have already occured according to server time,
+            // If the transition would have already occurred according to server time,
             // make the next transition the one
             if (time < (new Date()).getTime()) {
                 // Transition into the next state now
@@ -490,7 +453,7 @@ Template.worldBoard.onRendered(function () {
             //  Simplified list of things that the player collides into
             //map.setCollisionBetween(0, 7, true, layer, true);  // walls + buildings
             //map.setCollisionBetween(13, 14, true, layer, true); // barricades
-            map.setCollisionByExclusion([8, 9, 10, 11, 12, 15], true, layer, true);
+            map.setCollisionByExclusion(walkableTiles, true, layer, true);
 
             //  Handle special tiles on gameboard (i.e. intersections)
             //map.setTileIndexCallback(8, promptAtIntersection, this);
@@ -631,12 +594,15 @@ Template.worldBoard.onRendered(function () {
                 });
 
 
+                // check to see if the next block in the direction being walked is a legal move
+                // *** THIS STOPS PLAYERS FROM WALKING THROUGH BARRICADES!!! *** (among other things)
                 // check if user has run to the end of the canvas and stop them if so
                 if (playerId === localPlayerId) {
-                    if (sprite.body.position.x < 0
+                    if (!isLegalWalkingPosition(sprite.body)
+                        || sprite.body.position.x < 0
                         || sprite.body.position.y < 0
                         || sprite.body.position.x > map.widthInPixels - map.tileWidth
-                        || sprite.body.position.y > map.heightInPixels - map.tileHeight)
+                        || sprite.body.position.y > map.heightInPixels - map.tileHeight) {
                         Meteor.call('updatePositionAndVelocity', gameId, {
                             x: sprite.position.x,
                             y: sprite.position.y
@@ -644,6 +610,7 @@ Template.worldBoard.onRendered(function () {
                             x: 0,
                             y: 0
                         }, TimeSync.serverTime(new Date()));
+                    }
                 }
 
                 // TODO: Update position on collide.
@@ -669,6 +636,36 @@ Template.worldBoard.onRendered(function () {
 
             // game.debug.body(player);
 
+        }
+
+        /**
+         * Returns true only if the player can continue moving in the current direction
+         * otherwise returns false, which should be handled to stop sprites in their tracks
+         * @param body {Phaser.Body} contains position and velocity of the sprite
+         */
+        function isLegalWalkingPosition(body) {
+            var nextTile;
+            var currentTile =
+            {
+                x: Math.floor((body.position.x + 8) / 16),
+                y: Math.floor((body.position.y + 8) / 16)
+            };
+
+            // check tile in the direction we are headed
+            if (body.velocity.x > 0) {  // right
+                nextTile = map.getTile(currentTile.x + 1, currentTile.y, 0);
+            } else if (body.velocity.x < 0) {  // left
+                nextTile = map.getTile(currentTile.x - 1, currentTile.y, 0);
+            } else if (body.velocity.y > 0) {  // down
+                nextTile = map.getTile(currentTile.x, currentTile.y + 1, 0);
+            } else if (body.velocity.y < 0) {  // up
+                nextTile = map.getTile(currentTile.x, currentTile.y - 1, 0);
+            } else {
+                // not walking anywhere, feel free to loiter all you want
+                return true;
+            }
+
+            return _.indexOf(walkableTiles, nextTile.index) !== -1;
         }
 
         /**
