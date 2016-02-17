@@ -102,12 +102,15 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         // Interpret the barricade's current state, and set timers for the barricade's next
         // states.
         drawBarricade(map, barricade.state, barricade.intersectionId, currentMapInfo);
-        console.log("<0> update barricade: ", barricade.intersectionId, " from point 0");
 
         var from = _.isUndefined(barricade.progress) ? null : barricade.progress;
         var to = barricade.time == Infinity ? null : (barricade.nextState === Sanitaire.barricadeStates.BUILT ? 1 : 0);
         updateBuildProgressBar(barricade.intersectionId, from, to, barricade.time, buildProgressBars, phaserGame, mapInfo);
 
+        if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
+            || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION ) {
+            showBuildProgressBar(buildProgressBars, barricade.intersectionId);
+        }
 
         // Set new timer
         if (barricade.time > -Infinity
@@ -149,6 +152,8 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                             x: 0,
                             y: 0
                         }, TimeSync.serverTime(new Date()));
+                        // hide the display of progress
+                        hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
                     }
                     else {
                         console.log("build completed @", barricade.intersectionId, "by someone else");
@@ -167,14 +172,18 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                             x: 0,
                             y: 0
                         }, TimeSync.serverTime(new Date()));
+                        // hide the display of progress
+                        hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
                     }
                     else {
                         console.log("demolition completed @", barricade.intersectionId, "by someone else");
                         // Riot, people are tearing sh*t down! or digging us out of a shallow hole...
                     }
                 }
-
-                console.log("<1> update barricade: ", barricade.intersectionId, " from point 1");
+                else if (barricade.nextState === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
+                || barricade.nextState === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION ) {
+                    showBuildProgressBar(buildProgressBars, barricade.intersectionId);
+                }
             };
             // Convert to local time
             var time = barricade.time - TimeSync.serverOffset();
@@ -189,14 +198,11 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
             if (time < (new Date()).getTime()) {
                 // Transition into the next state now
                 transitionToNextState()
-                console.log("<2> update barricade: ", barricade.intersectionId, " from point 2");
-
             } else {
                 // Schedule a transition into the next state
                 Deps.afterFlush(function () {
                     barricadeTimers.push(Meteor.setTimeout(function () {
                         transitionToNextState();
-                        console.log("<3> update barricade: ", barricade.intersectionId, " from point 3");
                     }, Math.max(0, time - (new Date().getTime()))))
                 });
             }
@@ -317,6 +323,28 @@ var addBuildProgressBar = function (intersectionId, x, y, phaserGame, buildProgr
         foreground: foreground,
         tween: null
     };
+};
+
+/**
+ * Show build progress
+ * @param buildProgressBars {*} Array of Phaser.Sprites
+ * @param intersectionId {Number} id of an intersection to show progress at
+ */
+var showBuildProgressBar = function (buildProgressBars, intersectionId) {
+    // make build progress visible
+    buildProgressBars[intersectionId].background.visible = true;
+    buildProgressBars[intersectionId].foreground.visible = true;
+};
+
+/**
+ * Hide build progress
+ * @param buildProgressBars {*} Array of Phaser.Sprites
+ * @param intersectionId {Number} id of an intersection to hide progress at
+ */
+var hideBuildProgressBar = function (buildProgressBars, intersectionId) {
+    // make build progress invisible
+    buildProgressBars[intersectionId].background.visible = false;
+    buildProgressBars[intersectionId].foreground.visible = false;
 };
 
 /**
@@ -1129,26 +1157,6 @@ Template.worldBoard.onRendered(function () {
             player.playerId = playerId;
 
             return player;
-        };
-
-        /**
-         * Show build progress
-         * @param intersectionId {Number} id of an intersection to show progress at
-         */
-        var showBuildProgressBar = function (intersectionId) {
-            // make build progress visible
-            //buildProgressBars[intersectionId].background.visible = true;
-            //buildProgressBars[intersectionId].foreground.visible = true;
-        };
-
-        /**
-         * Hide build progress
-         * @param intersectionId {Number} id of an intersection to hide progress at
-         */
-        var hideBuildProgressBar = function (intersectionId) {
-            // make build progress visible
-            //buildProgressBars[intersectionId].background.visible = false;
-            //buildProgressBars[intersectionId].foreground.visible = false;
         };
     }
 )
