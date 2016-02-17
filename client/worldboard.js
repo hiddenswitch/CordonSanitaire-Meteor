@@ -14,10 +14,8 @@ var walkableTiles = [8, 9, 10, 11, 12, 15];
  * @param state {Number} A state from Sanitiare.barricadeStates
  * @param intersectionId {String|Number} An intersection ID
  * @param mapInfo {*} Map info containing all the lookup tables
- * @param prevPosition {Position} x and y properties
- * @param phaserGame {Phaser.Game}
  */
-var drawBarricade = function (map, state, intersectionId, mapInfo, prevPosition, phaserGame) {
+var drawBarricade = function (map, state, intersectionId, mapInfo) {
     var tile = mapInfo.intersectionsById[intersectionId].innerTiles[0];
 
     switch (state) {
@@ -103,7 +101,9 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         var intersectionId = barricade.intersectionId;
         // Interpret the barricade's current state, and set timers for the barricade's next
         // states.
-        drawBarricade(map, barricade.state, barricade.intersectionId, currentMapInfo, prevPosition, phaserGame);
+        drawBarricade(map, barricade.state, barricade.intersectionId, currentMapInfo);
+        console.log("<0> update barricade: ", barricade.intersectionId, " from point 0");
+
         var from = _.isUndefined(barricade.progress) ? null : barricade.progress;
         var to = barricade.time == Infinity ? null : (barricade.nextState === Sanitaire.barricadeStates.BUILT ? 1 : 0);
         updateBuildProgressBar(barricade.intersectionId, from, to, barricade.time, buildProgressBars, phaserGame, mapInfo);
@@ -114,6 +114,51 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
             && barricade.time < Infinity) {
             var transitionToNextState = function () {
                 drawBarricade(map, barricade.nextState, barricade.intersectionId, currentMapInfo);
+
+                // get the game
+                var game = Games.findOne(gameId);
+
+                // get latest log entry from local user
+                var myLastBarriersLogEntry = _.find(_.sortBy(game.barriersLog, function (logEntry) {
+                        return -logEntry.time;
+                    }),
+                    function (logEntry) {
+                        return logEntry.playerId === Router.current().data().playerId;
+                    }
+                );
+
+                var isLocalPlayerAtBarricade = false;
+
+                if(myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD || myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
+                   if(myLastBarriersLogEntry.intersectionId == barricade.intersectionId) {  // careful, string compared w/ number
+                       isLocalPlayerAtBarricade = true;
+                   }
+                }
+
+                // check to see if the barricade just completed building or demolishing
+                // if we are at this specific barricade, then move us to the middle of it
+                if (barricade.nextState === Sanitaire.barricadeStates.BUILT) {
+                    if(isLocalPlayerAtBarricade) {
+                        console.log("build completed @", barricade.intersectionId, "by you");
+                        // congrats, you finished building your very own barricade
+                    }
+                    else {
+                        console.log("build completed @", barricade.intersectionId, "by someone else");
+                        // someone else finished building a barricade, let's congratulate them...
+                    }
+                }
+                else if (barricade.nextState === Sanitaire.barricadeStates.EMPTY) {
+                    if(isLocalPlayerAtBarricade) {
+                        console.log("demolition completed @", barricade.intersectionId, "by you");
+                        // congrats, you finished demolishing someone's hard work... I guess you put in some work too
+                    }
+                    else {
+                        console.log("demolition completed @", barricade.intersectionId, "by someone else");
+                        // Riot, people are tearing sh*t down! or digging us out of a shallow hole...
+                    }
+                }
+
+                console.log("<1> update barricade: ", barricade.intersectionId, " from point 1");
             };
             // Convert to local time
             var time = barricade.time - TimeSync.serverOffset();
@@ -128,11 +173,14 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
             if (time < (new Date()).getTime()) {
                 // Transition into the next state now
                 transitionToNextState()
+                console.log("<2> update barricade: ", barricade.intersectionId, " from point 2");
+
             } else {
                 // Schedule a transition into the next state
                 Deps.afterFlush(function () {
                     barricadeTimers.push(Meteor.setTimeout(function () {
                         transitionToNextState();
+                        console.log("<3> update barricade: ", barricade.intersectionId, " from point 3");
                     }, Math.max(0, time - (new Date().getTime()))))
                 });
             }
