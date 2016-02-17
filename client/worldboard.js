@@ -756,6 +756,12 @@ Template.worldBoard.onRendered(function () {
                 return;
             }
 
+            // only respond to callback if within 3 pixels of the center of the tile
+            if (Math.abs((Math.floor(sprite.position.x) - 7) % 16) > 1 && Math.abs((Math.floor(sprite.position.y) - 7) % 16) > 1) {
+                //console.log("close but not close enough");
+                return;
+            }
+
             var game = Games.findOne(gameId);
             // Something is broken with underscore, indexBy is undefined!
             var barricade = _.find(game.barriers, function (b) {
@@ -854,6 +860,15 @@ Template.worldBoard.onRendered(function () {
                 return;
             }
 
+            // only respond to callback if within 3 pixels of the center of the tile
+            if (Math.abs((Math.floor(sprite.position.x)-7) % 16) > 1 && Math.abs((Math.floor(sprite.position.y)-7) % 16) > 1) {
+                //console.log("close but not close enough");
+                return;
+            }
+
+            // get the intersection tile
+            var intersectionTile = currentMapInfo.intersectionsById[intersectionId].innerTiles[0];
+
             var game = Games.findOne(gameId);
             // Something is broken with underscore, indexBy is undefined!
             var barricade = _.find(game.barriers, function (b) {
@@ -861,12 +876,25 @@ Template.worldBoard.onRendered(function () {
                 return b.intersectionId == intersectionId;
             });
 
+            // decide if to show buttons
+            var shouldShowBuildButton = false;
+            var shouldShowDestroyButton = false;
+
             // if the barricade is built then offer demolish
             if(!!barricade) {
                 if(barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.BUILT) {
                     console.log("CW: prompting from crosswalk at intersection ", intersectionId, " with barricade: ", barricade);
+
+                    if (TimeSync.serverTime(new Date()) < barricade.time
+                        || barricade.time == Infinity) {
+                        shouldShowBuildButton = barricade.buttons === Sanitaire.barricadeButtons.BUILD;
+                        shouldShowDestroyButton = barricade.buttons === Sanitaire.barricadeButtons.DESTROY;
+                    } else {
+                        shouldShowBuildButton = barricade.nextButtons === Sanitaire.barricadeButtons.BUILD;
+                        shouldShowDestroyButton = barricade.nextButtons === Sanitaire.barricadeButtons.DESTROY;
+                    }
 
                     // reset our catch for same intersection
                     movesSincePrompt = 0;
@@ -884,7 +912,40 @@ Template.worldBoard.onRendered(function () {
             }
             else {
                 console.log("CW: no need to prompt. Intersection ", intersectionId, " has never been built on.");
+                return;
             }
+
+            Session.set("showing build buttons", shouldShowBuildButton);
+            Session.set("showing destroy button", shouldShowDestroyButton);
+
+            // if we aren't showing buttons, no need to stop
+            //if(!shouldShowBuildButton)
+            //    return;
+
+            // stop our player (stops animation and movement)
+            player_direction = '';
+
+            // record the prompt tile
+            lastPromptTile.index = intersectionTile.index;
+            lastPromptTile.x = intersectionTile.x;
+            lastPromptTile.y = intersectionTile.y;
+
+            // round the position to always be on the grid
+            var pos = {
+                x: tile.x * 16,  // KEVIN HACK - Freeze player in the middle of the intersection
+                y: tile.y * 16
+                //x:Math.floor((sprite.position.x + 8) / 16) * 16,
+                //y:Math.floor((sprite.position.y + 8) / 16) * 16
+            };
+
+            Meteor.call('updatePositionAndVelocity', gameId, {
+                x: pos.x,
+                y: pos.y
+            }, {
+                x: 0,
+                y: 0
+            }, TimeSync.serverTime(new Date()));
+            return;
         };
 
         /**
