@@ -3,12 +3,37 @@
  */
 SanitaireMaps = (Meteor.isClient ? window : global).Maps || {};
 
+/**
+ * finds a random position on the roads (useful for finding a starting position)
+ * @param roads {*} Array of roads and tiles contained from mapInfo
+ * @returns {*} a Position {x,y} that is in the middle of a road
+ */
 SanitaireMaps.getRandomStartPosition = function (roads) {
     var address = parseInt(Math.floor(Math.random() * roads.length));
     var streetSize = roads[address].innerTiles.length;
     return roads[address].innerTiles[parseInt(streetSize / 2)];
 };
 
+/**
+ * finds the Tile position of an intersection from its id
+ * @param intersectionId {Number}
+ * @param intersections {*} Array of intersections and related tiles
+ */
+SanitaireMaps.getIntersectionTilePositionForId = function(intersectionId, intersections) {
+
+    var intersection = _.find(intersections, function(intersection) {
+        return intersection.id == intersectionId;   // handles string or number comparison happily
+    });
+    return intersection.innerTiles[0];
+};
+
+/**
+ *  Returns the id of an intersection given its coordinates and the intersections
+ * @param x {Number}
+ * @param y {Number}
+ * @param intersections {*} Array of intersections from mapInfo
+ * @returns {Number} Id of intersection
+ */
 SanitaireMaps.getIntersectionId = function (x, y, intersections) {
     for (var i = 0; i < intersections.length; i++) {
         // border tiles
@@ -25,6 +50,13 @@ SanitaireMaps.getIntersectionId = function (x, y, intersections) {
     return null;
 };
 
+/**
+ *  Returns an array of border tiles given an intersections coordinates
+ * @param x {Number}
+ * @param y {Number}
+ * @param intersections {*} Array of intersections from mapInfo
+ * @returns {*} Array of borderTiles
+ */
 SanitaireMaps.getCrosswalkTiles = function (x, y, intersections) {
     for (var i = 0; i < intersections.length; i++) {
         for (var j = 0; j < intersections[i].borderTiles.length; j++) {
@@ -36,6 +68,13 @@ SanitaireMaps.getCrosswalkTiles = function (x, y, intersections) {
     return null;
 };
 
+/**
+ *  Returns the roadId of tile at the coordinates x,y
+ * @param x {Number}
+ * @param y {Number}
+ * @param mapInfo {*} Array of all sorts of mapInfo
+ * @returns {Number} Id of road found
+ */
 SanitaireMaps.getRoadIdForTilePosition = function (x, y, mapInfo) {
     //make sure x and y are integers
     x = Math.floor(x);//x|0;
@@ -47,6 +86,13 @@ SanitaireMaps.getRoadIdForTilePosition = function (x, y, mapInfo) {
     return null;
 };
 
+/**
+ *  Returns the id of an intersection given its Tile coordinates and the mapInfo
+ * @param x {Number}
+ * @param y {Number}
+ * @param mapInfo {*} Array of all sorts of mapInfo
+ * @returns {Number} Id of intersection
+ */
 SanitaireMaps.getIntersectionIdForTilePosition = function (x, y, mapInfo) {
     //make sure x and y are integers
     x = Math.floor(x);//x|0;

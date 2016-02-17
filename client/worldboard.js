@@ -141,6 +141,14 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                     if(isLocalPlayerAtBarricade) {
                         console.log("build completed @", barricade.intersectionId, "by you");
                         // congrats, you finished building your very own barricade
+                        var centerTilePosition = SanitaireMaps.getIntersectionTilePositionForId(barricade.intersectionId, currentMapInfo.intersections);
+                        Meteor.call('updatePositionAndVelocity', gameId, {
+                            x: centerTilePosition.x*16,
+                            y: centerTilePosition.y*16
+                        }, {
+                            x: 0,
+                            y: 0
+                        }, TimeSync.serverTime(new Date()));
                     }
                     else {
                         console.log("build completed @", barricade.intersectionId, "by someone else");
@@ -151,6 +159,14 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                     if(isLocalPlayerAtBarricade) {
                         console.log("demolition completed @", barricade.intersectionId, "by you");
                         // congrats, you finished demolishing someone's hard work... I guess you put in some work too
+                        var centerTilePosition = SanitaireMaps.getIntersectionTilePositionForId(barricade.intersectionId, currentMapInfo.intersections);
+                        Meteor.call('updatePositionAndVelocity', gameId, {
+                            x: centerTilePosition.x*16,
+                            y: centerTilePosition.y*16
+                        }, {
+                            x: 0,
+                            y: 0
+                        }, TimeSync.serverTime(new Date()));
                     }
                     else {
                         console.log("demolition completed @", barricade.intersectionId, "by someone else");
@@ -503,12 +519,6 @@ Template.worldBoard.onRendered(function () {
             map.setCollisionByExclusion(walkableTiles, true, layer, true);
 
             //  Handle special tiles on gameboard (i.e. intersections)
-            //map.setTileIndexCallback(8, promptAtIntersection, this);
-            //map.setTileIndexCallback(9, promptAtIntersection, this);
-            //map.setTileIndexCallback(10, promptAtIntersection, this);
-            //map.setTileIndexCallback(11, promptAtIntersection, this);
-            // TODO: Set callbacks for tiles under construction / under deconstruction
-
             // barricade tiles
             map.setTileIndexCallback(13, promptAtIntersection, this);
             map.setTileIndexCallback(15, promptAtIntersection, this);
