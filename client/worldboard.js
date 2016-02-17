@@ -14,11 +14,10 @@ var walkableTiles = [8, 9, 10, 11, 12, 15];
  * @param state {Number} A state from Sanitiare.barricadeStates
  * @param intersectionId {String|Number} An intersection ID
  * @param mapInfo {*} Map info containing all the lookup tables
- * @param playerGroup {Phaser.Group} Group of player sprites
  * @param prevPosition {Position} x and y properties
  * @param phaserGame {Phaser.Game}
  */
-var drawBarricade = function (map, state, intersectionId, mapInfo, playerGroup, prevPosition, phaserGame) {
+var drawBarricade = function (map, state, intersectionId, mapInfo, prevPosition, phaserGame) {
     var tile = mapInfo.intersectionsById[intersectionId].innerTiles[0];
 
     switch (state) {
@@ -104,7 +103,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         var intersectionId = barricade.intersectionId;
         // Interpret the barricade's current state, and set timers for the barricade's next
         // states.
-        drawBarricade(map, barricade.state, barricade.intersectionId, currentMapInfo, playerGroup, prevPosition, phaserGame);
+        drawBarricade(map, barricade.state, barricade.intersectionId, currentMapInfo, prevPosition, phaserGame);
         var from = _.isUndefined(barricade.progress) ? null : barricade.progress;
         var to = barricade.time == Infinity ? null : (barricade.nextState === Sanitaire.barricadeStates.BUILT ? 1 : 0);
         updateBuildProgressBar(barricade.intersectionId, from, to, barricade.time, buildProgressBars, phaserGame, mapInfo);
@@ -395,7 +394,7 @@ Template.worldBoard.onRendered(function () {
 
         function preload() {
             // load path to map from settings
-            var filename = "Simple_Single_02.csv";
+            var filename = "London_single_lane.csv";
             var mapPath = "/assets/tilemaps/csv/" + filename;
             phaserGame.load.tilemap('map', mapPath, null, Phaser.Tilemap.CSV);
             phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map.png');
@@ -645,20 +644,20 @@ Template.worldBoard.onRendered(function () {
          */
         function isLegalWalkingPosition(body) {
             var nextTile;
-            var currentTile =
-            {
-                x: Math.floor((body.position.x + 8) / 16),
-                y: Math.floor((body.position.y + 8) / 16)
-            };
+            var currentTile;
 
             // check tile in the direction we are headed
             if (body.velocity.x > 0) {  // right
+                currentTile = { x: Math.floor((body.position.x) / 16), y: Math.floor((body.position.y + 8) / 16)};
                 nextTile = map.getTile(currentTile.x + 1, currentTile.y, 0);
             } else if (body.velocity.x < 0) {  // left
+                currentTile = { x: Math.floor((body.position.x+16) / 16), y: Math.floor((body.position.y + 8) / 16)};
                 nextTile = map.getTile(currentTile.x - 1, currentTile.y, 0);
             } else if (body.velocity.y > 0) {  // down
+                currentTile = { x: Math.floor((body.position.x + 8) / 16), y: Math.floor((body.position.y) / 16)};
                 nextTile = map.getTile(currentTile.x, currentTile.y + 1, 0);
             } else if (body.velocity.y < 0) {  // up
+                currentTile = { x: Math.floor((body.position.x + 8) / 16), y: Math.floor((body.position.y+16) / 16)};
                 nextTile = map.getTile(currentTile.x, currentTile.y - 1, 0);
             } else {
                 // not walking anywhere, feel free to loiter all you want
