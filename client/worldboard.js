@@ -133,7 +133,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                 Deps.afterFlush(function () {
                     barricadeTimers.push(Meteor.setTimeout(function () {
                         transitionToNextState();
-                    }, Math.min(0, time - (new Date().getTime()))))
+                    }, Math.max(0, time - (new Date().getTime()))))
                 });
             }
         }
