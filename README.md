@@ -9,6 +9,31 @@ Recommended work environment is within JetBrains WebStorm, which provides quick 
 1. [Meteor](https://www.meteor.com/)
 2. [Phaser](http://phaser.io/)
 
+## Architecture
+The following will walk through the file structure and some code snippets to explain how to keep the app in working order as a multiplayer synchronous game.
+
+Let's start with the most used files and what each of them contain.
+* CordonSanitaire-Meteor.html - templates for DOM, including main menu, lobby, game, profile...
+* CordonSanitaire-Meteor.css - styling for page templates
+* CordonSanitaire-Meteor.js - updates dynamic content in the templates (i.e. countdowns or stats)
+
+* client/worldboard.html - container for Phaser canvas
+* client/worldboard.css - styling for Phaser canvas (i.e. remove anti-aliasing)
+* client/worldboard.js - handles all aspects of drawing to the canvas, setup of Phaser and management of drawing game sprites, maps, states to the screen. In an MVC framework, this is View. Some level of control lies here, but you will see that much of the control should be elsewhere.
+
+* lib/collections.js - the three collections in our database (Games, Players, Maps)
+* lib/sanitaire.js - 
+* lib/sanitaire_geometry.js - 
+* lib/patientzero.js - 
+
+* server/maps.js - contains a list of possible map files on the server...
+* server/accounts.js - handle any logic about a user account such as having seen a tutorial 
+* server/publishes.js - 
+
+* tests/settings/ - run meteor with one of these settings
+```meteor --settings tests/settings/singleplayer.json```
+
+* public/assets/ - assets for gameplay
 
 ##License
 
