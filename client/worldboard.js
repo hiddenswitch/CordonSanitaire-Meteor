@@ -241,6 +241,8 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
     var patientZeroRoadId = SanitaireMaps.getRoadIdForTilePosition(patientZeroCurrentLocation.x, patientZeroCurrentLocation.y, currentMapInfo); // TODO: get actual road id from this game!!!!!!!
     var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
     var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId);
+    // color streets according to their state
+    var roadStatuses = GraphAnalysis.getRoadStatus(mapGraph, playerRoadIds, patientZeroRoadId);
 
     // Update visible patient zero status
     if (isPZeroContained) {
@@ -609,7 +611,6 @@ Template.worldBoard.onRendered(function () {
             initializeMeteor();
         }
 
-        // TODO: Use this or remove this (think it's gonna get wiped next commit)
         /**
          *  return a graph of the map in the following form
          *  var exampleGraph = { 'intersection id 1': ['interesction id 2', 'intersection id 4', 'intersection id 10'],
@@ -618,7 +619,17 @@ Template.worldBoard.onRendered(function () {
          */
         getGraphRepresentationOfMap = function (currentMapInfo, game) {
             var graph = {};
-            var blockedIntersectionIds = new Set(game.intersectionIds);
+
+            // find which intersections are blocked
+            var completedBarriers = _.filter(game.barriers, function(barrier) {
+                return barrier.state == Sanitaire.barricadeStates.BUILT;
+            });
+
+            // create an array of the intersection Ids
+            var blockedIntersectionIds = [];
+            _.each(completedBarriers, function(barrier) {
+                blockedIntersectionIds.push(barrier.intersectionId);
+            });
 
             currentMapInfo.roads.forEach(function (roadV) {
                 if (!graph[roadV.id]) {
@@ -626,7 +637,7 @@ Template.worldBoard.onRendered(function () {
                 }
 
                 roadV.intersectionIds.forEach(function (intersectionId) {
-                    if (blockedIntersectionIds.has(intersectionId)) {
+                    if (_.any(blockedIntersectionIds, function(blockedId){return blockedId == intersectionId;})) {
                         return;
                     }
 
