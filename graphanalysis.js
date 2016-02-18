@@ -44,10 +44,23 @@ GraphAnalysis._isPatientZeroIsolated = function (components, playerRoadIds, pati
     });
 };
 
+/**
+ * Get a state for Patient Zero (currently just isolated or not)...
+ * @param graph {Object.<Number, [Number]>} An adjacency list representation of the road network
+ * @param playerRoadIds {[Number]} An array of roadIds which players are on
+ * @param patientZeroRoadId {Number} id of the road that Patient Zero is currently on
+ */
 GraphAnalysis.checkPatientZero = function(graph, playerRoadIds, patientZeroRoadId) {
     return GraphAnalysis._isPatientZeroIsolated(GraphAnalysis._getComponents(graph), playerRoadIds, patientZeroRoadId);
 };
 
+/**
+ *  Breadth First Search
+ * @param graph {Object.<Number, [Number]>} An adjacency list representation of the road network
+ * @param source {*}
+ * @returns {Array}
+ * @private
+ */
 GraphAnalysis._bfs = function (graph, source) {
     var nodes = [];
     var seen = new Set();
