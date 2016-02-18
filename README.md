@@ -15,32 +15,32 @@ The following will walk through the file structure and some code snippets to exp
 Let's start with the most used files and what each of them contain.
 
 1. **Main display**
-  1. **CordonSanitaire-Meteor.html** - templates for DOM, including main menu, lobby, game, profile...
-  2. **CordonSanitaire-Meteor.css** - styling for page templates
-  3. **CordonSanitaire-Meteor.js** - updates dynamic content in the templates (i.e. countdowns or stats)
+  - **CordonSanitaire-Meteor.html** - templates for DOM, including main menu, lobby, game, profile...
+  - **CordonSanitaire-Meteor.css** - styling for page templates
+  - **CordonSanitaire-Meteor.js** - updates dynamic content in the templates (i.e. countdowns or stats)
 
 2. **Game display**
-  1. **client/worldboard.html** - container for Phaser canvas
-  2. **client/worldboard.css** - styling for Phaser canvas (i.e. remove anti-aliasing)
-  3. **client/worldboard.js** - handles all aspects of drawing to the canvas, setup of Phaser and management of drawing game sprites, maps, states to the screen. In an MVC framework, this is View. Some level of control lies here, but you will see that much of the control should be elsewhere.
+  - **client/worldboard.html** - container for Phaser canvas
+  - **client/worldboard.css** - styling for Phaser canvas (i.e. remove anti-aliasing)
+  - **client/worldboard.js** - handles all aspects of drawing to the canvas, setup of Phaser and management of drawing game sprites, maps, states to the screen. In an MVC framework, this is View. Some level of control lies here, but you will see that much of the control should be elsewhere.
 
 3. **Libraries**
-  1. **lib/collections.js** - the three collections in our database (Games, Players, Maps)
-  2. **lib/sanitaire.js** - 
-  3. **lib/sanitaire_geometry.js** - 
-  4. **lib/patientzero.js** - 
+  - **lib/collections.js** - the three collections in our database (Games, Players, Maps)
+  - **lib/sanitaire.js** - 
+  - **lib/sanitaire_geometry.js** - 
+  - **lib/patientzero.js** - 
 
 4. **Server**
-  1. **server/maps.js** - contains a list of possible map files on the server...
-  2. **server/accounts.js** - handle any logic about a user account such as having seen a tutorial 
-  3. **server/publishes.js** - 
+  - **server/maps.js** - contains a list of possible map files on the server...
+  - **server/accounts.js** - handle any logic about a user account such as having seen a tutorial 
+  - **server/publishes.js** - 
 
 5. **Meteor Settings**
-  1. **tests/settings/** - run meteor with one of these settings
+  - **tests/settings/** - run meteor with one of these settings
 ```meteor --settings tests/settings/singleplayer.json```
 
 6. Assets
-  1. **public/assets/** - assets for gameplay
+  - **public/assets/** - assets for gameplay
 
 ##License
 
