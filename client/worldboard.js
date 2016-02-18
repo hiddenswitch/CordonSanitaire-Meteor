@@ -54,35 +54,6 @@ var drawBarricade = function (map, state, intersectionId, mapInfo) {
     }
 };
 
-/**
- * Update the position of patient zero
- * @param patientZeroSprite {Phaser.Sprite} A Phaser sprite
- * @param tilePosition {{x: Number, y: Number}} A position in tile space where patient zero should be
- */
-var updatePatientZeroPosition = function (patientZeroSprite, tilePosition) {
-    if (!tilePosition) return;
-    patientZeroSprite.position.x = tilePosition.x * 16;
-    patientZeroSprite.position.y = tilePosition.y * 16;
-};
-
-/**
- * Finds the direction between the player and patient zero
- * @param patientZeroPosition
- * @param playerPosition
- */
-var updatePatientZeroLocation = function(patientZeroPosition, playerPosition){
-
-}
-
-/**
- * Shows the direction between the player and patient zero on screen
- * @param something1
- * @param something2
- * @param something3
- */
-var showPatientZeroLocation = function(something1, something2, something3){
-
-}
 
 /**
  * Update the sprites based on the given player document
@@ -312,6 +283,49 @@ var updatePatientZero = function (gameId, patientZeroSprite, phaserGame, patient
 };
 
 /**
+ * Update the position of patient zero
+ * @param patientZeroSprite {Phaser.Sprite} A Phaser sprite
+ * @param tilePosition {{x: Number, y: Number}} A position in tile space where patient zero should be
+ */
+var updatePatientZeroPosition = function (patientZeroSprite, tilePosition) {
+    if (!tilePosition) return;
+    patientZeroSprite.position.x = tilePosition.x * 16;
+    patientZeroSprite.position.y = tilePosition.y * 16;
+};
+
+/**
+ * Finds the direction between the player and patient zero
+ * @param patientZeroPosition
+ * @param playerPosition
+ */
+var updatePatientZeroLocationRelativeToPlayer = function(patientZeroSprite, playerSprite){
+    var patientZeroX = patientZeroSprite.position.x;
+    var patientZeroY = patientZeroSprite.position.y;
+    var playerX = playerSprite.position.x;
+    var playerY = playerSprite.position.y;
+
+    var angle = Math.atan2(-(patientZeroY-playerY),(patientZeroX-playerX)); //angle is in radians; -y because the axis is flipped
+    angle = (angle*180)/(Math.PI); // convert to degree
+    var distance = Math.sqrt((patientZeroX-playerX)*(patientZeroX-playerX) + (patientZeroY-playerY)*(patientZeroY-playerY));
+    console.log("angle");
+    console.log(angle);
+    console.log("distance");
+    console.log(distance);
+    return {angle:angle, distance:distance};
+
+}
+
+/**
+ * Shows the direction between the player and patient zero on screen
+ * @param something1
+ * @param something2
+ * @param something3
+ */
+var showPatientZeroLocationRelativeToPlayer = function(something1, something2, something3){
+
+}
+
+/**
  * Building progress bars - show status of build
  * @param intersectionId {Number} which intersection we represent
  * @param x {Number} position to place in the x coord
@@ -429,13 +443,16 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
 };
 
 
+
+
+
 Template.worldBoard.onRendered(function () {
         var renderer = this;
         var routeData = Router.current().data();
         var gameId = routeData.gameId;
         var localPlayerId = routeData.playerId;
         var game = Games.findOne(gameId);
-        var localPlayer = Players.findOne(localPlayerId);
+        var localPlayerSprite = Players.findOne(localPlayerId);
         var localPlayerState = {
             construction: {
                 prevPosition: {
@@ -663,7 +680,6 @@ Template.worldBoard.onRendered(function () {
         var lastLocalPlayerWallCollisionHandled = null;
 
         function update() {
-
             // Do patient zero
             var game = Games.findOne(gameId, {reactive: false});
             // Todo: temporary solution for end of game
@@ -746,6 +762,10 @@ Template.worldBoard.onRendered(function () {
                             y: 0
                         }, TimeSync.serverTime(new Date()));
                     }
+
+                    // look at the position of patient zero rel to local player
+                    updatePatientZeroLocationRelativeToPlayer(patientZeroSprite,sprite);
+
                 }
 
                 // TODO: Update position on collide.
