@@ -298,7 +298,7 @@ var updatePatientZeroPosition = function (patientZeroSprite, tilePosition) {
  * @param patientZeroPosition
  * @param playerPosition
  */
-var updatePatientZeroLocationRelativeToPlayer = function(patientZeroSprite, playerSprite){
+var findPatientZeroLocationRelativeToPlayer = function(patientZeroSprite, playerSprite){
     var patientZeroX = patientZeroSprite.position.x;
     var patientZeroY = patientZeroSprite.position.y;
     var playerX = playerSprite.position.x;
@@ -442,9 +442,47 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
     }
 };
 
+/**
+ *
+ * @param patientZeroSprite
+ * @param playerSprite
+ */
+var touchedByPatientZero = function(patientZeroSprite, playerSprite, localPlayerStatus){
+    var patientZeroLocation = findPatientZeroLocationRelativeToPlayer(patientZeroSprite, playerSprite);
+    if (patientZeroLocation.distance<= 5){
+        //TODO: distance is arbitrary right now
 
+        console.log("touched!");
+        localPlayerStatus.touched.yes = true;
+        localPlayerStatus.touched.time = TimeSync.serverTime(new Date());
+    }
+}
 
+/**
+ *
+ * @param patientZeroSprite
+ * @param playerSprite
+ */
+var stunPlayerIfTouched = function(phaserGame, patientZeroSprite, playerSprite,localPlayerStatus){
+    touchedByPatientZero(patientZeroSprite, playerSprite,localPlayerStatus);
+    var currentTime = TimeSync.serverTime(new Date());
+    if (localPlayerStatus.touched.yes){
+        //TODO: set sprite speed to 0 for 5 seconds
+        if ((currentTime - localPlayerStatus.touched.time)<5000){
+            playerSprite.body.velocity.x = 0;
+            playerSprite.body.velocity.y = 0;
+            // TODO disable inputs?
+            phaserGame.input.enabled = false;
+            playerSprite.animations.paused = true;
+        } else {
+            localPlayerStatus.touched.yes = false;
+            localPlayerStatus.touched.time = null;
+            phaserGame.input.enabled = true;
+            playerSprite.animations.paused = false;
+        }
 
+    }
+}
 
 Template.worldBoard.onRendered(function () {
         var renderer = this;
@@ -461,6 +499,10 @@ Template.worldBoard.onRendered(function () {
                 },
                 isBuilding: false,
                 intersectionId: -1
+            },
+            touched:{
+                yes: false,
+                time: null
             },
             health: 1.0
         };
@@ -764,8 +806,10 @@ Template.worldBoard.onRendered(function () {
                     }
 
                     // look at the position of patient zero rel to local player
-                    updatePatientZeroLocationRelativeToPlayer(patientZeroSprite,sprite);
+                    findPatientZeroLocationRelativeToPlayer(patientZeroSprite,sprite);
 
+                    // Stun player if touched by patient zero
+                    stunPlayerIfTouched(phaserGame,patientZeroSprite,sprite,localPlayerState);
                 }
 
                 // TODO: Update position on collide.
