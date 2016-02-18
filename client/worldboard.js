@@ -6,7 +6,21 @@
 /**
  *
  */
-var walkableTiles = [8, 9, 10, 11, 12, 15];
+var walkableTiles = [8, 9, 10, 11, 12, 15, 33, 37, 38, 39];
+
+/**
+ * Color the road at a specific id to show quarantine state
+ * @param map {Phaser.Map} A phaser map
+ * @param roadId {Number} Id of a road to change the color of
+ * @param mapInfo {*} Map info containing all the lookup tables
+ * @param tileColor {SanitaireMaps.streetColorTile} tile index for colored tiles
+ */
+var updateRoadTiles = function (map, roadId, mapInfo, tileColor) {
+
+    _.each(mapInfo.roadsById[roadId].innerTiles, function (tile) {
+        map.fill(tileColor, tile.x, tile.y, 1, 1);
+    });
+};
 
 /**
  * Draws a barricade
@@ -428,6 +442,9 @@ Template.worldBoard.onRendered(function () {
         var barricadeTimers = [];
         var patientZeroSprite = null;
 
+        // KEYS FOR TESTING FEATURES
+        var key1, key2, key3, key4;
+
         var initializeMeteor = function () {
             renderer.autorun(function () {
                 if (this.initialized) {
@@ -566,6 +583,19 @@ Template.worldBoard.onRendered(function () {
 
             // beginSwipe function
             phaserGame.input.onDown.add(beginSwipe, this);
+
+            // test new feature with key press
+            key1 = phaserGame.input.keyboard.addKey(Phaser.Keyboard.ONE);
+            key1.onDown.add(colorRandomRoadGrey, this);
+
+            key2 = phaserGame.input.keyboard.addKey(Phaser.Keyboard.TWO);
+            key2.onDown.add(colorRandomRoadYellow, this);
+
+            key3 = phaserGame.input.keyboard.addKey(Phaser.Keyboard.THREE);
+            key3.onDown.add(colorRandomRoadRed, this);
+
+            key4 = phaserGame.input.keyboard.addKey(Phaser.Keyboard.FOUR);
+            key4.onDown.add(colorRandomRoadGreen, this);
 
             currentMapInfo = SanitaireMaps.getMapInfo(map);
 
@@ -1071,6 +1101,38 @@ Template.worldBoard.onRendered(function () {
             localPlayerState.construction.intersectionId = intersectionId;
         };
 
+
+        /**
+         *  Color a random road as though a quarantine is completed
+         */
+        function colorRandomRoadGrey() {
+            var numRoads = currentMapInfo.roads.length;
+            updateRoadTiles(map, Math.floor(Math.random()*numRoads), currentMapInfo, SanitaireMaps.streetColorTile.EMPTY);
+        }
+
+        /**
+         *  Color a random road as though people are trapped
+         */
+        function colorRandomRoadYellow() {
+            var numRoads = currentMapInfo.roads.length;
+            updateRoadTiles(map, Math.floor(Math.random()*numRoads), currentMapInfo, SanitaireMaps.streetColorTile.RESPONDERS);
+        }
+
+        /**
+         *  Color a random road as though P0 is isolated
+         */
+        function colorRandomRoadGreen() {
+            var numRoads = currentMapInfo.roads.length;
+            updateRoadTiles(map, Math.floor(Math.random()*numRoads), currentMapInfo, SanitaireMaps.streetColorTile.ISOLATED);
+        }
+
+        /**
+         *  Color a random road as though people are trapped inside w/ P0
+         */
+        function colorRandomRoadRed() {
+            var numRoads = currentMapInfo.roads.length;
+            updateRoadTiles(map, Math.floor(Math.random()*numRoads), currentMapInfo, SanitaireMaps.streetColorTile.CONTAINED);
+        }
 
         /**
          *  when the player begins to swipe we only save mouse/finger coordinates, remove the touch/click

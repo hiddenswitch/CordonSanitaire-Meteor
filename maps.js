@@ -4,6 +4,30 @@
 SanitaireMaps = (Meteor.isClient ? window : global).Maps || {};
 
 /**
+ * Tile colors for colored streets
+ * @type {{NONE: number, EMPTY: number, RESPONDERS: number, CONTAINED: number, ISOLATED: number}}
+ */
+SanitaireMaps.streetColorTile = {
+    NONE: 12,
+    /**
+     * Closed quarantine but noone inside. Color GREY
+     */
+    EMPTY: 33,
+    /**
+     * Only healthy people trapped. Color YELLOW
+     */
+    RESPONDERS: 38,
+    /**
+     * Patient Zero contained with healthy people. Color RED
+     */
+    CONTAINED: 37,
+    /**
+     * Patient Zero isolated. Color GREEN
+     */
+    ISOLATED: 39
+};
+
+/**
  * finds a random position on the roads (useful for finding a starting position)
  * @param roads {*} Array of roads and tiles contained from mapInfo
  * @returns {*} a Position {x,y} that is in the middle of a road
@@ -209,6 +233,7 @@ SanitaireMaps.getMapInfo = function (phaserTileMapInterface) {
     var numIntersections = intersection_index;
     var intersections = mapInfo.intersections = [];
     var intersectionsById = mapInfo.intersectionsById = {};
+    var roadsById = mapInfo.roadsById = {};
     for (var i = 0; i < numIntersections; i++) {
 
         var innerTiles = [];
@@ -267,6 +292,11 @@ SanitaireMaps.getMapInfo = function (phaserTileMapInterface) {
             intersectionIds: intersectionIds
         });
     }
+
+    // create a roads by id for finding roads easily
+    _.each(roads, function(road) {
+        roadsById[road.id] = road;
+    });
 
     // add roadIds to intersections, this will be helpful when constructing a graph
     for (var i = 0; i < intersections.length; i++) {
