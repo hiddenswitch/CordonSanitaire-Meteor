@@ -66,6 +66,25 @@ var updatePatientZeroPosition = function (patientZeroSprite, tilePosition) {
 };
 
 /**
+ * Finds the direction between the player and patient zero
+ * @param patientZeroPosition
+ * @param playerPosition
+ */
+var updatePatientZeroLocation = function(patientZeroPosition, playerPosition){
+
+}
+
+/**
+ * Shows the direction between the player and patient zero on screen
+ * @param something1
+ * @param something2
+ * @param something3
+ */
+var showPatientZeroLocation = function(something1, something2, something3){
+
+}
+
+/**
  * Update the sprites based on the given player document
  * @param sprites {Object.<String, Phaser.Sprite>} A dictionary of phaser sprites keyed by playerId
  * @param player {String} A playerId (found in the players collection)
@@ -408,6 +427,7 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
         );
     }
 };
+
 
 Template.worldBoard.onRendered(function () {
         var renderer = this;
