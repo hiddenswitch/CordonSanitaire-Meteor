@@ -27,8 +27,7 @@ Let's start with the most used files and what each of them contain.
 3. **Libraries**
   - **lib/collections.js** - the three collections in our database (Games, Players, Maps)
   - **lib/sanitaire.js** - 
-  - **lib/sanitaire_geometry.js** - 
-  - **lib/patientzero.js** - 
+  - **lib/patientzero.js** -
 
 4. **Server**
   - **server/maps.js** - contains a list of possible map files on the server...
