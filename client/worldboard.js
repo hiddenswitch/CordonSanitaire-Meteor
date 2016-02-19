@@ -261,7 +261,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
     var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
     var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId);
     // color streets according to their state
-    var roadStatuses = GraphAnalysis.getRoadStatus(mapGraph, playerRoadIds, patientZeroRoadId);
+    var roadStatuses = GraphAnalysis.getRoadStatus(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
     _.each(roadStatuses, function(roadStatus, roadId) {
        updateRoadTiles(map, roadId, mapInfo, roadStatus);
     });

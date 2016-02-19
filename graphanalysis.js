@@ -99,14 +99,15 @@ GraphAnalysis.getRoadStatusById = function (graph, roadId, playerRoadIds, patien
  * @param graph {Object.<Number, [Number]>} An adjacency list representation of the road network
  * @param playerRoadIds {[Number]} An array of roadIds which players are on
  * @param patientZeroRoadId {Number} id of the road that Patient Zero is currently on
+ * @param numRoads {Number} the total number of roads, help with determining inside or outside
  * @returns {{GraphAnalysis.roadStatus}} Road statuses organized by roadId
  */
-GraphAnalysis.getRoadStatus = function (graph, playerRoadIds, patientZeroRoadId) {
+GraphAnalysis.getRoadStatus = function (graph, playerRoadIds, patientZeroRoadId, numRoads) {
     var roadStatuses = {};
     var components = GraphAnalysis._getComponents(graph);
 
     _.each(components, function(component) {
-        var roadStatus = GraphAnalysis._getComponentStatus(component, playerRoadIds, patientZeroRoadId);
+        var roadStatus = GraphAnalysis._getComponentStatus(component, playerRoadIds, patientZeroRoadId, numRoads);
         _.each(component, function(roadId) {
            roadStatuses[roadId] = roadStatus;
         });
@@ -120,9 +121,10 @@ GraphAnalysis.getRoadStatus = function (graph, playerRoadIds, patientZeroRoadId)
  * @param component {[Number]} group of roadIds
  * @param playerRoadIds {[Number]} roadIds occupied by responders
  * @param patientZeroRoadId {Number} roadId occupied by Patient Zero
+ * @param numRoads {Number} the total number of roads, help with determining inside or outside
  * @returns {GraphAnalysis.roadStatus} status of the component
  */
-GraphAnalysis._getComponentStatus = function (component, playerRoadIds, patientZeroRoadId) {
+GraphAnalysis._getComponentStatus = function (component, playerRoadIds, patientZeroRoadId, numRoads) {
     var componentStatus;
 
     var doesContainPatientZero = _.contains(component, patientZeroRoadId);
@@ -131,7 +133,11 @@ GraphAnalysis._getComponentStatus = function (component, playerRoadIds, patientZ
         return _.contains(component, playerRoadId);
     });
 
-    // Todo: check and see if this is the largest component... or some other way of determining inside or outside...
+    // check and see if this is the largest component... or some other way of determining inside or outside...
+    // the quarantine must not contain more than a third of the map to be a successful quarantine.
+    if(component.length > numRoads/3) {
+        return GraphAnalysis.roadStatus.OPEN;
+    }
 
     if(doesContainPatientZero && !doesContainResponders) {
         // isolated
@@ -147,9 +153,7 @@ GraphAnalysis._getComponentStatus = function (component, playerRoadIds, patientZ
     }
     else if(!doesContainPatientZero && !doesContainResponders) {
         // empty
-        componentStatus = GraphAnalysis.roadStatus.OPEN;
-
-        // Todo: think about how to determine whether this is OPEN or EMPTY
+        componentStatus = GraphAnalysis.roadStatus.CLOSED_EMPTY;
     }
 
     return componentStatus;
