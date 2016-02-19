@@ -4,11 +4,6 @@
  **/
 
 /**
- *
- */
-var walkableTiles = [8, 9, 10, 11, 12, 15, 33, 37, 38, 39];
-
-/**
  * Color the road at a specific id to show quarantine state
  * @param map {Phaser.Map} A phaser map
  * @param roadId {Number} Id of a road to change the color of
@@ -585,7 +580,7 @@ Template.worldBoard.onRendered(function () {
             //  Simplified list of things that the player collides into
             //map.setCollisionBetween(0, 7, true, layer, true);  // walls + buildings
             //map.setCollisionBetween(13, 14, true, layer, true); // barricades
-            map.setCollisionByExclusion(walkableTiles, true, layer, true);
+            map.setCollisionByExclusion(SanitaireMaps.PATHABLE_TILES, true, layer, true);
 
             //  Handle special tiles on gameboard (i.e. intersections)
             // barricade tiles
@@ -813,7 +808,7 @@ Template.worldBoard.onRendered(function () {
                 return true;
             }
 
-            return _.indexOf(walkableTiles, nextTile.index) !== -1;
+            return _.indexOf(SanitaireMaps.PATHABLE_TILES, nextTile.index) !== -1;
         }
 
         /**
