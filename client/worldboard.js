@@ -13,7 +13,7 @@
 var updateRoadTiles = function (map, roadId, mapInfo, tileState) {
 
     var tileColor;
-    switch(tileState) {
+    switch (tileState) {
         case GraphAnalysis.roadStatus.OPEN:
             tileColor = SanitaireMaps.streetColorTile.NONE;
             break;
@@ -29,7 +29,8 @@ var updateRoadTiles = function (map, roadId, mapInfo, tileState) {
         case GraphAnalysis.roadStatus.CLOSED_ISOLATED:
             tileColor = SanitaireMaps.streetColorTile.ISOLATED;
             break;
-        default: tileColor = SanitaireMaps.streetColorTile.NONE;
+        default:
+            tileColor = SanitaireMaps.streetColorTile.NONE;
     }
     _.each(mapInfo.roadsById[roadId].innerTiles, function (tile) {
         map.fill(tileColor, tile.x, tile.y, 1, 1);
@@ -106,6 +107,87 @@ var updatePlayer = function (sprites, player) {
 };
 
 /**
+ * This executes the transition from one state of a barrier to another, including all of the
+ * side effects that need to occur to a player
+ * @param map {Phaser.Map}
+ * @param barricade {*}
+ * @param gameId {String}
+ * @param buildProgressBars {*}
+ */
+var transitionToNextBarrierState = function (map, barricade, gameId, buildProgressBars) {
+    drawBarricade(map, barricade.nextState, barricade.intersectionId, currentMapInfo);
+
+    // get the game
+    var game = Games.findOne(gameId);
+
+    // get latest log entry from local user
+    var myLastBarriersLogEntry = _.find(_.sortBy(game.barriersLog, function (logEntry) {
+            return -logEntry.time;
+        }),
+        function (logEntry) {
+            return logEntry.playerId === Router.current().data().playerId;
+        }
+    );
+
+    var isLocalPlayerAtBarricade = false;
+
+    if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD
+        || myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
+        // careful, string compared w/ number
+        if (myLastBarriersLogEntry.intersectionId == barricade.intersectionId) {
+            isLocalPlayerAtBarricade = true;
+        }
+    }
+
+    // check to see if the barricade just completed building or demolishing
+    // if we are at this specific barricade, then move us to the middle of it
+    if (barricade.nextState === Sanitaire.barricadeStates.BUILT) {
+        if (isLocalPlayerAtBarricade) {
+            console.log("build completed @", barricade.intersectionId, "by you");
+            // congrats, you finished building your very own barricade
+            var centerTilePosition = SanitaireMaps.getIntersectionTilePositionForId(barricade.intersectionId, currentMapInfo.intersections);
+            Meteor.call('updatePositionAndVelocity', gameId, {
+                x: centerTilePosition.x * 16,
+                y: centerTilePosition.y * 16
+            }, {
+                x: 0,
+                y: 0
+            }, TimeSync.serverTime(new Date()));
+            // hide the display of progress
+            hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
+        }
+        else {
+            console.log("build completed @", barricade.intersectionId, "by someone else");
+            // someone else finished building a barricade, let's congratulate them...
+        }
+    }
+    else if (barricade.nextState === Sanitaire.barricadeStates.EMPTY) {
+        if (isLocalPlayerAtBarricade) {
+            console.log("demolition completed @", barricade.intersectionId, "by you");
+            // congrats, you finished demolishing someone's hard work... I guess you put in some work too
+            var centerTilePosition = SanitaireMaps.getIntersectionTilePositionForId(barricade.intersectionId, currentMapInfo.intersections);
+            Meteor.call('updatePositionAndVelocity', gameId, {
+                x: centerTilePosition.x * 16,
+                y: centerTilePosition.y * 16
+            }, {
+                x: 0,
+                y: 0
+            }, TimeSync.serverTime(new Date()));
+            // hide the display of progress
+            hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
+        }
+        else {
+            console.log("demolition completed @", barricade.intersectionId, "by someone else");
+            // Riot, people are tearing sh*t down! or digging us out of a shallow hole...
+        }
+    }
+    else if (barricade.nextState === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
+        || barricade.nextState === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION) {
+        showBuildProgressBar(buildProgressBars, barricade.intersectionId);
+    }
+};
+
+/**
  * Update the barriers
  * @param barriers
  * @param barricadeTimers
@@ -132,11 +214,19 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         drawBarricade(map, barricade.state, barricade.intersectionId, currentMapInfo);
 
         var from = _.isUndefined(barricade.progress) ? null : barricade.progress;
+        if (_.isNull(from)
+            && barricade.time != Infinity
+            && !_.isUndefined(barricade.time)
+            && !_.isUndefined(barricade.progressTime)) {
+            // Compute from with time data
+            var serverNow = TimeSync.serverTime(new Date());
+            from = inverseLerp(barrier.progressTime, barrier.time, serverNow);
+        }
         var to = barricade.time == Infinity ? null : (barricade.nextState === Sanitaire.barricadeStates.BUILT ? 1 : 0);
         updateBuildProgressBar(barricade.intersectionId, from, to, barricade.time, buildProgressBars, phaserGame, mapInfo);
 
         if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
-            || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION ) {
+            || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION) {
             showBuildProgressBar(buildProgressBars, barricade.intersectionId);
         }
 
@@ -144,86 +234,19 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         if (barricade.time > -Infinity
             && barricade.time < Infinity) {
             var transitionToNextState = function () {
-                drawBarricade(map, barricade.nextState, barricade.intersectionId, currentMapInfo);
-
-                // get the game
-                var game = Games.findOne(gameId);
-
-                // get latest log entry from local user
-                var myLastBarriersLogEntry = _.find(_.sortBy(game.barriersLog, function (logEntry) {
-                        return -logEntry.time;
-                    }),
-                    function (logEntry) {
-                        return logEntry.playerId === Router.current().data().playerId;
-                    }
-                );
-
-                var isLocalPlayerAtBarricade = false;
-
-                if(myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD || myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
-                   if(myLastBarriersLogEntry.intersectionId == barricade.intersectionId) {  // careful, string compared w/ number
-                       isLocalPlayerAtBarricade = true;
-                   }
-                }
-
-                // check to see if the barricade just completed building or demolishing
-                // if we are at this specific barricade, then move us to the middle of it
-                if (barricade.nextState === Sanitaire.barricadeStates.BUILT) {
-                    if(isLocalPlayerAtBarricade) {
-                        console.log("build completed @", barricade.intersectionId, "by you");
-                        // congrats, you finished building your very own barricade
-                        var centerTilePosition = SanitaireMaps.getIntersectionTilePositionForId(barricade.intersectionId, currentMapInfo.intersections);
-                        Meteor.call('updatePositionAndVelocity', gameId, {
-                            x: centerTilePosition.x*16,
-                            y: centerTilePosition.y*16
-                        }, {
-                            x: 0,
-                            y: 0
-                        }, TimeSync.serverTime(new Date()));
-                        // hide the display of progress
-                        hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
-                    }
-                    else {
-                        console.log("build completed @", barricade.intersectionId, "by someone else");
-                        // someone else finished building a barricade, let's congratulate them...
-                    }
-                }
-                else if (barricade.nextState === Sanitaire.barricadeStates.EMPTY) {
-                    if(isLocalPlayerAtBarricade) {
-                        console.log("demolition completed @", barricade.intersectionId, "by you");
-                        // congrats, you finished demolishing someone's hard work... I guess you put in some work too
-                        var centerTilePosition = SanitaireMaps.getIntersectionTilePositionForId(barricade.intersectionId, currentMapInfo.intersections);
-                        Meteor.call('updatePositionAndVelocity', gameId, {
-                            x: centerTilePosition.x*16,
-                            y: centerTilePosition.y*16
-                        }, {
-                            x: 0,
-                            y: 0
-                        }, TimeSync.serverTime(new Date()));
-                        // hide the display of progress
-                        hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
-                    }
-                    else {
-                        console.log("demolition completed @", barricade.intersectionId, "by someone else");
-                        // Riot, people are tearing sh*t down! or digging us out of a shallow hole...
-                    }
-                }
-                else if (barricade.nextState === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
-                || barricade.nextState === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION ) {
-                    showBuildProgressBar(buildProgressBars, barricade.intersectionId);
-                }
+                transitionToNextBarrierState(map, barricade, gameId, buildProgressBars);
             };
             // Convert to local time
-            var time = barricade.time - TimeSync.serverOffset();
+            var localTime = barricade.time - TimeSync.serverOffset();
 
             // Freeze the progress
-            if (time === Infinity) {
+            if (localTime === Infinity) {
                 return;
             }
 
             // If the transition would have already occurred according to server time,
             // make the next transition the one
-            if (time < (new Date()).getTime()) {
+            if (localTime < (new Date()).getTime()) {
                 // Transition into the next state now
                 transitionToNextState()
             } else {
@@ -231,7 +254,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                 Deps.afterFlush(function () {
                     barricadeTimers.push(Meteor.setTimeout(function () {
                         transitionToNextState();
-                    }, Math.max(0, time - (new Date().getTime()))))
+                    }, Math.max(0, localTime - (new Date().getTime()))))
                 });
             }
         }
@@ -257,8 +280,8 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
     var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId);
     // color streets according to their state
     var roadStatuses = GraphAnalysis.getRoadStatus(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
-    _.each(roadStatuses, function(roadStatus, roadId) {
-       updateRoadTiles(map, roadId, mapInfo, roadStatus);
+    _.each(roadStatuses, function (roadStatus, roadId) {
+        updateRoadTiles(map, roadId, mapInfo, roadStatus);
     });
 
     // Update visible patient zero status
@@ -438,8 +461,8 @@ Template.worldBoard.onRendered(function () {
         var localPlayerState = {
             construction: {
                 prevPosition: {
-                    x:-1,
-                    y:-1,
+                    x: -1,
+                    y: -1,
                 },
                 isBuilding: false,
                 intersectionId: -1
@@ -465,6 +488,11 @@ Template.worldBoard.onRendered(function () {
         var key1, key2, key3, key4;
 
         var initializeMeteor = function () {
+            // Try to resync the time during less chaotic downloads
+            Meteor.setTimeout(function() {
+                TimeSync.resync();
+            }, 4000);
+
             renderer.autorun(function () {
                 if (this.initialized) {
                     return;
@@ -638,13 +666,13 @@ Template.worldBoard.onRendered(function () {
             var graph = {};
 
             // find which intersections are blocked
-            var completedBarriers = _.filter(game.barriers, function(barrier) {
+            var completedBarriers = _.filter(game.barriers, function (barrier) {
                 return barrier.state == Sanitaire.barricadeStates.BUILT;
             });
 
             // create an array of the intersection Ids
             var blockedIntersectionIds = [];
-            _.each(completedBarriers, function(barrier) {
+            _.each(completedBarriers, function (barrier) {
                 blockedIntersectionIds.push(barrier.intersectionId);
             });
 
@@ -654,7 +682,9 @@ Template.worldBoard.onRendered(function () {
                 }
 
                 roadV.intersectionIds.forEach(function (intersectionId) {
-                    if (_.any(blockedIntersectionIds, function(blockedId){return blockedId == intersectionId;})) {
+                    if (_.any(blockedIntersectionIds, function (blockedId) {
+                            return blockedId == intersectionId;
+                        })) {
                         return;
                     }
 
@@ -792,16 +822,16 @@ Template.worldBoard.onRendered(function () {
 
             // check tile in the direction we are headed
             if (body.velocity.x > 0) {  // right
-                currentTile = { x: Math.floor((body.position.x) / 16), y: Math.floor((body.position.y + 8) / 16)};
+                currentTile = {x: Math.floor((body.position.x) / 16), y: Math.floor((body.position.y + 8) / 16)};
                 nextTile = map.getTile(currentTile.x + 1, currentTile.y, 0);
             } else if (body.velocity.x < 0) {  // left
-                currentTile = { x: Math.floor((body.position.x+16) / 16), y: Math.floor((body.position.y + 8) / 16)};
+                currentTile = {x: Math.floor((body.position.x + 16) / 16), y: Math.floor((body.position.y + 8) / 16)};
                 nextTile = map.getTile(currentTile.x - 1, currentTile.y, 0);
             } else if (body.velocity.y > 0) {  // down
-                currentTile = { x: Math.floor((body.position.x + 8) / 16), y: Math.floor((body.position.y) / 16)};
+                currentTile = {x: Math.floor((body.position.x + 8) / 16), y: Math.floor((body.position.y) / 16)};
                 nextTile = map.getTile(currentTile.x, currentTile.y + 1, 0);
             } else if (body.velocity.y < 0) {  // up
-                currentTile = { x: Math.floor((body.position.x + 8) / 16), y: Math.floor((body.position.y+16) / 16)};
+                currentTile = {x: Math.floor((body.position.x + 8) / 16), y: Math.floor((body.position.y + 16) / 16)};
                 nextTile = map.getTile(currentTile.x, currentTile.y - 1, 0);
             } else {
                 // not walking anywhere, feel free to loiter all you want
@@ -914,14 +944,14 @@ Template.worldBoard.onRendered(function () {
             var shouldShowDestroyButton = false;
 
             // if the barricade record exists
-            if(!!barricade) {
-                if(barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
+            if (!!barricade) {
+                if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.BUILT) {
                     console.log("X: no need to prompt, this should handled from a crosswalk");
                     return;
                 }
-                else if(barricade.state === Sanitaire.barricadeStates.EMPTY
+                else if (barricade.state === Sanitaire.barricadeStates.EMPTY
                     || barricade.state === Sanitaire.barricadeStates.NONE) {
                     console.log("X: we should have the option to build at intersection ", intersectionId);
 
@@ -938,7 +968,7 @@ Template.worldBoard.onRendered(function () {
                     console.log("X: how did we get here?");
                     return;
                 }
-            }else {
+            } else {
                 console.log("X: we should have the option to build at intersection ", intersectionId, ". It has never been built on.");
 
                 shouldShowBuildButton = true;
@@ -1001,7 +1031,7 @@ Template.worldBoard.onRendered(function () {
             }
 
             // only respond to callback if within 3 pixels of the center of the tile
-            if (Math.abs((Math.floor(sprite.position.x)-7) % 16) > 1 && Math.abs((Math.floor(sprite.position.y)-7) % 16) > 1) {
+            if (Math.abs((Math.floor(sprite.position.x) - 7) % 16) > 1 && Math.abs((Math.floor(sprite.position.y) - 7) % 16) > 1) {
                 //console.log("close but not close enough");
                 return;
             }
@@ -1021,8 +1051,8 @@ Template.worldBoard.onRendered(function () {
             var shouldShowDestroyButton = false;
 
             // if the barricade is built then offer demolish
-            if(!!barricade) {
-                if(barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
+            if (!!barricade) {
+                if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.BUILT) {
                     console.log("CW: prompting from crosswalk at intersection ", intersectionId, " with barricade: ", barricade);
@@ -1040,7 +1070,7 @@ Template.worldBoard.onRendered(function () {
                     movesSincePrompt = 0;
                     lastIntersectionId = intersectionId;
                 }
-                else if(barricade.state === Sanitaire.barricadeStates.EMPTY
+                else if (barricade.state === Sanitaire.barricadeStates.EMPTY
                     || barricade.state === Sanitaire.barricadeStates.NONE) {
                     console.log("CW: no need to prompt. Intersection ", intersectionId, " is empty.");
                     return;
@@ -1135,7 +1165,7 @@ Template.worldBoard.onRendered(function () {
          */
         function colorRandomRoadGrey() {
             var numRoads = currentMapInfo.roads.length;
-            updateRoadTiles(map, Math.floor(Math.random()*numRoads), currentMapInfo, SanitaireMaps.streetColorTile.EMPTY);
+            updateRoadTiles(map, Math.floor(Math.random() * numRoads), currentMapInfo, SanitaireMaps.streetColorTile.EMPTY);
         }
 
         /**
@@ -1143,7 +1173,7 @@ Template.worldBoard.onRendered(function () {
          */
         function colorRandomRoadYellow() {
             var numRoads = currentMapInfo.roads.length;
-            updateRoadTiles(map, Math.floor(Math.random()*numRoads), currentMapInfo, SanitaireMaps.streetColorTile.RESPONDERS);
+            updateRoadTiles(map, Math.floor(Math.random() * numRoads), currentMapInfo, SanitaireMaps.streetColorTile.RESPONDERS);
         }
 
         /**
@@ -1151,7 +1181,7 @@ Template.worldBoard.onRendered(function () {
          */
         function colorRandomRoadGreen() {
             var numRoads = currentMapInfo.roads.length;
-            updateRoadTiles(map, Math.floor(Math.random()*numRoads), currentMapInfo, SanitaireMaps.streetColorTile.ISOLATED);
+            updateRoadTiles(map, Math.floor(Math.random() * numRoads), currentMapInfo, SanitaireMaps.streetColorTile.ISOLATED);
         }
 
         /**
@@ -1159,7 +1189,7 @@ Template.worldBoard.onRendered(function () {
          */
         function colorRandomRoadRed() {
             var numRoads = currentMapInfo.roads.length;
-            updateRoadTiles(map, Math.floor(Math.random()*numRoads), currentMapInfo, SanitaireMaps.streetColorTile.CONTAINED);
+            updateRoadTiles(map, Math.floor(Math.random() * numRoads), currentMapInfo, SanitaireMaps.streetColorTile.CONTAINED);
         }
 
         /**
