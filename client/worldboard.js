@@ -466,14 +466,14 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
  * @param patientZeroSprite
  * @param playerSprite
  */
-var touchedByPatientZero = function(patientZeroSprite, playerSprite, localPlayerStatus){
+var touchedByPatientZero = function(patientZeroSprite, playerSprite, localPlayerState){
     var patientZeroLocation = findPatientZeroLocationRelativeToPlayer(patientZeroSprite, playerSprite);
     if (patientZeroLocation.distance<= 5){
         //TODO: distance is arbitrary right now
 
         console.log("touched!");
-        localPlayerStatus.touched.yes = true;
-        localPlayerStatus.touched.time = TimeSync.serverTime(new Date());
+        localPlayerState.touched.yes = true;
+        localPlayerState.touched.time = TimeSync.serverTime(new Date());
     }
 }
 
@@ -482,21 +482,17 @@ var touchedByPatientZero = function(patientZeroSprite, playerSprite, localPlayer
  * @param patientZeroSprite
  * @param playerSprite
  */
-var stunPlayerIfTouched = function(phaserGame, patientZeroSprite, playerSprite,localPlayerStatus){
-    touchedByPatientZero(patientZeroSprite, playerSprite,localPlayerStatus);
+var stunPlayerIfTouched = function(phaserGame, patientZeroSprite, playerSprite, localPlayerState, gameId){
+    touchedByPatientZero(patientZeroSprite, playerSprite, localPlayerState);
     var currentTime = TimeSync.serverTime(new Date());
-    if (localPlayerStatus.touched.yes){
-        //TODO: set sprite speed to 0 for 5 seconds
-        if ((currentTime - localPlayerStatus.touched.time)<5000){
-            playerSprite.body.velocity.x = 0;
-            playerSprite.body.velocity.y = 0;
-            // TODO disable inputs?
-            phaserGame.input.enabled = false;
+    if (localPlayerState.touched.yes){
+        if ((currentTime - localPlayerState.touched.time)<5000){
+            // Let the server know our player is stunned
+            stopLocalPlayer(gameId, playerSprite);
             playerSprite.animations.paused = true;
         } else {
-            localPlayerStatus.touched.yes = false;
-            localPlayerStatus.touched.time = null;
-            phaserGame.input.enabled = true;
+            localPlayerState.touched.yes = false;
+            localPlayerState.touched.time = -Infinity;
             playerSprite.animations.paused = false;
         }
 
@@ -521,7 +517,7 @@ Template.worldBoard.onRendered(function () {
             },
             touched:{
                 yes: false,
-                time: null
+                time: -Infinity
             },
             health: 1.0
         };
@@ -828,7 +824,7 @@ Template.worldBoard.onRendered(function () {
                     findPatientZeroLocationRelativeToPlayer(patientZeroSprite,sprite);
 
                     // Stun player if touched by patient zero
-                    stunPlayerIfTouched(phaserGame,patientZeroSprite,sprite,localPlayerState);
+                    stunPlayerIfTouched(phaserGame,patientZeroSprite,sprite,localPlayerState,gameId);
                 }
 
                 // TODO: Update position on collide.
@@ -893,6 +889,11 @@ Template.worldBoard.onRendered(function () {
          */
         function move(direction) {
             if (!playerSprites[localPlayerId]) {
+                return;
+            }
+
+            // don't move when player is stunned
+            if (localPlayerState.touched.yes) {
                 return;
             }
 
