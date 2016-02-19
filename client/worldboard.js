@@ -819,6 +819,7 @@ Template.worldBoard.onRendered(function () {
         function isLegalWalkingPosition(body) {
             var nextTile;
             var currentTile;
+            var isLegal = false;
 
             // check tile in the direction we are headed
             if (body.velocity.x > 0) {  // right
@@ -838,7 +839,11 @@ Template.worldBoard.onRendered(function () {
                 return true;
             }
 
-            return _.indexOf(SanitaireMaps.PATHABLE_TILES, nextTile.index) !== -1;
+            if(nextTile) {
+                isLegal = _.any(SanitaireMaps.PATHABLE_TILES, nextTile.index);
+            }
+
+            return isLegal;
         }
 
         /**
