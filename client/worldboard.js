@@ -23,6 +23,25 @@ var updateRoadTiles = function (map, roadId, mapInfo, tileColor) {
 };
 
 /**
+ * Lets the server know to stop our player just got stopped
+ * @param gameId {}
+ * @param sprite {}
+ */
+var stopLocalPlayer = function (gameId, sprite) {
+    // stop movement on our screen
+    sprite.body.velocity.x = 0;
+    sprite.body.velocity.y = 0;
+    // let everyone else know about it too! :)
+    Meteor.call('updatePositionAndVelocity', gameId, {
+        x: sprite.position.x,
+        y: sprite.position.y
+    }, {
+        x: 0,
+        y: 0
+    }, TimeSync.serverTime(new Date()));
+};
+
+/**
  * Draws a barricade
  * @param map {Phaser.Map} A phaser map
  * @param state {Number} A state from Sanitiare.barricadeStates
