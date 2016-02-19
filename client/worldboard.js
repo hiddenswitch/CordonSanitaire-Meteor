@@ -13,10 +13,29 @@ var walkableTiles = [8, 9, 10, 11, 12, 15, 33, 37, 38, 39];
  * @param map {Phaser.Map} A phaser map
  * @param roadId {Number} Id of a road to change the color of
  * @param mapInfo {*} Map info containing all the lookup tables
- * @param tileColor {SanitaireMaps.streetColorTile} tile index for colored tiles
+ * @param tileState {GraphAnalysis.roadStatus} status of road to determine color
  */
-var updateRoadTiles = function (map, roadId, mapInfo, tileColor) {
+var updateRoadTiles = function (map, roadId, mapInfo, tileState) {
 
+    var tileColor;
+    switch(tileState) {
+        case GraphAnalysis.roadStatus.OPEN:
+            tileColor = SanitaireMaps.streetColorTile.NONE;
+            break;
+        case GraphAnalysis.roadStatus.CLOSED_EMPTY:
+            tileColor = SanitaireMaps.streetColorTile.EMPTY;
+            break;
+        case GraphAnalysis.roadStatus.CLOSED_RESPONDERS:
+            tileColor = SanitaireMaps.streetColorTile.RESPONDERS;
+            break;
+        case GraphAnalysis.roadStatus.CLOSED_CONTAINED:
+            tileColor = SanitaireMaps.streetColorTile.CONTAINED;
+            break;
+        case GraphAnalysis.roadStatus.CLOSED_ISOLATED:
+            tileColor = SanitaireMaps.streetColorTile.ISOLATED;
+            break;
+        default: tileColor = SanitaireMaps.streetColorTile.NONE;
+    }
     _.each(mapInfo.roadsById[roadId].innerTiles, function (tile) {
         map.fill(tileColor, tile.x, tile.y, 1, 1);
     });
@@ -243,6 +262,9 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
     var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId);
     // color streets according to their state
     var roadStatuses = GraphAnalysis.getRoadStatus(mapGraph, playerRoadIds, patientZeroRoadId);
+    _.each(roadStatuses, function(roadStatus, roadId) {
+       updateRoadTiles(map, roadId, mapInfo, roadStatus);
+    });
 
     // Update visible patient zero status
     if (isPZeroContained) {

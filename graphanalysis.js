@@ -88,9 +88,10 @@ GraphAnalysis.checkPatientZero = function (graph, playerRoadIds, patientZeroRoad
  * @param roadId {Number} the id of the road whose status we want
  * @param playerRoadIds {[Number]} An array of roadIds which players are on
  * @param patientZeroRoadId {Number} id of the road that Patient Zero is currently on
+ * @returns {Number} a type of road status
  */
 GraphAnalysis.getRoadStatusById = function (graph, roadId, playerRoadIds, patientZeroRoadId) {
-
+    // checks which component the road is part of and then returns that component's status
 };
 
 /**
@@ -98,14 +99,60 @@ GraphAnalysis.getRoadStatusById = function (graph, roadId, playerRoadIds, patien
  * @param graph {Object.<Number, [Number]>} An adjacency list representation of the road network
  * @param playerRoadIds {[Number]} An array of roadIds which players are on
  * @param patientZeroRoadId {Number} id of the road that Patient Zero is currently on
- * @returns {{}} Road statuses organized by roadId
+ * @returns {{GraphAnalysis.roadStatus}} Road statuses organized by roadId
  */
 GraphAnalysis.getRoadStatus = function (graph, playerRoadIds, patientZeroRoadId) {
     var roadStatuses = {};
     var components = GraphAnalysis._getComponents(graph);
-    //debugger;
+
+    _.each(components, function(component) {
+        var roadStatus = GraphAnalysis._getComponentStatus(component, playerRoadIds, patientZeroRoadId);
+        _.each(component, function(roadId) {
+           roadStatuses[roadId] = roadStatus;
+        });
+    });
 
     return roadStatuses;
+};
+
+/**
+ * Gets the status of a single component (group of roads)
+ * @param component {[Number]} group of roadIds
+ * @param playerRoadIds {[Number]} roadIds occupied by responders
+ * @param patientZeroRoadId {Number} roadId occupied by Patient Zero
+ * @returns {GraphAnalysis.roadStatus} status of the component
+ */
+GraphAnalysis._getComponentStatus = function (component, playerRoadIds, patientZeroRoadId) {
+    var componentStatus;
+
+    var doesContainPatientZero = _.contains(component, patientZeroRoadId);
+
+    var doesContainResponders = _.any(playerRoadIds, function (playerRoadId) {
+        return _.contains(component, playerRoadId);
+    });
+
+    // Todo: check and see if this is the largest component... or some other way of determining inside or outside...
+
+    if(doesContainPatientZero && !doesContainResponders) {
+        // isolated
+        componentStatus = GraphAnalysis.roadStatus.CLOSED_ISOLATED;
+    }
+    else if(doesContainPatientZero && doesContainResponders) {
+        // contained
+        componentStatus = GraphAnalysis.roadStatus.CLOSED_CONTAINED;
+    }
+    else if(!doesContainPatientZero && doesContainResponders) {
+        // responders present
+        componentStatus = GraphAnalysis.roadStatus.CLOSED_RESPONDERS;
+    }
+    else if(!doesContainPatientZero && !doesContainResponders) {
+        // empty
+        componentStatus = GraphAnalysis.roadStatus.OPEN;
+
+        // Todo: think about how to determine whether this is OPEN or EMPTY
+    }
+
+    return componentStatus;
 };
 
 /**
