@@ -317,7 +317,7 @@ var updatePatientZeroPosition = function (patientZeroSprite, tilePosition) {
  * @param patientZeroPosition
  * @param playerPosition
  */
-var findPatientZeroLocationRelativeToPlayer = function(patientZeroSprite, playerSprite){
+var updatePatientZeroLocationRelativeToLocalPlayer = function(patientZeroSprite, playerSprite, patientZeroLocationRelativeToLocalPlayer){
     var patientZeroX = patientZeroSprite.position.x;
     var patientZeroY = patientZeroSprite.position.y;
     var playerX = playerSprite.position.x;
@@ -330,8 +330,8 @@ var findPatientZeroLocationRelativeToPlayer = function(patientZeroSprite, player
     console.log(angle);
     console.log("distance");
     console.log(distance);
-    return {angle:angle, distance:distance};
-
+    patientZeroLocationRelativeToLocalPlayer.distance = distance;
+    patientZeroLocationRelativeToLocalPlayer.angle = angle;
 }
 
 /**
@@ -462,9 +462,8 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
 };
 
 
-var updateTouchedByPatientZero = function(patientZeroSprite, playerSprite, localPlayerState){
-    var patientZeroLocation = findPatientZeroLocationRelativeToPlayer(patientZeroSprite, playerSprite);
-    if (patientZeroLocation.distance<= 5){
+var updateTouchedByPatientZero = function(patientZeroSprite, playerSprite, localPlayerState, patientZeroLocationRelativeToLocalPlayer){
+    if (patientZeroLocationRelativeToLocalPlayer.distance<= 5){
         //TODO: distance is arbitrary right now
 
         console.log("touched!");
@@ -472,6 +471,7 @@ var updateTouchedByPatientZero = function(patientZeroSprite, playerSprite, local
         localPlayerState.health.timeWhenTouchedByPatientZero = TimeSync.serverTime(new Date());
     }
 }
+
 
 var stunPlayer = function(playerSprite){
     // Let the server know our player is stunned
@@ -509,6 +509,11 @@ Template.worldBoard.onRendered(function () {
             },
 
         };
+
+        var patientZeroLocationRelativeToLocalPlayer = {
+            distance: Infinity,
+            angle: 0
+        }
 
         // scale everything a bit to up performance when moving the map
         var scaleValue = 1.75;
@@ -810,7 +815,7 @@ Template.worldBoard.onRendered(function () {
 
                     // look at the position of patient zero rel to local player
                     // TODO: use this to update compass
-                    findPatientZeroLocationRelativeToPlayer(patientZeroSprite,sprite);
+                    updatePatientZeroLocationRelativeToLocalPlayer(patientZeroSprite,sprite);
 
                     // Stun player if touched by patient zero
                     // Check if touched by patient zero
