@@ -472,8 +472,8 @@ var touchedByPatientZero = function(patientZeroSprite, playerSprite, localPlayer
         //TODO: distance is arbitrary right now
 
         console.log("touched!");
-        localPlayerState.touched.yes = true;
-        localPlayerState.touched.time = TimeSync.serverTime(new Date());
+        localPlayerState.health.isStunned = true;
+        localPlayerState.health.timeWhenTouchedByPatientZero = TimeSync.serverTime(new Date());
     }
 }
 
@@ -485,14 +485,14 @@ var touchedByPatientZero = function(patientZeroSprite, playerSprite, localPlayer
 var stunPlayerIfTouched = function(phaserGame, patientZeroSprite, playerSprite, localPlayerState, gameId){
     touchedByPatientZero(patientZeroSprite, playerSprite, localPlayerState);
     var currentTime = TimeSync.serverTime(new Date());
-    if (localPlayerState.touched.yes){
-        if ((currentTime - localPlayerState.touched.time)<5000){
+    if (localPlayerState.health.isStunned){
+        if ((currentTime - localPlayerState.health.timeWhenTouchedByPatientZero)<5000){
             // Let the server know our player is stunned
             stopLocalPlayer(gameId, playerSprite);
             playerSprite.animations.paused = true;
         } else {
-            localPlayerState.touched.yes = false;
-            localPlayerState.touched.time = -Infinity;
+            localPlayerState.health.isStunned = false;
+            localPlayerState.health.timeWhenTouchedByPatientZero = -Infinity;
             playerSprite.animations.paused = false;
         }
 
@@ -515,11 +515,12 @@ Template.worldBoard.onRendered(function () {
                 isBuilding: false,
                 intersectionId: -1
             },
-            touched:{
-                yes: false,
-                time: -Infinity
+            health: {
+                value:1.0,
+                isStunned: false,
+                timeWhenTouchedByPatientZero: -Infinity
             },
-            health: 1.0
+
         };
 
         // scale everything a bit to up performance when moving the map
@@ -893,7 +894,7 @@ Template.worldBoard.onRendered(function () {
             }
 
             // don't move when player is stunned
-            if (localPlayerState.touched.yes) {
+            if (localPlayerState.health.isStunned) {
                 return;
             }
 
