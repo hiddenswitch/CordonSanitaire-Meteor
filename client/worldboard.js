@@ -313,9 +313,10 @@ var updatePatientZeroPosition = function (patientZeroSprite, tilePosition) {
 };
 
 /**
- * Finds the direction between the player and patient zero
- * @param patientZeroPosition
- * @param playerPosition
+ * Updates the direction and distance between the local player and patient zero
+ * @param patientZeroSprite {Phaser.Sprite}
+ * @param playerSprite {Phaser.Sprite}
+ * @param patientZeroLocationRelativeToLocalPlayer {Object}
  */
 var updatePatientZeroLocationRelativeToLocalPlayer = function(patientZeroSprite, playerSprite, patientZeroLocationRelativeToLocalPlayer){
     var patientZeroX = patientZeroSprite.position.x;
@@ -461,8 +462,12 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
     }
 };
 
-
-var updateTouchedByPatientZero = function(patientZeroSprite, playerSprite, localPlayerState, patientZeroLocationRelativeToLocalPlayer){
+/**
+ * If patient zero is close enough, updates the PlayerState to show that the local player is stunned
+ * @param localPlayerState {Object}
+ * @param patientZeroLocationRelativeToLocalPlayer {Object}
+ */
+var updateTouchedByPatientZero = function(localPlayerState, patientZeroLocationRelativeToLocalPlayer){
     if (patientZeroLocationRelativeToLocalPlayer.distance<= 5){
         //TODO: distance is arbitrary right now
 
@@ -472,14 +477,22 @@ var updateTouchedByPatientZero = function(patientZeroSprite, playerSprite, local
     }
 }
 
-
-var stunPlayer = function(playerSprite){
+/**
+ * Stops the player, updates the server about the stop, and stops sprite animation
+ * @param playerSprite {Phaser.Sprite}
+ */
+var stunPlayer = function(gameId, playerSprite){
     // Let the server know our player is stunned
     stopLocalPlayer(gameId, playerSprite);
     playerSprite.animations.paused = true;
 
 }
 
+/**
+ * Updates player state to show that they are no longer stunned, and re-animates player
+ * @param playerSprite {Phaser.Sprite}
+ * @param localPlayerState {Object}
+ */
 var unstunPlayer = function(playerSprite, localPlayerState){
     localPlayerState.health.isStunned = false;
     localPlayerState.health.timeWhenTouchedByPatientZero = -Infinity;
@@ -815,11 +828,11 @@ Template.worldBoard.onRendered(function () {
 
                     // look at the position of patient zero rel to local player
                     // TODO: use this to update compass
-                    updatePatientZeroLocationRelativeToLocalPlayer(patientZeroSprite,sprite);
+                    updatePatientZeroLocationRelativeToLocalPlayer(patientZeroSprite, sprite, patientZeroLocationRelativeToLocalPlayer);
 
                     // Stun player if touched by patient zero
                     // Check if touched by patient zero
-                    updateTouchedByPatientZero(patientZeroSprite, sprite, localPlayerState);
+                    updateTouchedByPatientZero(localPlayerState, patientZeroLocationRelativeToLocalPlayer);
 
                     var currentTime = TimeSync.serverTime(new Date());
                     if (localPlayerState.health.isStunned){
@@ -827,7 +840,7 @@ Template.worldBoard.onRendered(function () {
                         // NOTE: if the time when they were touched has been updated to a
                         // more recent time, they will be stunned for longer
                         if ((currentTime - localPlayerState.health.timeWhenTouchedByPatientZero)<5000){
-                            stunPlayer(sprite);
+                            stunPlayer(gameId, sprite);
                         } else {
                             unstunPlayer(sprite, localPlayerState);
                         }
