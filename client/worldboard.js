@@ -461,42 +461,29 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
     }
 };
 
-/**
- *
- * @param patientZeroSprite
- * @param playerSprite
- */
-var touchedByPatientZero = function(patientZeroSprite, playerSprite, localPlayerState){
+
+var updateTouchedByPatientZero = function(patientZeroSprite, playerSprite, localPlayerState){
     var patientZeroLocation = findPatientZeroLocationRelativeToPlayer(patientZeroSprite, playerSprite);
     if (patientZeroLocation.distance<= 5){
         //TODO: distance is arbitrary right now
 
         console.log("touched!");
-        localPlayerState.health.isStunned = true;
+        localPlayerState.health.isStunned = true; // NOTE: The player can be stunned multiple times when stunned!
         localPlayerState.health.timeWhenTouchedByPatientZero = TimeSync.serverTime(new Date());
     }
 }
 
-/**
- *
- * @param patientZeroSprite
- * @param playerSprite
- */
-var stunPlayerIfTouched = function(phaserGame, patientZeroSprite, playerSprite, localPlayerState, gameId){
-    touchedByPatientZero(patientZeroSprite, playerSprite, localPlayerState);
-    var currentTime = TimeSync.serverTime(new Date());
-    if (localPlayerState.health.isStunned){
-        if ((currentTime - localPlayerState.health.timeWhenTouchedByPatientZero)<5000){
-            // Let the server know our player is stunned
-            stopLocalPlayer(gameId, playerSprite);
-            playerSprite.animations.paused = true;
-        } else {
-            localPlayerState.health.isStunned = false;
-            localPlayerState.health.timeWhenTouchedByPatientZero = -Infinity;
-            playerSprite.animations.paused = false;
-        }
+var stunPlayer = function(playerSprite){
+    // Let the server know our player is stunned
+    stopLocalPlayer(gameId, playerSprite);
+    playerSprite.animations.paused = true;
 
-    }
+}
+
+var unstunPlayer = function(playerSprite, localPlayerState){
+    localPlayerState.health.isStunned = false;
+    localPlayerState.health.timeWhenTouchedByPatientZero = -Infinity;
+    playerSprite.animations.paused = false;
 }
 
 Template.worldBoard.onRendered(function () {
@@ -822,10 +809,24 @@ Template.worldBoard.onRendered(function () {
                     }
 
                     // look at the position of patient zero rel to local player
+                    // TODO: use this to update compass
                     findPatientZeroLocationRelativeToPlayer(patientZeroSprite,sprite);
 
                     // Stun player if touched by patient zero
-                    stunPlayerIfTouched(phaserGame,patientZeroSprite,sprite,localPlayerState,gameId);
+                    // Check if touched by patient zero
+                    updateTouchedByPatientZero(patientZeroSprite, sprite, localPlayerState);
+
+                    var currentTime = TimeSync.serverTime(new Date());
+                    if (localPlayerState.health.isStunned){
+                        // keep the player stunned for 5 seconds since they were touched
+                        // NOTE: if the time when they were touched has been updated to a
+                        // more recent time, they will be stunned for longer
+                        if ((currentTime - localPlayerState.health.timeWhenTouchedByPatientZero)<5000){
+                            stunPlayer(sprite);
+                        } else {
+                            unstunPlayer(sprite, localPlayerState);
+                        }
+                    }
                 }
 
                 // TODO: Update position on collide.
