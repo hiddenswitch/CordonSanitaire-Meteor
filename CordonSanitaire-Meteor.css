@@ -167,6 +167,13 @@ start of game */
     font-size: .7em;
 }
 
+#distance-direction-container{
+    position: absolute;
+    z-index: 101;
+    top: 100px;
+    left: 0;
+}
+
 #buttons {
     z-index: 999;
     background: black;
