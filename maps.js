@@ -3,6 +3,13 @@
  */
 SanitaireMaps = (Meteor.isClient ? window : global).Maps || {};
 
+
+/**
+ * Wherever we may need to calculate based on the map tile size...
+ * @type {number}
+ */
+SanitaireMaps.TILE_SIZE = 16;
+
 /**
  * Tiles for p-zero pathing and legal moves by players
  * @type {number[]}
