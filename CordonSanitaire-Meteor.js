@@ -103,6 +103,11 @@ if (Meteor.isClient) {
                 "-moz-transform": "rotate(" + angle + "deg)",
                 "transform": "rotate(" + angle + "deg)" /* For modern browsers(CSS3)  */
             });
+        },
+
+        updatePatientZeroDistance: function(){
+            var distance = Math.round(Session.get("patient zero distance and direction").distance/8); // just taking the rounded value
+            return distance;
         }
 
 

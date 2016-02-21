@@ -93,13 +93,13 @@
 
     <!-- Container for patient zero distance and direction -->
     <div id="distance-direction-container">
+        <div id="distance-container">
+            <span id="distance">Distance: {{updatePatientZeroDistance}} feet</span>
+        </div>
         <div id="compass">
             <img id="compass-img" src="/assets/sprites/PZero_Compass_rotated.png"/>
         </div>
         {{updatePatientZeroDirection}}
-        <div id="distance-container">
-            <span id="distance"></span>
-        </div>
     </div>
 
 
