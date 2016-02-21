@@ -91,6 +91,20 @@
     <div id="countdown"><span id="seconds">{{timeLeftInGame.seconds}}</span>.<span
             id="hundredths">{{timeLeftInGame.hundredths}}</span></div>
 
+    <!-- Container for patient zero distance and direction -->
+    <div id="distance-direction-container">
+        <div id="compass">
+            <img id="compass-img" src="/assets/sprites/PZero_Compass_rotated.png"/>
+        </div>
+        {{updatePatientZeroDirection}}
+        <div id="distance-container">
+            <span id="distance"></span>
+        </div>
+    </div>
+
+
+
+
     <!-- Logout button for player | Not currently necessary -->
     <!--<input type="button" value="Log Out" class="logoutButton" onclick="userLogout()" />-->
 
