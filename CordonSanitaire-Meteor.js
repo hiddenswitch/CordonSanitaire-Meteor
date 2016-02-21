@@ -94,7 +94,18 @@ if (Meteor.isClient) {
         },
         showPatientZeroLoose: function () {
             return Session.get("patient zero loose");
+        },
+
+        updatePatientZeroDirection: function(){
+            var angle = -Session.get("patient zero distance and direction").angle; // negative because of how css works
+            $('#compass-img').css({
+                "-webkit-transform": "rotate(" + angle + "deg)",
+                "-moz-transform": "rotate(" + angle + "deg)",
+                "transform": "rotate(" + angle + "deg)" /* For modern browsers(CSS3)  */
+            });
         }
+
+
     });
 
     Template.conclusion.helpers({
