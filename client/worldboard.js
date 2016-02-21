@@ -271,9 +271,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         );
     });
 
-    var patientZeroCurrentLocation = SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, game.patientZero.path, game.patientZero.pathUpdatedAt, {
-        time: new Date()
-    });
+    var patientZeroCurrentLocation = SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, game.patientZero.path, game.patientZero.pathUpdatedAt);
 
     var patientZeroRoadId = SanitaireMaps.getRoadIdForTilePosition(patientZeroCurrentLocation.x, patientZeroCurrentLocation.y, currentMapInfo); // TODO: get actual road id from this game!!!!!!!
     var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
@@ -310,9 +308,7 @@ var updatePatientZero = function (gameId, patientZeroSprite, phaserGame, patient
     var game = Games.findOne(gameId, {reactive: false});
     // If we haven't created patient zero yet, create him
     if (!patientZeroSprite) {
-        var patientZeroCurrentLocation = SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, game.patientZero.path, game.patientZero.pathUpdatedAt, {
-            time: new Date()
-        });
+        var patientZeroCurrentLocation = SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, game.patientZero.path, game.patientZero.pathUpdatedAt);
 
         patientZeroSprite = phaserGame.add.sprite(patientZeroCurrentLocation.x * 16, patientZeroCurrentLocation.y * 16, 'patientZero', 1);
         phaserGame.physics.enable(patientZeroSprite, Phaser.Physics.ARCADE);
@@ -323,9 +319,7 @@ var updatePatientZero = function (gameId, patientZeroSprite, phaserGame, patient
 
     var path = patientZeroFromGameDocument.path || game.patientZero.path;
     var pathUpdatedAt = patientZeroFromGameDocument.pathUpdatedAt || game.patientZero.pathUpdatedAt;
-    var currentPosition = SanitairePatientZero.estimatePositionFromPath(speed, path, pathUpdatedAt, {
-        time: TimeSync.serverTime(new Date())
-    });
+    var currentPosition = SanitairePatientZero.estimatePositionFromPath(speed, path, pathUpdatedAt);
 
     Deps.afterFlush(function () {
         updatePatientZeroPosition(patientZeroSprite, currentPosition);
@@ -819,7 +813,6 @@ Template.worldBoard.onRendered(function () {
         function isLegalWalkingPosition(body) {
             var nextTile;
             var currentTile;
-            var isLegal = false;
 
             // check tile in the direction we are headed
             if (body.velocity.x > 0) {  // right
@@ -839,11 +832,8 @@ Template.worldBoard.onRendered(function () {
                 return true;
             }
 
-            if(nextTile) {
-                isLegal = _.any(SanitaireMaps.PATHABLE_TILES, nextTile.index);
-            }
-
-            return isLegal;
+            // make sure next tile exists
+            return nextTile && _.indexOf(SanitaireMaps.PATHABLE_TILES, nextTile.index) !== -1;
         }
 
         /**
