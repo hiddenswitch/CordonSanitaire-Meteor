@@ -327,22 +327,20 @@ var updatePatientZeroLocationRelativeToLocalPlayer = function(patientZeroSprite,
     var angle = Math.atan2(-(patientZeroY-playerY),(patientZeroX-playerX)); //angle is in radians; -y because the axis is flipped
     angle = (angle*180)/(Math.PI); // convert to degree
     var distance = Math.sqrt((patientZeroX-playerX)*(patientZeroX-playerX) + (patientZeroY-playerY)*(patientZeroY-playerY));
-    console.log("angle");
-    console.log(angle);
-    console.log("distance");
-    console.log(distance);
+    //console.log("angle");
+    //console.log(angle);
+    //console.log("distance");
+    //console.log(distance);
     patientZeroLocationRelativeToLocalPlayer.distance = distance;
     patientZeroLocationRelativeToLocalPlayer.angle = angle;
 }
 
 /**
- * Shows the direction between the player and patient zero on screen
- * @param something1
- * @param something2
- * @param something3
+ * Shows the direction and distance between the player and patient zero on screen
+ * @param patientZeroLocationRelativeToLocalPlayer {Object}
  */
-var showPatientZeroLocationRelativeToPlayer = function(something1, something2, something3){
-
+var showPatientZeroLocationRelativeToPlayer = function(patientZeroLocationRelativeToLocalPlayer){
+    Session.set("patient zero distance and direction", patientZeroLocationRelativeToLocalPlayer);
 }
 
 /**
@@ -829,7 +827,7 @@ Template.worldBoard.onRendered(function () {
                     // look at the position of patient zero rel to local player
                     // TODO: use this to update compass
                     updatePatientZeroLocationRelativeToLocalPlayer(patientZeroSprite, sprite, patientZeroLocationRelativeToLocalPlayer);
-
+                    showPatientZeroLocationRelativeToPlayer(patientZeroLocationRelativeToLocalPlayer);
                     // Stun player if touched by patient zero
                     // Check if touched by patient zero
                     updateTouchedByPatientZero(localPlayerState, patientZeroLocationRelativeToLocalPlayer);
