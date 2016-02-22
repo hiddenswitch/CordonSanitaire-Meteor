@@ -1034,6 +1034,7 @@ Template.worldBoard.onRendered(function () {
             // decide if to show buttons
             var shouldShowBuildButton = false;
             var shouldShowDestroyButton = false;
+            var shouldShowBothButtons = false;
 
             // if the barricade record exists
             if(!!barricade) {
@@ -1051,9 +1052,11 @@ Template.worldBoard.onRendered(function () {
                         || barricade.time == Infinity) {
                         shouldShowBuildButton = barricade.buttons === Sanitaire.barricadeButtons.BUILD;
                         shouldShowDestroyButton = barricade.buttons === Sanitaire.barricadeButtons.DESTROY;
+                        shouldShowBothButtons = barricade.buttons === Sanitaire.barricadeButtons.BUILD_AND_DESTROY;
                     } else {
                         shouldShowBuildButton = barricade.nextButtons === Sanitaire.barricadeButtons.BUILD;
                         shouldShowDestroyButton = barricade.nextButtons === Sanitaire.barricadeButtons.DESTROY;
+                        shouldShowBothButtons = barricade.buttons === Sanitaire.barricadeButtons.BUILD_AND_DESTROY;
                     }
                 }
                 else {
@@ -1072,8 +1075,9 @@ Template.worldBoard.onRendered(function () {
             lastIntersectionId = intersectionId;
 
 
-            Session.set("showing build buttons", shouldShowBuildButton);
+            Session.set("showing build button", shouldShowBuildButton);
             Session.set("showing destroy button", shouldShowDestroyButton);
+            Session.set("showing build and destroy buttons", shouldShowBothButtons);
 
             // stop our player (stops animation and movement)
             player_direction = '';
@@ -1141,6 +1145,7 @@ Template.worldBoard.onRendered(function () {
             // decide if to show buttons
             var shouldShowBuildButton = false;
             var shouldShowDestroyButton = false;
+            var shouldShowBothButtons = false;
 
             // if the barricade is built then offer demolish
             if(!!barricade) {
@@ -1153,9 +1158,11 @@ Template.worldBoard.onRendered(function () {
                         || barricade.time == Infinity) {
                         shouldShowBuildButton = barricade.buttons === Sanitaire.barricadeButtons.BUILD;
                         shouldShowDestroyButton = barricade.buttons === Sanitaire.barricadeButtons.DESTROY;
+                        shouldShowBothButtons = barricade.buttons === Sanitaire.barricadeButtons.BUILD_AND_DESTROY;
                     } else {
                         shouldShowBuildButton = barricade.nextButtons === Sanitaire.barricadeButtons.BUILD;
                         shouldShowDestroyButton = barricade.nextButtons === Sanitaire.barricadeButtons.DESTROY;
+                        shouldShowBothButtons = barricade.buttons === Sanitaire.barricadeButtons.BUILD_AND_DESTROY;
                     }
 
                     // reset our catch for same intersection
@@ -1177,8 +1184,9 @@ Template.worldBoard.onRendered(function () {
                 return;
             }
 
-            Session.set("showing build buttons", shouldShowBuildButton);
+            Session.set("showing build button", shouldShowBuildButton);
             Session.set("showing destroy button", shouldShowDestroyButton);
+            Session.set("showing build and destroy buttons", shouldShowBothButtons);
 
             // if we aren't showing buttons, no need to stop
             //if(!shouldShowBuildButton)
@@ -1216,7 +1224,7 @@ Template.worldBoard.onRendered(function () {
         buildBarricade = function () {
 
             // hide buttons
-            Session.set("showing build buttons", false);
+            hideButtons();
 
             if (_.isUndefined(lastPromptTile)) {
                 return;
@@ -1236,8 +1244,7 @@ Template.worldBoard.onRendered(function () {
          */
         demolishBarricade = function () {
             // hide buttons
-            Session.set("showing build buttons", false);
-            Session.set("showing destroy button", false);
+            hideButtons();
 
             if (_.isUndefined(lastPromptTile)) {
                 return;
@@ -1251,6 +1258,14 @@ Template.worldBoard.onRendered(function () {
             localPlayerState.construction.intersectionId = intersectionId;
         };
 
+        /**
+         * Hide buttons for build or demolish from screen
+         */
+        hideButtons = function () {
+            Session.set("showing build button", false);
+            Session.set("showing destroy button", false);
+            Session.set("showing build and destroy buttons", false);
+        };
 
         /**
          *  Color a random road as though a quarantine is completed
@@ -1301,7 +1316,7 @@ Template.worldBoard.onRendered(function () {
          */
         function endSwipe() {
             // hide buttons
-            Session.set("showing build buttons", false);
+            hideButtons();
 
             // saving mouse/finger coordinates
             endX = phaserGame.input.worldX;
@@ -1383,14 +1398,5 @@ Template.game.events({
     'click #destroyButton': function () {
         // TODO: Make this smarter (it should be calling a meteor method)
         demolishBarricade();
-    },
-
-    'click #cancelButton': function () {
-        // TODO: Make this smarter (it should be calling a meteor method)
-        if (Session.get("showing destroy button"))
-            cancelDestroy();
-        else
-            keepRunning();
     }
-
 });

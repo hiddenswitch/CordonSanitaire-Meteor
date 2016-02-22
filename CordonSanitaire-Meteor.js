@@ -80,11 +80,14 @@ if (Meteor.isClient) {
             };
             return result;
         },
-        showingBuildButtons: function () {
-            return Session.get("showing build buttons");
+        showingBuildButton: function () {
+            return Session.get("showing build button");
         },
         showingDestroyButton: function () {
             return Session.get("showing destroy button");
+        },
+        showingBuildAndDestroyButtons: function () {
+            return Session.get("showing build and destroy buttons");;
         },
         showPatientZeroIsolated: function () {
             return Session.get("patient zero isolated");
