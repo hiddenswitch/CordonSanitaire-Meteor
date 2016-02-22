@@ -91,7 +91,7 @@ start of game */
 }
 
 .lobbyCountdown {
-    position: ;
+    /**position: ;**/
 }
 
 #lobby_count {
@@ -165,6 +165,21 @@ start of game */
 
 #hundredths {
     font-size: .7em;
+}
+
+#distance-direction-container{
+    position: absolute;
+    z-index: 101;
+    top: 100px;
+    left: 0;
+    margin: 5%;
+}
+
+#distance-container{
+    background: rgba(0,0,0,1);
+    color: white;
+    border-radius: 10px;
+    padding: 10px;
 }
 
 #buttons {
