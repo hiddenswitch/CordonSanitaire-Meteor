@@ -37,6 +37,25 @@ var updateRoadTiles = function (map, roadId, mapInfo, tileState) {
 };
 
 /**
+ * Lets the server know to stop our player just got stopped
+ * @param gameId {}
+ * @param sprite {}
+ */
+var stopLocalPlayer = function (gameId, sprite) {
+    // stop movement on our screen
+    sprite.body.velocity.x = 0;
+    sprite.body.velocity.y = 0;
+    // let everyone else know about it too! :)
+    Meteor.call('updatePositionAndVelocity', gameId, {
+        x: sprite.position.x,
+        y: sprite.position.y
+    }, {
+        x: 0,
+        y: 0
+    }, TimeSync.serverTime(new Date()));
+};
+
+/**
  * Draws a barricade
  * @param map {Phaser.Map} A phaser map
  * @param state {Number} A state from Sanitiare.barricadeStates
@@ -68,16 +87,6 @@ var drawBarricade = function (map, state, intersectionId, mapInfo) {
     }
 };
 
-/**
- * Update the position of patient zero
- * @param patientZeroSprite {Phaser.Sprite} A Phaser sprite
- * @param tilePosition {{x: Number, y: Number}} A position in tile space where patient zero should be
- */
-var updatePatientZeroPosition = function (patientZeroSprite, tilePosition) {
-    if (!tilePosition) return;
-    patientZeroSprite.position.x = tilePosition.x * 16;
-    patientZeroSprite.position.y = tilePosition.y * 16;
-};
 
 /**
  * Update the sprites based on the given player document
@@ -312,6 +321,48 @@ var updatePatientZero = function (gameId, patientZeroSprite, phaserGame, patient
 };
 
 /**
+ * Update the position of patient zero
+ * @param patientZeroSprite {Phaser.Sprite} A Phaser sprite
+ * @param tilePosition {{x: Number, y: Number}} A position in tile space where patient zero should be
+ */
+var updatePatientZeroPosition = function (patientZeroSprite, tilePosition) {
+    if (!tilePosition) return;
+    patientZeroSprite.position.x = tilePosition.x * 16;
+    patientZeroSprite.position.y = tilePosition.y * 16;
+};
+
+/**
+ * Updates the direction and distance between the local player and patient zero
+ * @param patientZeroSprite {Phaser.Sprite}
+ * @param playerSprite {Phaser.Sprite}
+ * @param patientZeroLocationRelativeToLocalPlayer {Object}
+ */
+var updatePatientZeroLocationRelativeToLocalPlayer = function(patientZeroSprite, playerSprite, patientZeroLocationRelativeToLocalPlayer){
+    var patientZeroX = patientZeroSprite.position.x;
+    var patientZeroY = patientZeroSprite.position.y;
+    var playerX = playerSprite.position.x;
+    var playerY = playerSprite.position.y;
+
+    var angle = Math.atan2(-(patientZeroY-playerY),(patientZeroX-playerX)); //angle is in radians; -y because the axis is flipped
+    angle = (angle*180)/(Math.PI); // convert to degree
+    var distance = Math.sqrt((patientZeroX-playerX)*(patientZeroX-playerX) + (patientZeroY-playerY)*(patientZeroY-playerY));
+    //console.log("angle");
+    //console.log(angle);
+    //console.log("distance");
+    //console.log(distance);
+    patientZeroLocationRelativeToLocalPlayer.distance = distance;
+    patientZeroLocationRelativeToLocalPlayer.angle = angle;
+}
+
+/**
+ * Shows the direction and distance between the player and patient zero on screen
+ * @param patientZeroLocationRelativeToLocalPlayer {Object}
+ */
+var showPatientZeroLocationRelativeToPlayer = function(patientZeroLocationRelativeToLocalPlayer){
+    Session.set("patient zero distance and direction", patientZeroLocationRelativeToLocalPlayer);
+}
+
+/**
  * Building progress bars - show status of build
  * @param intersectionId {Number} which intersection we represent
  * @param x {Number} position to place in the x coord
@@ -428,13 +479,50 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
     }
 };
 
+/**
+ * If patient zero is close enough, updates the PlayerState to show that the local player is stunned
+ * @param localPlayerState {Object}
+ * @param patientZeroLocationRelativeToLocalPlayer {Object}
+ */
+var updateTouchedByPatientZero = function(localPlayerState, patientZeroLocationRelativeToLocalPlayer){
+    if (patientZeroLocationRelativeToLocalPlayer.distance<= 5){
+        //TODO: distance is arbitrary right now
+
+        console.log("touched!");
+        localPlayerState.health.isStunned = true; // NOTE: The player can be stunned multiple times when stunned!
+        localPlayerState.health.timeWhenTouchedByPatientZero = TimeSync.serverTime(new Date());
+    }
+}
+
+/**
+ * Stops the player, updates the server about the stop, and stops sprite animation
+ * @param playerSprite {Phaser.Sprite}
+ */
+var stunPlayer = function(gameId, playerSprite){
+    // Let the server know our player is stunned
+    stopLocalPlayer(gameId, playerSprite);
+    playerSprite.animations.paused = true;
+
+}
+
+/**
+ * Updates player state to show that they are no longer stunned, and re-animates player
+ * @param playerSprite {Phaser.Sprite}
+ * @param localPlayerState {Object}
+ */
+var unstunPlayer = function(playerSprite, localPlayerState){
+    localPlayerState.health.isStunned = false;
+    localPlayerState.health.timeWhenTouchedByPatientZero = -Infinity;
+    playerSprite.animations.paused = false;
+}
+
 Template.worldBoard.onRendered(function () {
         var renderer = this;
         var routeData = Router.current().data();
         var gameId = routeData.gameId;
         var localPlayerId = routeData.playerId;
         var game = Games.findOne(gameId);
-        var localPlayer = Players.findOne(localPlayerId);
+        var localPlayerSprite = Players.findOne(localPlayerId);
         var localPlayerState = {
             construction: {
                 prevPosition: {
@@ -444,8 +532,18 @@ Template.worldBoard.onRendered(function () {
                 isBuilding: false,
                 intersectionId: -1
             },
-            health: 1.0
+            health: {
+                value:1.0,
+                isStunned: false,
+                timeWhenTouchedByPatientZero: -Infinity
+            },
+
         };
+
+        var patientZeroLocationRelativeToLocalPlayer = {
+            distance: Infinity,
+            angle: 0
+        }
 
         // scale everything a bit to up performance when moving the map
         var scaleValue = 1.75;
@@ -671,7 +769,6 @@ Template.worldBoard.onRendered(function () {
         var lastLocalPlayerWallCollisionHandled = null;
 
         function update() {
-
             // Do patient zero
             var game = Games.findOne(gameId, {reactive: false});
             // Todo: temporary solution for end of game
@@ -754,6 +851,26 @@ Template.worldBoard.onRendered(function () {
                             y: 0
                         }, TimeSync.serverTime(new Date()));
                     }
+
+                    // look at the position of patient zero rel to local player
+                    // TODO: use this to update compass
+                    updatePatientZeroLocationRelativeToLocalPlayer(patientZeroSprite, sprite, patientZeroLocationRelativeToLocalPlayer);
+                    showPatientZeroLocationRelativeToPlayer(patientZeroLocationRelativeToLocalPlayer);
+                    // Stun player if touched by patient zero
+                    // Check if touched by patient zero
+                    updateTouchedByPatientZero(localPlayerState, patientZeroLocationRelativeToLocalPlayer);
+
+                    var currentTime = TimeSync.serverTime(new Date());
+                    if (localPlayerState.health.isStunned){
+                        // keep the player stunned for 5 seconds since they were touched
+                        // NOTE: if the time when they were touched has been updated to a
+                        // more recent time, they will be stunned for longer
+                        if ((currentTime - localPlayerState.health.timeWhenTouchedByPatientZero)<5000){
+                            stunPlayer(gameId, sprite);
+                        } else {
+                            unstunPlayer(sprite, localPlayerState);
+                        }
+                    }
                 }
 
                 // TODO: Update position on collide.
@@ -818,6 +935,11 @@ Template.worldBoard.onRendered(function () {
          */
         function move(direction) {
             if (!playerSprites[localPlayerId]) {
+                return;
+            }
+
+            // don't move when player is stunned
+            if (localPlayerState.health.isStunned) {
                 return;
             }
 
