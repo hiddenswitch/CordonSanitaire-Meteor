@@ -123,7 +123,7 @@ var updatePlayer = function (sprites, player) {
  * @param playerSprites
  * @returns {*}
  */
-var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSprites, playerGroup, prevPosition, mapInfo, buildProgressBars, phaserGame) {
+var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSprites, playerGroup, patientZeroStatus, prevPosition, mapInfo, buildProgressBars, phaserGame) {
     // These barricades come from Sanitaire.addConstructionMessageToLog
 
     // Clear the previous timers
@@ -271,16 +271,25 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
     });
 
     // Update visible patient zero status
-    if (isPZeroContained) {
-        Session.set("patient zero isolated", true);
-        Session.set("patient zero contained", false);
-        Session.set("patient zero loose", false);
+    // Only update if the status has changed
+   if (isPZeroContained){
+        if (patientZeroStatus==="loose"){
+            patientZeroStatus = "isolated";
+            Session.set("patient zero isolated", true);
+            Session.set("patient zero contained", false);
+            Session.set("patient zero loose", false);
+            Meteor.call("updatePatientZeroStatus", gameId, "isolated");
+        }
+    } else {
+        if (patientZeroStatus==="isolated"){
+            patientZeroStatus = "loose";
+            Session.set("patient zero isolated", false);
+            Session.set("patient zero contained", false);
+            Session.set("patient zero loose", true);
+            Meteor.call("updatePatientZeroStatus", gameId, "loose");
+        }
     }
-    else {
-        Session.set("patient zero isolated", false);
-        Session.set("patient zero contained", false);
-        Session.set("patient zero loose", true);
-    }
+
     return barriers;
 };
 
@@ -558,6 +567,7 @@ Template.worldBoard.onRendered(function () {
         // This is a list of timers that are used to schedule when the barricade state transition occurs
         var barricadeTimers = [];
         var patientZeroSprite = null;
+        var patientZeroStatus = "loose";
 
         // KEYS FOR TESTING FEATURES
         var key1, key2, key3, key4;
@@ -572,7 +582,7 @@ Template.worldBoard.onRendered(function () {
                     _.each(fields, function (v, k) {
                         // See if a quarantine tile has been added
                         if (k === 'barriers') {
-                            updateBarriers(v, barricadeTimers, map, gameId, playerSprites, playerGroup, localPlayerState.construction.prevPosition, currentMapInfo, buildProgressBars, phaserGame);
+                            updateBarriers(v, barricadeTimers, map, gameId, playerSprites, playerGroup, patientZeroStatus, localPlayerState.construction.prevPosition, currentMapInfo, buildProgressBars, phaserGame);
                         } else
                         // Has the patient zero updated at time changed? Do some moving
                         if (k === 'patientZero') {
