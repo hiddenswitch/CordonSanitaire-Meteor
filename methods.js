@@ -130,6 +130,15 @@ Meteor.methods({
         var messageType = Sanitaire.barricadeActions.STOP_DEMOLISH;
 
         return Sanitaire.addConstructionMessageToLog(gameId, thisPlayer._id, intersectionId, messageType, new Date());
+    },
+
+    /**
+     * Update patient zero status (isolated/loose)
+     * @param gameId {Number}
+     * @param patientZeroStatus {String}
+     */
+    updatePatientZeroStatus: function(gameId, patientZeroStatus){
+        return Sanitaire.updatePatientZeroStatus(gameId, patientZeroStatus);
     }
 
 });
