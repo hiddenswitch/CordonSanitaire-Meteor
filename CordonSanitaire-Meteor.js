@@ -118,13 +118,15 @@ if (Meteor.isClient) {
             return -1;
         },
         pZeroStatus: function () {
-            return -1;
+            var game = Games.findOne(this.gameId);
+            return game.gameStats.patientZeroStatus;
         },
         numQuarantines: function () {
             return -1;
         },
         numBarricades: function () {
-            return -1;
+            var game = Games.findOne(this.gameId);
+            return game.gameStats.numberOfBarricadesBuilt;
         },
         numInjured: function () {
             return -1;
