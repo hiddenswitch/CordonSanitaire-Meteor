@@ -1056,7 +1056,7 @@ Template.worldBoard.onRendered(function () {
                     } else {
                         shouldShowBuildButton = barricade.nextButtons === Sanitaire.barricadeButtons.BUILD;
                         shouldShowDestroyButton = barricade.nextButtons === Sanitaire.barricadeButtons.DESTROY;
-                        shouldShowBothButtons = barricade.buttons === Sanitaire.barricadeButtons.BUILD_AND_DESTROY;
+                        shouldShowBothButtons = barricade.nextButtons === Sanitaire.barricadeButtons.BUILD_AND_DESTROY;
                     }
                 }
                 else {
@@ -1162,7 +1162,7 @@ Template.worldBoard.onRendered(function () {
                     } else {
                         shouldShowBuildButton = barricade.nextButtons === Sanitaire.barricadeButtons.BUILD;
                         shouldShowDestroyButton = barricade.nextButtons === Sanitaire.barricadeButtons.DESTROY;
-                        shouldShowBothButtons = barricade.buttons === Sanitaire.barricadeButtons.BUILD_AND_DESTROY;
+                        shouldShowBothButtons = barricade.nextButtons === Sanitaire.barricadeButtons.BUILD_AND_DESTROY;
                     }
 
                     // reset our catch for same intersection
