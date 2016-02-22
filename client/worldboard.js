@@ -263,7 +263,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
 
     var patientZeroRoadId = SanitaireMaps.getRoadIdForTilePosition(patientZeroCurrentLocation.x, patientZeroCurrentLocation.y, currentMapInfo); // TODO: get actual road id from this game!!!!!!!
     var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
-    var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId);
+    var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
     // color streets according to their state
     var roadStatuses = GraphAnalysis.getRoadStatus(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
     _.each(roadStatuses, function(roadStatus, roadId) {
