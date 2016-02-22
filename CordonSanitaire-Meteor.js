@@ -87,17 +87,32 @@ if (Meteor.isClient) {
             return Session.get("showing destroy button");
         },
         showPatientZeroIsolated: function () {
+            //if(Session.get("patient zero isolated")){
+            //    return Session.get("patient zero isolated");
+            //}
+            //return false
             return Session.get("patient zero isolated");
         },
         showPatientZeroContained: function () {
+            //if(Session.get("patient zero contained")){
+            //    return Session.get("patient zero contained");
+            //}
+            //return false
             return Session.get("patient zero contained");
         },
         showPatientZeroLoose: function () {
+            //if (Session.get("patient zero loose")){
+            //    return Session.get("patient zero loose");
+            //}
+            //return true;
             return Session.get("patient zero loose");
         },
 
         updatePatientZeroDirection: function(){
-            var angle = -Session.get("patient zero distance and direction").angle; // negative because of how css works
+            var angle = 0;
+            if (Session.get("patient zero distance and direction")){
+                angle = -Session.get("patient zero distance and direction").angle; // negative because of how css works
+            }
             $('#compass-img').css({
                 "-webkit-transform": "rotate(" + angle + "deg)",
                 "-moz-transform": "rotate(" + angle + "deg)",

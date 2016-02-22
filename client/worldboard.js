@@ -272,8 +272,9 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
 
     // Update visible patient zero status
     // Only update if the status has changed
+    // TODO: May have issues with multiple people update at once
    if (isPZeroContained){
-        if (patientZeroStatus==="loose"){
+        if (patientZeroStatus==="loose"){// check if status has changed
             patientZeroStatus = "isolated";
             Session.set("patient zero isolated", true);
             Session.set("patient zero contained", false);
