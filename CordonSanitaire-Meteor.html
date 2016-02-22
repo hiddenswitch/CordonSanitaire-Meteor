@@ -136,8 +136,13 @@
             <a href="#" id="destroyButton" class="centerButton quarantineButton destroyButton">DEMOLISH</a>
             <p class="buttonSubtext">or swipe to keep running</p>
         {{/if}}
-        {{#if showingBuildButtons}}
+        {{#if showingBuildButton}}
                 <a href="#" id="buildButton" class="centerButton quarantineButton buildButton">BUILD</a>
+            <p class="buttonSubtext">or swipe to keep running</p>
+        {{/if}}
+        {{#if showingBuildAndDestroyButtons}}
+            <a href="#" id="buildButton" class="leftButton quarantineButton buildButton">BUILD</a>
+            <a href="#" id="destroyButton" class="rightButton quarantineButton destroyButton">DEMO</a>
             <p class="buttonSubtext">or swipe to keep running</p>
         {{/if}}
         <!--<a href="#" id="mainToggleButton" class="mainButton toggleButton">JOIN</a>-->

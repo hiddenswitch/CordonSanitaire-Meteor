@@ -325,13 +325,13 @@ start of game */
 }
 
 .leftButton {
-    bottom: 20px;
+    bottom: 40px;
     width: 30%;
     margin: 0 55% 0 15%;
 }
 
 .rightButton {
-    bottom: 20px;
+    bottom: 40px;
     width: 30%;
     margin: 0 15% 0 55%;
 }
