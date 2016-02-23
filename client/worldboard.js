@@ -182,6 +182,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                     if (isLocalPlayerAtBarricade) {
                         console.log("build completed @", barricade.intersectionId, "by you");
                         // congrats, you finished building your very own barricade
+                        Meteor.call('stopConstruction', gameId, parseInt(barricade.intersectionId));
                         var centerTilePosition = SanitaireMaps.getIntersectionTilePositionForId(barricade.intersectionId, currentMapInfo.intersections);
                         Meteor.call('updatePositionAndVelocity', gameId, {
                             x: centerTilePosition.x * 16,
@@ -204,6 +205,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                     if (isLocalPlayerAtBarricade) {
                         console.log("demolition completed @", barricade.intersectionId, "by you");
                         // congrats, you finished demolishing someone's hard work... I guess you put in some work too
+                        Meteor.call('stopDeconstruction', gameId, parseInt(barricade.intersectionId));
                         var centerTilePosition = SanitaireMaps.getIntersectionTilePositionForId(barricade.intersectionId, currentMapInfo.intersections);
                         Meteor.call('updatePositionAndVelocity', gameId, {
                             x: centerTilePosition.x * 16,
@@ -494,12 +496,20 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
  * @param patientZeroLocationRelativeToLocalPlayer {Object}
  */
 var updateTouchedByPatientZero = function (localPlayerState, patientZeroLocationRelativeToLocalPlayer) {
-    if (patientZeroLocationRelativeToLocalPlayer.distance <= 5) {
+    if (patientZeroLocationRelativeToLocalPlayer.distance <= 5 && !localPlayerState.health.isStunned) {
         //TODO: distance is arbitrary right now
 
-        console.log("touched!");
-        localPlayerState.health.isStunned = true; // NOTE: The player can be stunned multiple times when stunned!
+        //console.log("touched!");
+        localPlayerState.health.isStunned = true;
         localPlayerState.health.timeWhenTouchedByPatientZero = TimeSync.serverTime(new Date());
+
+        // PAUSE: if building, stop and remember last build state
+        if (localPlayerState.construction.state === Sanitaire.barricadeActions.START_BUILD) {
+            Meteor.call('stopConstruction', Router.current().data().gameId, localPlayerState.construction.intersectionId);
+        }
+        else if (localPlayerState.construction.state === Sanitaire.barricadeActions.START_DEMOLISH) {
+            Meteor.call('stopDeconstruction', Router.current().data().gameId, localPlayerState.construction.intersectionId);
+        }
     }
 };
 
@@ -521,6 +531,13 @@ var stunPlayer = function (gameId, playerSprite) {
 var unstunPlayer = function (playerSprite, localPlayerState) {
     localPlayerState.health.isStunned = false;
     localPlayerState.health.timeWhenTouchedByPatientZero = -Infinity;
+    // RESUME: if building before, start build process again
+    if (localPlayerState.construction.state === Sanitaire.barricadeActions.START_BUILD) {
+        Meteor.call('startConstruction', Router.current().data().gameId, localPlayerState.construction.intersectionId);
+    }
+    else if (localPlayerState.construction.state === Sanitaire.barricadeActions.START_DEMOLISH) {
+        Meteor.call('startDeconstruction', Router.current().data().gameId, localPlayerState.construction.intersectionId);
+    }
 };
 
 Template.worldBoard.onRendered(function () {
@@ -536,15 +553,14 @@ Template.worldBoard.onRendered(function () {
                     x: -1,
                     y: -1,
                 },
-                isBuilding: false,
+                state: Sanitaire.barricadeActions.NONE,
                 intersectionId: -1
             },
             health: {
                 value: 1.0,
                 isStunned: false,
                 timeWhenTouchedByPatientZero: -Infinity
-            },
-
+            }
         };
 
         var patientZeroLocationRelativeToLocalPlayer = {
@@ -1010,9 +1026,11 @@ Template.worldBoard.onRendered(function () {
             if (myLastBarriersLogEntry) {
                 if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD) {
                     Meteor.call('stopConstruction', Router.current().data().gameId, myLastBarriersLogEntry.intersectionId);
+                    localPlayerState.construction.state = Sanitaire.barricadeActions.NONE;
                 }
                 else if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
                     Meteor.call('stopDeconstruction', Router.current().data().gameId, myLastBarriersLogEntry.intersectionId);
+                    localPlayerState.construction.state = Sanitaire.barricadeActions.NONE;
                 }
             }
         }
@@ -1252,7 +1270,7 @@ Template.worldBoard.onRendered(function () {
             // tell game we are starting to build a quarantine
             Meteor.call('startConstruction', gameId, intersectionId);
             // update state of player
-            localPlayerState.construction.isBuilding = true;
+            localPlayerState.construction.state = Sanitaire.barricadeActions.START_BUILD;
             localPlayerState.construction.intersectionId = intersectionId;
         };
 
@@ -1271,7 +1289,7 @@ Template.worldBoard.onRendered(function () {
             var intersectionId = SanitaireMaps.getIntersectionIdForTilePosition(lastPromptTile.x, lastPromptTile.y, currentMapInfo);
             Meteor.call('startDeconstruction', gameId, intersectionId, new Date());
             // update state of player
-            localPlayerState.construction.isBuilding = true;
+            localPlayerState.construction.state = Sanitaire.barricadeActions.START_DEMOLISH;
             localPlayerState.construction.intersectionId = intersectionId;
         };
 
@@ -1476,9 +1494,7 @@ Template.worldBoard.onRendered(function () {
             return rgbToHex(R,G,B);
         };
 
-    }
-)
-;
+});
 
 Template.game.events({
     'click #buildButton': function () {
