@@ -1358,7 +1358,11 @@ Template.worldBoard.onRendered(function () {
             player.animations.add('idle', [15, 16, 17, 18], 5, true);
             player.animations.add('injured', [22, 23, 24, 25], 5, true);
             player.smoothed = false;
-            player.tint = determineColorFromPlayerId(playerId);
+            if(Sanitaire.PLAYER_UNIQUENESS) {
+                player.tint = determineColorFromPlayerId(playerId);
+            }else {
+                player.tint = '0xFFEE33';  // otherwise everyone is yellow
+            }
 
             phaserGame.physics.enable(player, Phaser.Physics.ARCADE);
 

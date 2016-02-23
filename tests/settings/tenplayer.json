@@ -1,11 +1,11 @@
 {
   "public": {
-    "maxPlayers": 2,
+    "maxPlayers": 9,
     "durationSeconds": 180,
-    "countdownSeconds": 5,
+    "countdownSeconds": 9,
     "demolishTimeSeconds": 4,
     "buildTimeSeconds": 8,
-    "map":"London.csv",
+    "map":"Simple_Single_02.csv",
     "uniqueness":true
   }
 }
