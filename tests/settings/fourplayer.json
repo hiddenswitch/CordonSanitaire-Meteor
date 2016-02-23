@@ -5,6 +5,7 @@
     "countdownSeconds": 10,
     "demolishTimeSeconds": 4,
     "buildTimeSeconds": 8,
-    "map":"London.csv"
+    "map":"London.csv",
+    "uniqueness":true
   }
 }
