@@ -191,10 +191,12 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                         }, TimeSync.serverTime(new Date()));
                         // hide the display of progress
                         hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
+                        recalculatePatientZero();
                     }
                     else {
                         console.log("build completed @", barricade.intersectionId, "by someone else");
                         // someone else finished building a barricade, let's congratulate them...
+                        recalculatePatientZero();
                     }
                 }
                 else if (barricade.nextState === Sanitaire.barricadeStates.EMPTY) {
@@ -211,10 +213,12 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                         }, TimeSync.serverTime(new Date()));
                         // hide the display of progress
                         hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
+                        recalculatePatientZero();
                     }
                     else {
                         console.log("demolition completed @", barricade.intersectionId, "by someone else");
                         // Riot, people are tearing sh*t down! or digging us out of a shallow hole...
+                        recalculatePatientZero();
                     }
                 }
                 else if (barricade.nextState === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
@@ -246,41 +250,45 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         }
     });
 
-    // Recalculate patient zero
-    var game = Games.findOne(gameId, {reactive: false});
+    recalculatePatientZero = function () {
+        // Recalculate patient zero
+        var game = Games.findOne(gameId, {reactive: false});
 
-    var playerRoadIds = _.map(playerSprites, function (sprite) {
-        return SanitaireMaps.getRoadIdForTilePosition(
-            sprite.x / 16,
-            sprite.y / 16,
-            currentMapInfo
-        );
-    });
+        var playerRoadIds = _.map(playerSprites, function (sprite) {
+            return SanitaireMaps.getRoadIdForTilePosition(
+                sprite.x / 16,
+                sprite.y / 16,
+                currentMapInfo
+            );
+        });
 
-    var patientZeroCurrentLocation = SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, game.patientZero.path, game.patientZero.pathUpdatedAt, {
-        time: new Date()
-    });
+        var patientZeroCurrentLocation = SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, game.patientZero.path, game.patientZero.pathUpdatedAt, {
+            time: new Date()
+        });
 
-    var patientZeroRoadId = SanitaireMaps.getRoadIdForTilePosition(patientZeroCurrentLocation.x, patientZeroCurrentLocation.y, currentMapInfo); // TODO: get actual road id from this game!!!!!!!
-    var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
-    var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
-    // color streets according to their state
-    var roadStatuses = GraphAnalysis.getRoadStatus(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
-    _.each(roadStatuses, function(roadStatus, roadId) {
-       updateRoadTiles(map, roadId, mapInfo, roadStatus);
-    });
+        console.log("checking pzero and updating road colors");
+        var patientZeroRoadId = SanitaireMaps.getRoadIdForTilePosition(patientZeroCurrentLocation.x, patientZeroCurrentLocation.y, currentMapInfo); // TODO: get actual road id from this game!!!!!!!
+        var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
+        var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
+        // color streets according to their state
+        var roadStatuses = GraphAnalysis.getRoadStatus(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
+        _.each(roadStatuses, function(roadStatus, roadId) {
+            updateRoadTiles(map, roadId, mapInfo, roadStatus);
+        });
 
-    // Update visible patient zero status
-    if (isPZeroContained) {
-        Session.set("patient zero isolated", true);
-        Session.set("patient zero contained", false);
-        Session.set("patient zero loose", false);
-    }
-    else {
-        Session.set("patient zero isolated", false);
-        Session.set("patient zero contained", false);
-        Session.set("patient zero loose", true);
-    }
+        // Update visible patient zero status
+        if (isPZeroContained) {
+            Session.set("patient zero isolated", true);
+            Session.set("patient zero contained", false);
+            Session.set("patient zero loose", false);
+        }
+        else {
+            Session.set("patient zero isolated", false);
+            Session.set("patient zero contained", false);
+            Session.set("patient zero loose", true);
+        }
+    };
+
     return barriers;
 };
 
@@ -734,8 +742,9 @@ Template.worldBoard.onRendered(function () {
             var graph = {};
 
             // find which intersections are blocked
+            // including those that have completed based on time, but not yet completed in the game document
             var completedBarriers = _.filter(game.barriers, function(barrier) {
-                return barrier.state == Sanitaire.barricadeStates.BUILT;
+                return (barrier.state == Sanitaire.barricadeStates.BUILT || (barrier.nextState == Sanitaire.barricadeStates.BUILT && barrier.time < (new Date()).getTime()));
             });
 
             // create an array of the intersection Ids
