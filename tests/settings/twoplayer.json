@@ -4,6 +4,7 @@
     "durationSeconds": 180,
     "countdownSeconds": 5,
     "demolishTimeSeconds": 4,
-    "buildTimeSeconds": 8
+    "buildTimeSeconds": 8,
+    "map":"London.csv"
   }
 }
