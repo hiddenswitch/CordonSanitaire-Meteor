@@ -13,7 +13,6 @@ Meteor.startup(function () {
     var mapInfos = _.map([
         'London.csv',
         'Tokyo.csv',
-        'London_single_lane.csv',
         'Simple_Single_01.csv',
         'Simple_Single_02.csv',
         'Simple_40.csv'
