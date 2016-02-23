@@ -167,19 +167,37 @@ start of game */
     font-size: .7em;
 }
 
-#distance-direction-container{
+#distance-direction-container {
     position: absolute;
     z-index: 101;
-    top: 100px;
-    left: 0;
-    margin: 5%;
+    top: 90px;
+    left: 20px;
 }
 
-#distance-container{
+#distance-container {
+    /*visibility: hidden;*/
     background: rgba(0,0,0,1);
     color: white;
-    border-radius: 10px;
-    padding: 10px;
+    border-radius: 5px;
+    padding: 6px 10px 6px 30px;
+    margin-top: 5px;
+    margin-left: 30px;
+}
+
+#compass {
+    position: fixed;
+    top: 70px;
+    left: 20px;
+    /*padding: 10px;*/
+}
+
+#compass-needle {
+    z-index: 102;
+    position: fixed;
+}
+
+#compass-bg {
+    position: fixed;
 }
 
 #buttons {
