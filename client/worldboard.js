@@ -492,18 +492,17 @@ var updateTouchedByPatientZero = function(localPlayerState, patientZeroLocationR
         localPlayerState.health.isStunned = true; // NOTE: The player can be stunned multiple times when stunned!
         localPlayerState.health.timeWhenTouchedByPatientZero = TimeSync.serverTime(new Date());
     }
-}
+};
 
 /**
  * Stops the player, updates the server about the stop, and stops sprite animation
+ * @param gameId {String} id of current game
  * @param playerSprite {Phaser.Sprite}
  */
 var stunPlayer = function(gameId, playerSprite){
     // Let the server know our player is stunned
     stopLocalPlayer(gameId, playerSprite);
-    playerSprite.animations.paused = true;
-
-}
+};
 
 /**
  * Updates player state to show that they are no longer stunned, and re-animates player
@@ -513,8 +512,7 @@ var stunPlayer = function(gameId, playerSprite){
 var unstunPlayer = function(playerSprite, localPlayerState){
     localPlayerState.health.isStunned = false;
     localPlayerState.health.timeWhenTouchedByPatientZero = -Infinity;
-    playerSprite.animations.paused = false;
-}
+};
 
 Template.worldBoard.onRendered(function () {
         var renderer = this;
@@ -833,6 +831,7 @@ Template.worldBoard.onRendered(function () {
                     });
                 });
 
+                var isPlayerInjured = false;
 
                 // check to see if the next block in the direction being walked is a legal move
                 // *** THIS STOPS PLAYERS FROM WALKING THROUGH BARRICADES!!! *** (among other things)
@@ -867,8 +866,10 @@ Template.worldBoard.onRendered(function () {
                         // more recent time, they will be stunned for longer
                         if ((currentTime - localPlayerState.health.timeWhenTouchedByPatientZero)<5000){
                             stunPlayer(gameId, sprite);
+                            isPlayerInjured = true;
                         } else {
                             unstunPlayer(sprite, localPlayerState);
+                            isPlayerInjured = false;
                         }
                     }
                 }
@@ -885,8 +886,12 @@ Template.worldBoard.onRendered(function () {
                 } else if (sprite.body.velocity.y < 0) {
                     sprite.play('up');
                 } else {
-                    sprite.play('idle');
-                    //sprite.animations.stop();
+                    if(isPlayerInjured) {
+                        sprite.play('injured');
+                    }
+                    else {
+                        sprite.play('idle');
+                    }
                 }
             }
 
@@ -1371,6 +1376,7 @@ Template.worldBoard.onRendered(function () {
             player.animations.add('up', [11, 12, 13], 10, true);
             player.animations.add('down', [4, 5, 6], 10, true);
             player.animations.add('idle', [15, 16, 17, 18], 5, true);
+            player.animations.add('injured', [22, 23, 24, 25], 5, true);
             player.smoothed = false;
 
             phaserGame.physics.enable(player, Phaser.Physics.ARCADE);
