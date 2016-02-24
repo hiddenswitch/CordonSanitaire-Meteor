@@ -5,6 +5,7 @@
     "countdownSeconds": 9,
     "demolishTimeSeconds": 4,
     "buildTimeSeconds": 8,
+    "stunTimeSeconds": 4,
     "map":"Simple_Single_02.csv",
     "uniqueness":true
   }
