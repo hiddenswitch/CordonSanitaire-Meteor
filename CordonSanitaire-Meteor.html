@@ -83,6 +83,11 @@
             </ul>
         </div>
     </div>
+
+    <!-- Container for Phaser Game -->
+    <div id="map-container">
+        {{> worldBoard gameId=gameId}}
+    </div>
 </template>
 
 <!-- All in game views -->
@@ -159,7 +164,7 @@
     <div id="intro_container">
     </div>
 
-    <!-- Container for Google Map -->
+    <!-- Container for Phaser Game -->
     <div id="map-container">
         {{> worldBoard gameId=gameId}}
     </div>
