@@ -100,7 +100,11 @@ if (Meteor.isClient) {
         },
 
         updatePatientZeroDirection: function(){
-            var angle = -Session.get("patient zero distance and direction").angle; // negative because of how css works
+            var pzeroData = Session.get("patient zero distance and direction");
+            if(!pzeroData) {
+                return;
+            }
+            var angle = -pzeroData.angle; // negative because of how css works
             $('#compass-img').css({
                 "-webkit-transform": "rotate(" + angle + "deg)",
                 "-moz-transform": "rotate(" + angle + "deg)",
@@ -109,8 +113,13 @@ if (Meteor.isClient) {
         },
 
         updatePatientZeroDistance: function(){
-            var distance = Math.round(Session.get("patient zero distance and direction").distance/8); // just taking the rounded value
-            return distance;
+            var pzeroData = Session.get("patient zero distance and direction");
+            if(!pzeroData) {
+                return 0;
+            }
+            else {
+                return Math.round(pzeroData.distance / 8);    // 8 = scale factor for pixels to feet
+            }
         }
 
 

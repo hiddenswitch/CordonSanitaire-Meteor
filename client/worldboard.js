@@ -942,6 +942,10 @@ Template.worldBoard.onRendered(function () {
                 return true;
             }
 
+            if(!nextTile) {
+                return false;
+            }
+
             return _.indexOf(SanitaireMaps.PATHABLE_TILES, nextTile.index) !== -1;
         }
 
@@ -1058,12 +1062,12 @@ Template.worldBoard.onRendered(function () {
                 if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.BUILT) {
-                    console.log("X: no need to prompt, this should handled from a crosswalk");
+                    //console.log("X: no need to prompt, this should handled from a crosswalk");
                     return;
                 }
                 else if (barricade.state === Sanitaire.barricadeStates.EMPTY
                     || barricade.state === Sanitaire.barricadeStates.NONE) {
-                    console.log("X: we should have the option to build at intersection ", intersectionId);
+                    //console.log("X: we should have the option to build at intersection ", intersectionId);
 
                     if (TimeSync.serverTime(new Date()) < barricade.time
                         || barricade.time == Infinity) {
@@ -1081,7 +1085,7 @@ Template.worldBoard.onRendered(function () {
                     return;
                 }
             } else {
-                console.log("X: we should have the option to build at intersection ", intersectionId, ". It has never been built on.");
+                //console.log("X: we should have the option to build at intersection ", intersectionId, ". It has never been built on.");
 
                 shouldShowBuildButton = true;
                 shouldShowDestroyButton = false;
@@ -1169,7 +1173,7 @@ Template.worldBoard.onRendered(function () {
                 if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.BUILT) {
-                    console.log("CW: prompting from crosswalk at intersection ", intersectionId, " with barricade: ", barricade);
+                    //console.log("CW: prompting from crosswalk at intersection ", intersectionId, " with barricade: ", barricade);
 
                     if (TimeSync.serverTime(new Date()) < barricade.time
                         || barricade.time == Infinity) {
@@ -1188,7 +1192,7 @@ Template.worldBoard.onRendered(function () {
                 }
                 else if (barricade.state === Sanitaire.barricadeStates.EMPTY
                     || barricade.state === Sanitaire.barricadeStates.NONE) {
-                    console.log("CW: no need to prompt. Intersection ", intersectionId, " is empty.");
+                    //console.log("CW: no need to prompt. Intersection ", intersectionId, " is empty.");
                     return;
                 }
                 else {
@@ -1197,7 +1201,7 @@ Template.worldBoard.onRendered(function () {
                 }
             }
             else {
-                console.log("CW: no need to prompt. Intersection ", intersectionId, " has never been built on.");
+                //console.log("CW: no need to prompt. Intersection ", intersectionId, " has never been built on.");
                 return;
             }
 
