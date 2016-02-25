@@ -942,6 +942,10 @@ Template.worldBoard.onRendered(function () {
                 return true;
             }
 
+            if(!nextTile) {
+                return false;
+            }
+
             return _.indexOf(SanitaireMaps.PATHABLE_TILES, nextTile.index) !== -1;
         }
 

@@ -98,6 +98,11 @@ GraphAnalysis.getRoadStatusById = function (graph, roadId, playerRoadIds, patien
         return _.contains(component, roadId);
     });
 
+    if(!component) {
+        console.log("No component found for road: ", roadId);
+        return GraphAnalysis.roadStatus.OPEN;
+    }
+
     return GraphAnalysis._getComponentStatus(component, playerRoadIds, patientZeroRoadId, numRoads);
 };
 
