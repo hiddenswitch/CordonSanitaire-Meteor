@@ -876,7 +876,7 @@ Template.worldBoard.onRendered(function () {
                         // keep the player stunned for 5 seconds since they were touched
                         // NOTE: if the time when they were touched has been updated to a
                         // more recent time, they will be stunned for longer
-                        if ((currentTime - localPlayerState.health.timeWhenTouchedByPatientZero) < SanitairePatientZero.INJURY_TIME) {
+                        if ((currentTime - localPlayerState.health.timeWhenTouchedByPatientZero) < Sanitaire.STUN_DURATION_SECONDS * 1000) {
                             stunPlayer(gameId, sprite);
                             isPlayerInjured = true;
                         } else {
