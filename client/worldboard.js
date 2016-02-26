@@ -48,8 +48,8 @@ var stopLocalPlayer = function (gameId, sprite) {
     sprite.body.velocity.y = 0;
     // let everyone else know about it too! :)
     Meteor.call('updatePositionAndVelocity', gameId, {
-        x: sprite.position.x,
-        y: sprite.position.y
+        x: sprite.body.position.x,
+        y: sprite.body.position.y
     }, {
         x: 0,
         y: 0
@@ -643,7 +643,7 @@ Template.worldBoard.onRendered(function () {
 
         function preload() {
             // load path to map from settings
-            var filename = "Simple_Single_02.csv";
+            var filename = Sanitaire.DEFAULT_MAP;
             var mapPath = "/assets/tilemaps/csv/" + filename;
             phaserGame.load.tilemap('map', mapPath, null, Phaser.Tilemap.CSV);
             phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map.png');
@@ -892,7 +892,7 @@ Template.worldBoard.onRendered(function () {
                         // keep the player stunned for 5 seconds since they were touched
                         // NOTE: if the time when they were touched has been updated to a
                         // more recent time, they will be stunned for longer
-                        if ((currentTime - localPlayerState.health.timeWhenTouchedByPatientZero) < SanitairePatientZero.INJURY_TIME) {
+                        if ((currentTime - localPlayerState.health.timeWhenTouchedByPatientZero) < Sanitaire.STUN_DURATION_SECONDS * 1000) {
                             stunPlayer(gameId, sprite);
                             isPlayerInjured = true;
                         } else {
@@ -956,6 +956,10 @@ Template.worldBoard.onRendered(function () {
             } else {
                 // not walking anywhere, feel free to loiter all you want
                 return true;
+            }
+
+            if(!nextTile) {
+                return false;
             }
 
             return _.indexOf(SanitaireMaps.PATHABLE_TILES, nextTile.index) !== -1;
@@ -1076,12 +1080,12 @@ Template.worldBoard.onRendered(function () {
                 if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.BUILT) {
-                    console.log("X: no need to prompt, this should handled from a crosswalk");
+                    //console.log("X: no need to prompt, this should handled from a crosswalk");
                     return;
                 }
                 else if (barricade.state === Sanitaire.barricadeStates.EMPTY
                     || barricade.state === Sanitaire.barricadeStates.NONE) {
-                    console.log("X: we should have the option to build at intersection ", intersectionId);
+                    //console.log("X: we should have the option to build at intersection ", intersectionId);
 
                     if (TimeSync.serverTime(new Date()) < barricade.time
                         || barricade.time == Infinity) {
@@ -1099,7 +1103,7 @@ Template.worldBoard.onRendered(function () {
                     return;
                 }
             } else {
-                console.log("X: we should have the option to build at intersection ", intersectionId, ". It has never been built on.");
+                //console.log("X: we should have the option to build at intersection ", intersectionId, ". It has never been built on.");
 
                 shouldShowBuildButton = true;
                 shouldShowDestroyButton = false;
@@ -1187,7 +1191,7 @@ Template.worldBoard.onRendered(function () {
                 if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.BUILT) {
-                    console.log("CW: prompting from crosswalk at intersection ", intersectionId, " with barricade: ", barricade);
+                    //console.log("CW: prompting from crosswalk at intersection ", intersectionId, " with barricade: ", barricade);
 
                     if (TimeSync.serverTime(new Date()) < barricade.time
                         || barricade.time == Infinity) {
@@ -1206,7 +1210,7 @@ Template.worldBoard.onRendered(function () {
                 }
                 else if (barricade.state === Sanitaire.barricadeStates.EMPTY
                     || barricade.state === Sanitaire.barricadeStates.NONE) {
-                    console.log("CW: no need to prompt. Intersection ", intersectionId, " is empty.");
+                    //console.log("CW: no need to prompt. Intersection ", intersectionId, " is empty.");
                     return;
                 }
                 else {
@@ -1215,7 +1219,7 @@ Template.worldBoard.onRendered(function () {
                 }
             }
             else {
-                console.log("CW: no need to prompt. Intersection ", intersectionId, " has never been built on.");
+                //console.log("CW: no need to prompt. Intersection ", intersectionId, " has never been built on.");
                 return;
             }
 
@@ -1376,7 +1380,11 @@ Template.worldBoard.onRendered(function () {
             player.animations.add('idle', [15, 16, 17, 18], 5, true);
             player.animations.add('injured', [22, 23, 24, 25], 5, true);
             player.smoothed = false;
-            player.tint = determineColorFromPlayerId(playerId);
+            if(Sanitaire.PLAYER_UNIQUENESS) {
+                player.tint = determineColorFromPlayerId(playerId);
+            }else {
+                player.tint = '0xFFEE33';  // otherwise everyone is yellow
+            }
 
             phaserGame.physics.enable(player, Phaser.Physics.ARCADE);
 
