@@ -48,8 +48,8 @@ var stopLocalPlayer = function (gameId, sprite) {
     sprite.body.velocity.y = 0;
     // let everyone else know about it too! :)
     Meteor.call('updatePositionAndVelocity', gameId, {
-        x: sprite.body.position.x,
-        y: sprite.body.position.y
+        x: sprite.position.x,
+        y: sprite.position.y
     }, {
         x: 0,
         y: 0
