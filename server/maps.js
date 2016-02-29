@@ -15,7 +15,8 @@ Meteor.startup(function () {
         'Tokyo.csv',
         'Simple_Single_01.csv',
         'Simple_Single_02.csv',
-        'Simple_40.csv'
+        'Simple_40.csv',
+        'Simple_60_80.csv'
     ], function (mapName) {
         return {url: 'assets/tilemaps/csv/' + mapName, _id: mapName};
     });
