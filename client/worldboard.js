@@ -144,6 +144,14 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         drawBarricade(map, barricade.state, barricade.intersectionId, currentMapInfo);
 
         var from = _.isUndefined(barricade.progress) ? null : barricade.progress;
+        if (_.isNull(from)
+            && barricade.time != Infinity
+            && !_.isUndefined(barricade.time)
+            && !_.isUndefined(barricade.progressTime)) {
+            // Compute from with time data
+            var serverNow = TimeSync.serverTime(new Date());
+            from = inverseLerp(barrier.progressTime, barrier.time, serverNow);
+        }
         var to = barricade.time == Infinity ? null : (barricade.nextState === Sanitaire.barricadeStates.BUILT ? 1 : 0);
         updateBuildProgressBar(barricade.intersectionId, from, to, barricade.time, buildProgressBars, phaserGame, mapInfo);
 
@@ -172,9 +180,11 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
 
                 var isLocalPlayerAtBarricade = false;
 
-                if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD || myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
-                    if (myLastBarriersLogEntry.intersectionId == barricade.intersectionId) {  // careful, string compared w/ number
-                        isLocalPlayerAtBarricade = true;
+                if(myLastBarriersLogEntry) {
+                    if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD || myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
+                        if (myLastBarriersLogEntry.intersectionId == barricade.intersectionId) {  // careful, string compared w/ number
+                            isLocalPlayerAtBarricade = true;
+                        }
                     }
                 }
 
@@ -199,6 +209,8 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                     else {
                         console.log("build completed @", barricade.intersectionId, "by someone else");
                         // someone else finished building a barricade, let's congratulate them...
+                        // hide the display of progress
+                        hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
                         recalculatePatientZero();
                     }
                 }
@@ -220,7 +232,8 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                     }
                     else {
                         console.log("demolition completed @", barricade.intersectionId, "by someone else");
-                        // Riot, people are tearing sh*t down! or digging us out of a shallow hole...
+                        // hide the display of progress
+                        hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
                         recalculatePatientZero();
                     }
                 }
@@ -365,7 +378,7 @@ var getPatientZeroDirectionInDegrees = function (patientZeroSprite, playerSprite
 var getPatientZeroDistance = function (patientZeroSprite, playerSprite) {
     var a = patientZeroSprite.position.x - playerSprite.position.x;
     var b = patientZeroSprite.position.y - playerSprite.position.y;
-    return Math.sqrt(a*a + b*b);
+    return Math.sqrt(a * a + b * b);
 };
 
 /**
@@ -872,14 +885,14 @@ Template.worldBoard.onRendered(function () {
 
                     // Check if touched by patient zero
                     var justTouched = isTouchedByPatientZero(localPlayerState, distance);
-                    if(justTouched) {
-                        console.log("sprite when touched",sprite);
+                    if (justTouched) {
+                        console.log("sprite when touched", sprite);
                     }
 
                     var currentTime = TimeSync.serverTime(new Date());
                     if (localPlayerState.health.isStunned) {
                         if ((currentTime - localPlayerState.health.timeWhenTouchedByPatientZero) < Sanitaire.STUN_DURATION_SECONDS * 1000) {
-                            if(justTouched) {
+                            if (justTouched) {
                                 stunPlayer(gameId, sprite);
                             }
                             isPlayerInjured = true;
@@ -946,7 +959,7 @@ Template.worldBoard.onRendered(function () {
                 return true;
             }
 
-            if(!nextTile) {
+            if (!nextTile) {
                 return false;
             }
 
@@ -1366,9 +1379,9 @@ Template.worldBoard.onRendered(function () {
             player.animations.add('idle', [15, 16, 17, 18], 5, true);
             player.animations.add('injured', [22, 23, 24, 25], 5, true);
             player.smoothed = false;
-            if(Sanitaire.PLAYER_UNIQUENESS) {
+            if (Sanitaire.PLAYER_UNIQUENESS) {
                 player.tint = determineColorFromPlayerId(playerId);
-            }else {
+            } else {
                 player.tint = '0xFFEE33';  // otherwise everyone is yellow
             }
 
@@ -1479,13 +1492,14 @@ Template.worldBoard.onRendered(function () {
                     G = 0;
                     B = x;
                     break;
-                default: break;
+                default:
+                    break;
             }
             R = Math.floor((R + m) * 255);
             G = Math.floor((G + m) * 255);
             B = Math.floor((B + m) * 255);
 
-            return rgbToHex(R,G,B);
+            return rgbToHex(R, G, B);
         };
 
     }
