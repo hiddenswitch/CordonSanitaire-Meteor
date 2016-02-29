@@ -180,9 +180,11 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
 
                 var isLocalPlayerAtBarricade = false;
 
-                if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD || myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
-                    if (myLastBarriersLogEntry.intersectionId == barricade.intersectionId) {  // careful, string compared w/ number
-                        isLocalPlayerAtBarricade = true;
+                if(myLastBarriersLogEntry) {
+                    if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD || myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
+                        if (myLastBarriersLogEntry.intersectionId == barricade.intersectionId) {  // careful, string compared w/ number
+                            isLocalPlayerAtBarricade = true;
+                        }
                     }
                 }
 
@@ -207,6 +209,8 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                     else {
                         console.log("build completed @", barricade.intersectionId, "by someone else");
                         // someone else finished building a barricade, let's congratulate them...
+                        // hide the display of progress
+                        hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
                         recalculatePatientZero();
                     }
                 }
@@ -228,7 +232,8 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                     }
                     else {
                         console.log("demolition completed @", barricade.intersectionId, "by someone else");
-                        // Riot, people are tearing sh*t down! or digging us out of a shallow hole...
+                        // hide the display of progress
+                        hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
                         recalculatePatientZero();
                     }
                 }
