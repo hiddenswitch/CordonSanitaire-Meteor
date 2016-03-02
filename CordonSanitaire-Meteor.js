@@ -99,6 +99,10 @@ if (Meteor.isClient) {
             return Session.get("patient zero loose");
         },
 
+        isGameZoomedOut: function() {
+            return Session.get("is game zoomed out");
+        },
+
         updatePatientZeroDirection: function(){
             var angle = Session.get("pzero angle");
             if(!angle) {

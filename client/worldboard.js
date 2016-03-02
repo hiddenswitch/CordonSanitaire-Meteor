@@ -688,10 +688,26 @@ Template.worldBoard.onRendered(function () {
             map.addTilesetImage('tiles');
 
             //  Create our layer
-            layer = map.createLayer(0);
+            // Size it to the map if need be for the camera
+            layer = map.createLayer(0, map.width * map.tileWidth, map.height * map.tileHeight);
 
             //  Resize the world
             layer.resizeWorld();
+
+            // Scale the screen to fit
+
+            if(Sanitaire.DEFAULT_ZOOM === "SHOW_FULL_MAP") {
+                Session.set("is game zoomed out", true);
+                var ratioX = phaserGame.camera.view.width / phaserGame.world.bounds.width;
+                var ratioY = phaserGame.world.camera.view.height / phaserGame.world.bounds.height;
+                var ratio = Math.min(ratioX, ratioY);
+                console.log("ratios: ", ratioX, ratioY, ratio);
+                phaserGame.world.scale.x = ratio;
+                phaserGame.world.scale.y = ratio;
+            }
+            else {
+                Session.set("is game zoomed out", false);
+            }
 
             // Create a group to add player sprites to
             playerGroup = phaserGame.add.group();
@@ -1389,7 +1405,7 @@ Template.worldBoard.onRendered(function () {
 
             player.body.setSize(10, 14, 2, 1);
 
-            if (options.isLocalPlayer) {
+            if (options.isLocalPlayer && Sanitaire.DEFAULT_ZOOM === 1) {
                 phaserGame.camera.follow(player);
             }
 

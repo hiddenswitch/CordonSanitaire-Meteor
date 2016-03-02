@@ -164,7 +164,7 @@
     </div>
 
     <!-- Container for Phaser Game -->
-    <div id="map-container">
+    <div id="map-container" style="{{#if isGameZoomedOut}}background:#000; padding-top: 125px;{{/if}}">
         {{> worldBoard gameId=gameId}}
     </div>
 </template>
