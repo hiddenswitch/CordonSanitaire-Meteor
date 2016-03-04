@@ -412,9 +412,9 @@ var addBuildProgressBar = function (intersectionId, x, y, phaserGame, buildProgr
     x += 8;
 
     var properties = {
-        height: 3,
-        width: 20,
-        padding: 1
+        height: 8,
+        width: 40,
+        padding: 2
     };
 
     var bmd = phaserGame.add.bitmapData(properties.width, properties.height);
