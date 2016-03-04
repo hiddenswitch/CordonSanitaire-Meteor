@@ -322,9 +322,10 @@ start of game */
 
 /* Quarantine button styling */
 .quarantineButton {
-    z-index: 999;
+    z-index: 2 !important;
     position: absolute;
     height: 50px;
+    overflow: hidden;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -379,7 +380,7 @@ start of game */
 }
 
 .buildButton {
-    background-color: rgba(253,238,74,0.9);
+    background-color: rgba(153,138,24,1.0);
 }
 
 .destroyButton {
@@ -575,3 +576,26 @@ start of game */
     vertical-align: middle;
 }
 
+/*
+ * Progress buttons
+ */
+
+/* The colorful bar that grows depending on the progress */
+
+.quarantineButton .progress-bar {
+    bottom:0;
+    left:0;
+    height:100%;
+    position:absolute;
+    z-index:1 !important;
+}
+
+#build-progress-bar {
+    background-color:rgba(253,238,74,.25);
+    width:0;
+}
+
+#demo-progress-bar {
+    background-color:rgba(0,0,0,.25);
+    width:100%;
+}

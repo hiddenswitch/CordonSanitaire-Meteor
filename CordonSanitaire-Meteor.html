@@ -112,8 +112,6 @@
     </div>
 
 
-
-
     <!-- Logout button for player | Not currently necessary -->
     <!--<input type="button" value="Log Out" class="logoutButton" onclick="userLogout()" />-->
 
@@ -142,12 +140,14 @@
 
     <div id="bottom_container">
         {{#if showingDestroyButton}}
-            <a href="#" id="destroyButton" class="centerButton quarantineButton destroyButton">DEMOLISH</a>
+            <a href="#" id="destroyButton" class="centerButton quarantineButton destroyButton"><span id="demo-progress-bar" class="progress-bar"></span>DEMOLISH</a>
             <p class="buttonSubtext">or swipe to keep running</p>
+            {{updateDemolishProgress}}
         {{/if}}
         {{#if showingBuildButton}}
-                <a href="#" id="buildButton" class="centerButton quarantineButton buildButton">BUILD</a>
+            <a href="#" id="buildButton" class="centerButton quarantineButton buildButton"><span id="build-progress-bar" class="progress-bar"></span>BUILD</a>
             <p class="buttonSubtext">or swipe to keep running</p>
+            {{updateBuildProgress}}
         {{/if}}
         {{#if showingBuildAndDestroyButtons}}
             <a href="#" id="buildButton" class="leftButton quarantineButton buildButton">BUILD</a>
@@ -173,7 +173,8 @@
 <template name="conclusion">
     <div class="textCenter">
         <h2 class="gameOverTitle">Game Over</h2>
-        <p class = "gameOverMessage">Lorem ipsum dolor sit amet, scelerisque erat elit. Vel mauris et tempus pede praesent, luctus mauris laoreet.</p>
+        <p class="gameOverMessage">Lorem ipsum dolor sit amet, scelerisque erat elit. Vel mauris et tempus pede
+            praesent, luctus mauris laoreet.</p>
         <p>{{endGameSynopsis}}</p>
         <div class="finalStats">
             <ul class="finalStatsList">

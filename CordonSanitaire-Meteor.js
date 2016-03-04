@@ -63,11 +63,11 @@ if (Meteor.isClient) {
         lobbyCountdownSeconds: function () {
             // returns the current time til start for the lobby
             timerDependency.depend();   // keeps this called every 10ms
-            var game = Games.findOne(this.gameId, {fields: {countdownStartTime:1}});
+            var game = Games.findOne(this.gameId, {fields: {countdownStartTime: 1}});
             var millisSinceCountdownStarted = new Date() - game.countdownStartTime;
             var totalCountdownSeconds = Meteor.settings && Meteor.settings.public && Meteor.settings.public.countdownSeconds || 10;
 
-            var countdown = totalCountdownSeconds - Math.floor(millisSinceCountdownStarted/1000);
+            var countdown = totalCountdownSeconds - Math.floor(millisSinceCountdownStarted / 1000);
             return countdown;
         }
     });
@@ -94,7 +94,8 @@ if (Meteor.isClient) {
             return Session.get("showing destroy button");
         },
         showingBuildAndDestroyButtons: function () {
-            return Session.get("showing build and destroy buttons");;
+            return Session.get("showing build and destroy buttons");
+            ;
         },
         showPatientZeroIsolated: function () {
             return Session.get("patient zero isolated");
@@ -105,14 +106,12 @@ if (Meteor.isClient) {
         showPatientZeroLoose: function () {
             return Session.get("patient zero loose");
         },
-
-        isGameZoomedOut: function() {
+        isGameZoomedOut: function () {
             return Session.get("is game zoomed out");
         },
-
-        updatePatientZeroDirection: function(){
+        updatePatientZeroDirection: function () {
             var angle = Session.get("pzero angle");
-            if(!angle) {
+            if (!angle) {
                 return;
             }
             var angle = -angle; // negative because of how css works
@@ -122,18 +121,15 @@ if (Meteor.isClient) {
                 "transform": "rotate(" + angle + "deg)" /* For modern browsers(CSS3)  */
             });
         },
-
-        updatePatientZeroDistance: function(){
+        updatePatientZeroDistance: function () {
             var distance = Session.get("pzero distance");
-            if(!distance) {
+            if (!distance) {
                 return 0;
             }
             else {
                 return Math.round(distance / 8);    // 8 = scale factor for pixels to feet
             }
         }
-
-
     });
 
     Template.conclusion.helpers({

@@ -180,7 +180,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
 
                 var isLocalPlayerAtBarricade = false;
 
-                if(myLastBarriersLogEntry) {
+                if (myLastBarriersLogEntry) {
                     if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD || myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
                         if (myLastBarriersLogEntry.intersectionId == barricade.intersectionId) {  // careful, string compared w/ number
                             isLocalPlayerAtBarricade = true;
@@ -474,32 +474,58 @@ var hideBuildProgressBar = function (buildProgressBars, intersectionId) {
  * @param from {Number} A value between 0 and 1 representing the normalized progress to start the tween at. If null,
  * uses the existing value
  * @param to {Number} A value between 0 and 1 representing the normalized progress to end the tween at. If null,
- * no tween
+ * no tween (does not animate)
  * @param time {Number} The ticks when the tween should finish. Ignored if to is null
  * @param buildProgressBars {Object.<Number, *>} A dictionary of progress bar datums set by add build progress bar
  * @param phaserGame {Phaser.Game} The phaser game
  * @param mapInfo {*} The map info
  */
 var updateBuildProgressBar = function (intersectionId, from, to, time, buildProgressBars, phaserGame, mapInfo) {
+    // TODO: Are we at an intersection that the local player is currently working on?
+    var isLocalPlayerIntersectionId = true;
+
+    // Create a progress bar if it doesn't already exist at this intersectionId
     if (!buildProgressBars[intersectionId]) {
         var innerTile = mapInfo.intersectionsById[intersectionId].innerTiles[0];
         addBuildProgressBar(intersectionId, innerTile.x * 16, innerTile.y * 16, phaserGame, buildProgressBars);
     }
 
-    // update the foreground of the build progress bar to show construction
+    // TODO: Determine if the build/destroy button is rigged for animation. This may always be true, it really depends
+    var isButtonReadyToAnimate = true;
+    if (!isButtonReadyToAnimate) {
+        // TODO: Rig the button for animation
+    }
+
+    // Gets the width of the progress bar (i.e., 100% full)
     var width = buildProgressBars[intersectionId].background.width;
 
-    // Stop the tween if it already exists
+
+    // Stop the tween if it already exists, because we are going to overwrite it
     if (!!buildProgressBars[intersectionId].tween) {
+        // Stops the tween, since we're changing it. It's no longer valid
         buildProgressBars[intersectionId].tween.stop();
+        // Remove the tween (cleanup only for Phaser)
         phaserGame.tweens.remove(buildProgressBars[intersectionId].tween);
     }
 
+    // TODO: Is there an existing tween/animation underway for the build/destroy button?
+    var isTweenPlayingForButton = false;
 
-    if (!_.isNull(from)) {
-        buildProgressBars[intersectionId].foreground.width = from * width;
+    if (isLocalPlayerIntersectionId
+        && isTweenPlayingForButton) {
+        // TODO: Tear down the animation for the button
     }
 
+    // If a from value is not null, set the width of the progress bar immediately to the new from (start) value.
+    if (!_.isNull(from)) {
+        buildProgressBars[intersectionId].foreground.width = from * width;
+
+        if (isLocalPlayerIntersectionId) {
+            // TODO: Set the width of the button progress bar immediately to the new from (start) value
+        }
+    }
+
+    // If the to value is not null, start a tween that makes the width of the progress bar eventually the width of to
     if (!_.isNull(to)) {
         // to(properties, duration, ease, autoStart, delay, repeat, yoyo)
         var diff = time - TimeSync.serverTime(new Date());
@@ -507,13 +533,48 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
         var duration = Math.max(0.1, diff);
         var ease = Phaser.Easing.Linear.None;
         var autoStart = true;
+        // Stores a reference to the tween for stopping later.
         buildProgressBars[intersectionId].tween = phaserGame.add.tween(buildProgressBars[intersectionId].foreground).to(
             properties,
             duration,
             ease,
             autoStart
         );
+
+        if (isLocalPlayerIntersectionId) {
+            // TODO: Configure an animation for the button to animate from:from and to:to, and store a reference to the animation to tear down later
+            // set to start position
+            $('#build-progress-bar').css({
+                "width": from * 100 + "%",
+                "-webkit-transition": "width 0s",
+                "-moz-transition": "width 0s",
+                "transition": "width 0s"
+            });
+
+            if(from < to) {
+                // end position
+                $('#build-progress-bar').css({
+                    "width": to * 100 + "%",
+                    "-webkit-transition": "width " + duration + "ms linear 0s",
+                    "-moz-transition": "width " + duration + "ms linear 0s",
+                    "transition": "width " + duration + "ms linear 0s"
+                });
+            }
+            else {
+                // end position
+                $('#demo-progress-bar').css({
+                    "width": to * 100 + "%",
+                    "-webkit-transition": "width " + duration + "ms linear 0s",
+                    "-moz-transition": "width " + duration + "ms linear 0s",
+                    "transition": "width " + duration + "ms linear 0s"
+                });
+            }
+        }
     }
+
+    // If the to value was null, the progress bar does not animate. This occurs for intersections with no builders or destroyers, whether
+    // that progress is partial, 0, or 1. (slope of the build line is 0).
+    // If the from value was null, there is no construction or destruction underway (slope of the build line is 0).
 };
 
 /**
@@ -707,7 +768,7 @@ Template.worldBoard.onRendered(function () {
 
             // Scale the screen to fit
 
-            if(Sanitaire.DEFAULT_ZOOM === "SHOW_FULL_MAP") {
+            if (Sanitaire.DEFAULT_ZOOM === "SHOW_FULL_MAP") {
                 Session.set("is game zoomed out", true);
                 var ratioX = phaserGame.camera.view.width / phaserGame.world.bounds.width;
                 var ratioY = phaserGame.world.camera.view.height / phaserGame.world.bounds.height;
@@ -1298,7 +1359,7 @@ Template.worldBoard.onRendered(function () {
         buildBarricade = function () {
 
             // hide buttons
-            hideButtons();
+            //hideButtons();
 
             if (_.isUndefined(lastPromptTile)) {
                 return;
@@ -1318,7 +1379,7 @@ Template.worldBoard.onRendered(function () {
          */
         demolishBarricade = function () {
             // hide buttons
-            hideButtons();
+            //hideButtons();
 
             if (_.isUndefined(lastPromptTile)) {
                 return;
@@ -1432,7 +1493,7 @@ Template.worldBoard.onRendered(function () {
                 localPlayerHighlight.animations.add('beacon', [0, 1, 2, 3, 4, 5, 6, 7], 5, true);
                 localPlayerHighlight.play('beacon');
 
-                if(Sanitaire.DEFAULT_ZOOM != "SHOW_FULL_MAP") {
+                if (Sanitaire.DEFAULT_ZOOM != "SHOW_FULL_MAP") {
                     // follow the player if our camera isn't showing the full map
                     phaserGame.camera.follow(player);
                 }
