@@ -932,6 +932,11 @@ Template.worldBoard.onRendered(function () {
                             localPlayerHighlight.tint = 0xFFFFFF;
                         }
                     }
+
+                    // keep our highlight moving with us
+                    var offset = (localPlayerHighlight.width - sprite.width) / 2;
+                    localPlayerHighlight.position.x = sprite.position.x - offset;
+                    localPlayerHighlight.position.y = sprite.position.y - offset;
                 }
 
                 // TODO: Update position on collide.
@@ -953,11 +958,6 @@ Template.worldBoard.onRendered(function () {
                         sprite.play('idle');
                     }
                 }
-
-                // keep our highlight moving with us
-                var offset = (localPlayerHighlight.width - sprite.width) / 2;
-                localPlayerHighlight.position.x = sprite.position.x - offset;
-                localPlayerHighlight.position.y = sprite.position.y - offset;
             }
 
         }
