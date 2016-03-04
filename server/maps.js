@@ -16,7 +16,8 @@ Meteor.startup(function () {
         'Simple_Single_01.csv',
         'Simple_Single_02.csv',
         'Simple_40.csv',
-        'Simple_60_80.csv'
+        'Simple_60_80.csv',
+        'Simple_46_60.csv'
     ], function (mapName) {
         return {url: 'assets/tilemaps/csv/' + mapName, _id: mapName};
     });
