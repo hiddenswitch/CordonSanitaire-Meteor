@@ -11,6 +11,10 @@ SanitaireMaps.PATHABLE_TILES = [8, 9, 10, 11, 12, 15, 33, 37, 38, 39];
 
 SanitaireMaps.CROSSWALK_TILES = [8, 9, 10, 11];
 
+SanitaireMaps.INTERSECTION_TILES = [15];
+
+SanitaireMaps.BARRICADE_TILES = [14, 17, 18];
+
 /**
  * Tile colors for colored streets
  * @type {{NONE: number, EMPTY: number, RESPONDERS: number, CONTAINED: number, ISOLATED: number}}
@@ -51,9 +55,9 @@ SanitaireMaps.getRandomStartPosition = function (roads) {
  * @param intersectionId {Number}
  * @param intersections {*} Array of intersections and related tiles
  */
-SanitaireMaps.getIntersectionTilePositionForId = function(intersectionId, intersections) {
+SanitaireMaps.getIntersectionTilePositionForId = function (intersectionId, intersections) {
 
-    var intersection = _.find(intersections, function(intersection) {
+    var intersection = _.find(intersections, function (intersection) {
         return intersection.id == intersectionId;   // handles string or number comparison happily
     });
     return intersection.innerTiles[0];
@@ -112,7 +116,7 @@ SanitaireMaps.getRoadIdForTilePosition = function (x, y, mapInfo) {
     x = Math.floor(x);//x|0;
     y = Math.floor(y);//y|0;
     var key = "(" + x + "," + y + ")";
-    if(mapInfo.mapTiles[key].roadId) {
+    if (mapInfo.mapTiles[key].roadId) {
         return mapInfo.mapTiles[key].roadId;
     }
     return null;
@@ -130,7 +134,7 @@ SanitaireMaps.getIntersectionIdForTilePosition = function (x, y, mapInfo) {
     x = Math.floor(x);//x|0;
     y = Math.floor(y);//y|0;
     var key = "(" + x + "," + y + ")";
-    if(mapInfo.mapTiles[key].intersectionId) {
+    if (mapInfo.mapTiles[key].intersectionId) {
         return mapInfo.mapTiles[key].intersectionId;
     }
     return null;
@@ -302,14 +306,14 @@ SanitaireMaps.getMapInfo = function (phaserTileMapInterface) {
     }
 
     // create a roads by id for finding roads easily
-    _.each(roads, function(road) {
+    _.each(roads, function (road) {
         roadsById[road.id] = road;
     });
 
     // add roadIds to intersections, this will be helpful when constructing a graph
     for (var i = 0; i < intersections.length; i++) {
         var roadIds = [];
-        for(var j = 0; j < intersections[i].borderTiles.length; j++) {
+        for (var j = 0; j < intersections[i].borderTiles.length; j++) {
             var borderTile = intersections[i].borderTiles[j];
             var key = "(" + borderTile.x + "," + borderTile.y + ")";
             if (!_.contains(roadIds, mapTiles[key].roadId))   // only add if unique
