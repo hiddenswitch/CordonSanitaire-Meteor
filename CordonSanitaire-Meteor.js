@@ -109,9 +109,11 @@ if (Meteor.isClient) {
         },
 
         updatePatientZeroDirection: function(){
-            var angle = 0;
-            if (Session.get("patient zero distance and direction")){
-                angle = -Session.get("patient zero distance and direction").angle; // negative because of how css works
+            var angle = Session.get("pzero angle");
+            if (angle){
+                angle = -angle; // negative because of how css works
+            } else {
+                angle = 0;
             }
             $('#compass-img').css({
                 "-webkit-transform": "rotate(" + angle + "deg)",
