@@ -80,11 +80,14 @@ if (Meteor.isClient) {
             };
             return result;
         },
-        showingBuildButtons: function () {
-            return Session.get("showing build buttons");
+        showingBuildButton: function () {
+            return Session.get("showing build button");
         },
         showingDestroyButton: function () {
             return Session.get("showing destroy button");
+        },
+        showingBuildAndDestroyButtons: function () {
+            return Session.get("showing build and destroy buttons");;
         },
         showPatientZeroIsolated: function () {
             if(Session.get("patient zero isolated")){
@@ -118,8 +121,13 @@ if (Meteor.isClient) {
         },
 
         updatePatientZeroDistance: function(){
-            var distance = Math.round(Session.get("patient zero distance and direction").distance/8); // just taking the rounded value
-            return distance;
+            var distance = Session.get("pzero distance");
+            if(!distance) {
+                return 0;
+            }
+            else {
+                return Math.round(distance / 8);    // 8 = scale factor for pixels to feet
+            }
         }
 
 

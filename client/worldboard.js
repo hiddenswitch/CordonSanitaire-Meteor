@@ -13,15 +13,15 @@
 var updateRoadTiles = function (map, roadId, mapInfo, tileState) {
 
     var tileColor;
-    switch(tileState) {
+    switch (tileState) {
         case GraphAnalysis.roadStatus.OPEN:
             tileColor = SanitaireMaps.streetColorTile.NONE;
             break;
         case GraphAnalysis.roadStatus.CLOSED_EMPTY:
-            tileColor = SanitaireMaps.streetColorTile.EMPTY;
+            tileColor = SanitaireMaps.streetColorTile.NONE;
             break;
         case GraphAnalysis.roadStatus.CLOSED_RESPONDERS:
-            tileColor = SanitaireMaps.streetColorTile.RESPONDERS;
+            tileColor = SanitaireMaps.streetColorTile.NONE;
             break;
         case GraphAnalysis.roadStatus.CLOSED_CONTAINED:
             tileColor = SanitaireMaps.streetColorTile.CONTAINED;
@@ -29,7 +29,8 @@ var updateRoadTiles = function (map, roadId, mapInfo, tileState) {
         case GraphAnalysis.roadStatus.CLOSED_ISOLATED:
             tileColor = SanitaireMaps.streetColorTile.ISOLATED;
             break;
-        default: tileColor = SanitaireMaps.streetColorTile.NONE;
+        default:
+            tileColor = SanitaireMaps.streetColorTile.NONE;
     }
     _.each(mapInfo.roadsById[roadId].innerTiles, function (tile) {
         map.fill(tileColor, tile.x, tile.y, 1, 1);
@@ -38,14 +39,11 @@ var updateRoadTiles = function (map, roadId, mapInfo, tileState) {
 
 /**
  * Lets the server know to stop our player just got stopped
- * @param gameId {}
- * @param sprite {}
+ * @param gameId {String}
+ * @param sprite {Phaser.Sprite}
  */
 var stopLocalPlayer = function (gameId, sprite) {
-    // stop movement on our screen
-    sprite.body.velocity.x = 0;
-    sprite.body.velocity.y = 0;
-    // let everyone else know about it too! :)
+    // set our velocity to zero
     Meteor.call('updatePositionAndVelocity', gameId, {
         x: sprite.position.x,
         y: sprite.position.y
@@ -91,7 +89,7 @@ var drawBarricade = function (map, state, intersectionId, mapInfo) {
 /**
  * Update the sprites based on the given player document
  * @param sprites {Object.<String, Phaser.Sprite>} A dictionary of phaser sprites keyed by playerId
- * @param player {String} A playerId (found in the players collection)
+ * @param player {Object} Player from collection (db)
  */
 var updatePlayer = function (sprites, player) {
     var sprite = sprites[player._id];
@@ -114,6 +112,8 @@ var updatePlayer = function (sprites, player) {
     sprite.position.y = player.position.y + diffY;
 };
 
+
+
 /**
  * Update the barriers
  * @param barriers
@@ -121,6 +121,10 @@ var updatePlayer = function (sprites, player) {
  * @param map
  * @param gameId
  * @param playerSprites
+ * @param playerGroup
+ * @param mapInfo
+ * @param buildProgressBars
+ * @param phaserGame
  * @returns {*}
  */
 var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSprites, playerGroup, patientZeroStatus, prevPosition, mapInfo, buildProgressBars, phaserGame) {
@@ -141,11 +145,19 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         drawBarricade(map, barricade.state, barricade.intersectionId, currentMapInfo);
 
         var from = _.isUndefined(barricade.progress) ? null : barricade.progress;
+        if (_.isNull(from)
+            && barricade.time != Infinity
+            && !_.isUndefined(barricade.time)
+            && !_.isUndefined(barricade.progressTime)) {
+            // Compute from with time data
+            var serverNow = TimeSync.serverTime(new Date());
+            from = inverseLerp(barrier.progressTime, barrier.time, serverNow);
+        }
         var to = barricade.time == Infinity ? null : (barricade.nextState === Sanitaire.barricadeStates.BUILT ? 1 : 0);
         updateBuildProgressBar(barricade.intersectionId, from, to, barricade.time, buildProgressBars, phaserGame, mapInfo);
 
         if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
-            || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION ) {
+            || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION) {
             showBuildProgressBar(buildProgressBars, barricade.intersectionId);
         }
 
@@ -169,56 +181,65 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
 
                 var isLocalPlayerAtBarricade = false;
 
-                if(myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD || myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
-                   if(myLastBarriersLogEntry.intersectionId == barricade.intersectionId) {  // careful, string compared w/ number
-                       isLocalPlayerAtBarricade = true;
-                   }
+                if(myLastBarriersLogEntry) {
+                    if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD || myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
+                        if (myLastBarriersLogEntry.intersectionId == barricade.intersectionId) {  // careful, string compared w/ number
+                            isLocalPlayerAtBarricade = true;
+                        }
+                    }
                 }
 
                 // check to see if the barricade just completed building or demolishing
                 // if we are at this specific barricade, then move us to the middle of it
                 if (barricade.nextState === Sanitaire.barricadeStates.BUILT) {
-                    if(isLocalPlayerAtBarricade) {
+                    if (isLocalPlayerAtBarricade) {
                         console.log("build completed @", barricade.intersectionId, "by you");
                         // congrats, you finished building your very own barricade
                         var centerTilePosition = SanitaireMaps.getIntersectionTilePositionForId(barricade.intersectionId, currentMapInfo.intersections);
                         Meteor.call('updatePositionAndVelocity', gameId, {
-                            x: centerTilePosition.x*16,
-                            y: centerTilePosition.y*16
+                            x: centerTilePosition.x * 16,
+                            y: centerTilePosition.y * 16
                         }, {
                             x: 0,
                             y: 0
                         }, TimeSync.serverTime(new Date()));
                         // hide the display of progress
                         hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
+                        recalculatePatientZero();
                     }
                     else {
                         console.log("build completed @", barricade.intersectionId, "by someone else");
                         // someone else finished building a barricade, let's congratulate them...
+                        // hide the display of progress
+                        hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
+                        recalculatePatientZero();
                     }
                 }
                 else if (barricade.nextState === Sanitaire.barricadeStates.EMPTY) {
-                    if(isLocalPlayerAtBarricade) {
+                    if (isLocalPlayerAtBarricade) {
                         console.log("demolition completed @", barricade.intersectionId, "by you");
                         // congrats, you finished demolishing someone's hard work... I guess you put in some work too
                         var centerTilePosition = SanitaireMaps.getIntersectionTilePositionForId(barricade.intersectionId, currentMapInfo.intersections);
                         Meteor.call('updatePositionAndVelocity', gameId, {
-                            x: centerTilePosition.x*16,
-                            y: centerTilePosition.y*16
+                            x: centerTilePosition.x * 16,
+                            y: centerTilePosition.y * 16
                         }, {
                             x: 0,
                             y: 0
                         }, TimeSync.serverTime(new Date()));
                         // hide the display of progress
                         hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
+                        recalculatePatientZero();
                     }
                     else {
                         console.log("demolition completed @", barricade.intersectionId, "by someone else");
-                        // Riot, people are tearing sh*t down! or digging us out of a shallow hole...
+                        // hide the display of progress
+                        hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
+                        recalculatePatientZero();
                     }
                 }
                 else if (barricade.nextState === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
-                || barricade.nextState === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION ) {
+                    || barricade.nextState === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION) {
                     showBuildProgressBar(buildProgressBars, barricade.intersectionId);
                 }
             };
@@ -246,30 +267,46 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         }
     });
 
-    // Recalculate patient zero
-    var game = Games.findOne(gameId, {reactive: false});
+    recalculatePatientZero = function () {
+        // Recalculate patient zero
+        var game = Games.findOne(gameId, {reactive: false});
 
-    var playerRoadIds = _.map(playerSprites, function (sprite) {
-        return SanitaireMaps.getRoadIdForTilePosition(
-            sprite.x / 16,
-            sprite.y / 16,
-            currentMapInfo
-        );
-    });
+        var playerRoadIds = _.map(playerSprites, function (sprite) {
+            return SanitaireMaps.getRoadIdForTilePosition(
+                sprite.x / 16,
+                sprite.y / 16,
+                currentMapInfo
+            );
+        });
 
-    var patientZeroCurrentLocation = SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, game.patientZero.path, game.patientZero.pathUpdatedAt, {
-        time: new Date()
-    });
+        var patientZeroCurrentLocation = SanitairePatientZero.estimatePositionFromPath(game.patientZero.speed, game.patientZero.path, game.patientZero.pathUpdatedAt, {
+            time: new Date()
+        });
 
-    var patientZeroRoadId = SanitaireMaps.getRoadIdForTilePosition(patientZeroCurrentLocation.x, patientZeroCurrentLocation.y, currentMapInfo); // TODO: get actual road id from this game!!!!!!!
-    var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
-    var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId);
-    // color streets according to their state
-    var roadStatuses = GraphAnalysis.getRoadStatus(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
-    _.each(roadStatuses, function(roadStatus, roadId) {
-       updateRoadTiles(map, roadId, mapInfo, roadStatus);
-    });
+        console.log("checking pzero and updating road colors");
+        var patientZeroRoadId = SanitaireMaps.getRoadIdForTilePosition(patientZeroCurrentLocation.x, patientZeroCurrentLocation.y, currentMapInfo); // TODO: get actual road id from this game!!!!!!!
+        var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
+        var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
+        // color streets according to their state
+        var roadStatuses = GraphAnalysis.getRoadStatus(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
+        _.each(roadStatuses, function (roadStatus, roadId) {
+            updateRoadTiles(map, roadId, mapInfo, roadStatus);
+        });
 
+        // Update visible patient zero status
+        if (isPZeroContained) {
+            Session.set("patient zero isolated", true);
+            Session.set("patient zero contained", false);
+            Session.set("patient zero loose", false);
+        }
+        else {
+            Session.set("patient zero isolated", false);
+            Session.set("patient zero contained", false);
+            Session.set("patient zero loose", true);
+        }
+    };
+
+//<<<<<<< HEAD
     // Update visible patient zero status
     // Only update if the status has changed
     // TODO: May have issues with multiple people update at once
@@ -291,6 +328,8 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         }
     }
 
+//=======
+//>>>>>>> a3aeedee43dc29341d2888c60ea4498f7c9b2379
     return barriers;
 };
 
@@ -342,35 +381,40 @@ var updatePatientZeroPosition = function (patientZeroSprite, tilePosition) {
 };
 
 /**
- * Updates the direction and distance between the local player and patient zero
+ * returns the direction in degrees from p-zero to a player
  * @param patientZeroSprite {Phaser.Sprite}
  * @param playerSprite {Phaser.Sprite}
- * @param patientZeroLocationRelativeToLocalPlayer {Object}
+ * @returns {number}
  */
-var updatePatientZeroLocationRelativeToLocalPlayer = function(patientZeroSprite, playerSprite, patientZeroLocationRelativeToLocalPlayer){
-    var patientZeroX = patientZeroSprite.position.x;
-    var patientZeroY = patientZeroSprite.position.y;
-    var playerX = playerSprite.position.x;
-    var playerY = playerSprite.position.y;
+var getPatientZeroDirectionInDegrees = function (patientZeroSprite, playerSprite) {
+    var deltaY = patientZeroSprite.position.y - playerSprite.position.y;
+    var deltaX = patientZeroSprite.position.x - playerSprite.position.x;
+    var angle = Math.atan2(-deltaY, deltaX); //angle is in radians; -y because the axis is flipped
+    angle = (angle * 180) / (Math.PI); // convert to degree
+    return angle;
+};
 
-    var angle = Math.atan2(-(patientZeroY-playerY),(patientZeroX-playerX)); //angle is in radians; -y because the axis is flipped
-    angle = (angle*180)/(Math.PI); // convert to degree
-    var distance = Math.sqrt((patientZeroX-playerX)*(patientZeroX-playerX) + (patientZeroY-playerY)*(patientZeroY-playerY));
-    //console.log("angle");
-    //console.log(angle);
-    //console.log("distance");
-    //console.log(distance);
-    patientZeroLocationRelativeToLocalPlayer.distance = distance;
-    patientZeroLocationRelativeToLocalPlayer.angle = angle;
-}
+/**
+ *
+ * @param patientZeroSprite {Phaser.Sprite}
+ * @param playerSprite {Phaser.Sprite}
+ * @returns {number}
+ */
+var getPatientZeroDistance = function (patientZeroSprite, playerSprite) {
+    var a = patientZeroSprite.position.x - playerSprite.position.x;
+    var b = patientZeroSprite.position.y - playerSprite.position.y;
+    return Math.sqrt(a * a + b * b);
+};
 
 /**
  * Shows the direction and distance between the player and patient zero on screen
- * @param patientZeroLocationRelativeToLocalPlayer {Object}
+ * @param distance {Number}
+ * @param angle {Number}
  */
-var showPatientZeroLocationRelativeToPlayer = function(patientZeroLocationRelativeToLocalPlayer){
-    Session.set("patient zero distance and direction", patientZeroLocationRelativeToLocalPlayer);
-}
+var updateDisplayForPatientZeroTracker = function (distance, angle) {
+    Session.set("pzero distance", distance);
+    Session.set("pzero angle", angle);
+};
 
 /**
  * Building progress bars - show status of build
@@ -492,39 +536,40 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
 /**
  * If patient zero is close enough, updates the PlayerState to show that the local player is stunned
  * @param localPlayerState {Object}
- * @param patientZeroLocationRelativeToLocalPlayer {Object}
+ * @param distance {Number}
  */
-var updateTouchedByPatientZero = function(localPlayerState, patientZeroLocationRelativeToLocalPlayer){
-    if (patientZeroLocationRelativeToLocalPlayer.distance<= 5){
+var isTouchedByPatientZero = function (localPlayerState, distance) {
+    if (distance <= 5 && !localPlayerState.health.isStunned) {
         //TODO: distance is arbitrary right now
 
         console.log("touched!");
-        localPlayerState.health.isStunned = true; // NOTE: The player can be stunned multiple times when stunned!
+        localPlayerState.health.isStunned = true;
         localPlayerState.health.timeWhenTouchedByPatientZero = TimeSync.serverTime(new Date());
+
+        return true;
     }
-}
+    return false;
+};
 
 /**
  * Stops the player, updates the server about the stop, and stops sprite animation
+ * @param gameId {String} id of current game
  * @param playerSprite {Phaser.Sprite}
  */
-var stunPlayer = function(gameId, playerSprite){
+var stunPlayer = function (gameId, playerSprite) {
     // Let the server know our player is stunned
     stopLocalPlayer(gameId, playerSprite);
-    playerSprite.animations.paused = true;
-
-}
+};
 
 /**
  * Updates player state to show that they are no longer stunned, and re-animates player
  * @param playerSprite {Phaser.Sprite}
  * @param localPlayerState {Object}
  */
-var unstunPlayer = function(playerSprite, localPlayerState){
+var unstunPlayer = function (playerSprite, localPlayerState) {
     localPlayerState.health.isStunned = false;
     localPlayerState.health.timeWhenTouchedByPatientZero = -Infinity;
-    playerSprite.animations.paused = false;
-}
+};
 
 Template.worldBoard.onRendered(function () {
         var renderer = this;
@@ -535,25 +580,16 @@ Template.worldBoard.onRendered(function () {
         var localPlayerSprite = Players.findOne(localPlayerId);
         var localPlayerState = {
             construction: {
-                prevPosition: {
-                    x:-1,
-                    y:-1,
-                },
                 isBuilding: false,
                 intersectionId: -1
             },
             health: {
-                value:1.0,
+                value: 1.0,
                 isStunned: false,
                 timeWhenTouchedByPatientZero: -Infinity
             },
 
         };
-
-        var patientZeroLocationRelativeToLocalPlayer = {
-            distance: Infinity,
-            angle: 0
-        }
 
         // scale everything a bit to up performance when moving the map
         var scaleValue = 1.75;
@@ -631,7 +667,7 @@ Template.worldBoard.onRendered(function () {
 
         function preload() {
             // load path to map from settings
-            var filename = "London_single_lane.csv";
+            var filename = Sanitaire.DEFAULT_MAP;
             var mapPath = "/assets/tilemaps/csv/" + filename;
             phaserGame.load.tilemap('map', mapPath, null, Phaser.Tilemap.CSV);
             phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map.png');
@@ -713,17 +749,17 @@ Template.worldBoard.onRendered(function () {
             phaserGame.input.onDown.add(beginSwipe, this);
 
             // test new feature with key press
-            key1 = phaserGame.input.keyboard.addKey(Phaser.Keyboard.ONE);
-            key1.onDown.add(colorRandomRoadGrey, this);
-
-            key2 = phaserGame.input.keyboard.addKey(Phaser.Keyboard.TWO);
-            key2.onDown.add(colorRandomRoadYellow, this);
-
-            key3 = phaserGame.input.keyboard.addKey(Phaser.Keyboard.THREE);
-            key3.onDown.add(colorRandomRoadRed, this);
-
-            key4 = phaserGame.input.keyboard.addKey(Phaser.Keyboard.FOUR);
-            key4.onDown.add(colorRandomRoadGreen, this);
+            //key1 = phaserGame.input.keyboard.addKey(Phaser.Keyboard.ONE);
+            //key1.onDown.add(colorRandomRoadGrey, this);
+            //
+            //key2 = phaserGame.input.keyboard.addKey(Phaser.Keyboard.TWO);
+            //key2.onDown.add(colorRandomRoadYellow, this);
+            //
+            //key3 = phaserGame.input.keyboard.addKey(Phaser.Keyboard.THREE);
+            //key3.onDown.add(colorRandomRoadRed, this);
+            //
+            //key4 = phaserGame.input.keyboard.addKey(Phaser.Keyboard.FOUR);
+            //key4.onDown.add(colorRandomRoadGreen, this);
 
             currentMapInfo = SanitaireMaps.getMapInfo(map);
 
@@ -731,8 +767,8 @@ Template.worldBoard.onRendered(function () {
             // This is sort of already done by adding intersections to the roads array
             // each road is an edge, containing the two nodes it connects
 
-            var game = Games.findOne(gameId, {reactive: false});
-            var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
+            //var game = Games.findOne(gameId, {reactive: false});
+            //var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
 
             initializeMeteor();
         }
@@ -747,13 +783,14 @@ Template.worldBoard.onRendered(function () {
             var graph = {};
 
             // find which intersections are blocked
-            var completedBarriers = _.filter(game.barriers, function(barrier) {
-                return barrier.state == Sanitaire.barricadeStates.BUILT;
+            // including those that have completed based on time, but not yet completed in the game document
+            var completedBarriers = _.filter(game.barriers, function (barrier) {
+                return (barrier.state == Sanitaire.barricadeStates.BUILT || (barrier.nextState == Sanitaire.barricadeStates.BUILT && barrier.time < (new Date()).getTime()));
             });
 
             // create an array of the intersection Ids
             var blockedIntersectionIds = [];
-            _.each(completedBarriers, function(barrier) {
+            _.each(completedBarriers, function (barrier) {
                 blockedIntersectionIds.push(barrier.intersectionId);
             });
 
@@ -763,7 +800,9 @@ Template.worldBoard.onRendered(function () {
                 }
 
                 roadV.intersectionIds.forEach(function (intersectionId) {
-                    if (_.any(blockedIntersectionIds, function(blockedId){return blockedId == intersectionId;})) {
+                    if (_.any(blockedIntersectionIds, function (blockedId) {
+                            return blockedId == intersectionId;
+                        })) {
                         return;
                     }
 
@@ -844,6 +883,7 @@ Template.worldBoard.onRendered(function () {
                     });
                 });
 
+                var isPlayerInjured = false;
 
                 // check to see if the next block in the direction being walked is a legal move
                 // *** THIS STOPS PLAYERS FROM WALKING THROUGH BARRICADES!!! *** (among other things)
@@ -864,22 +904,27 @@ Template.worldBoard.onRendered(function () {
                     }
 
                     // look at the position of patient zero rel to local player
-                    // TODO: use this to update compass
-                    updatePatientZeroLocationRelativeToLocalPlayer(patientZeroSprite, sprite, patientZeroLocationRelativeToLocalPlayer);
-                    showPatientZeroLocationRelativeToPlayer(patientZeroLocationRelativeToLocalPlayer);
-                    // Stun player if touched by patient zero
+                    var distance = getPatientZeroDistance(patientZeroSprite, sprite);
+                    var angle = getPatientZeroDirectionInDegrees(patientZeroSprite, sprite);
+                    // update compass
+                    updateDisplayForPatientZeroTracker(distance, angle);
+
                     // Check if touched by patient zero
-                    updateTouchedByPatientZero(localPlayerState, patientZeroLocationRelativeToLocalPlayer);
+                    var justTouched = isTouchedByPatientZero(localPlayerState, distance);
+                    if (justTouched) {
+                        console.log("sprite when touched", sprite);
+                    }
 
                     var currentTime = TimeSync.serverTime(new Date());
-                    if (localPlayerState.health.isStunned){
-                        // keep the player stunned for 5 seconds since they were touched
-                        // NOTE: if the time when they were touched has been updated to a
-                        // more recent time, they will be stunned for longer
-                        if ((currentTime - localPlayerState.health.timeWhenTouchedByPatientZero)<5000){
-                            stunPlayer(gameId, sprite);
+                    if (localPlayerState.health.isStunned) {
+                        if ((currentTime - localPlayerState.health.timeWhenTouchedByPatientZero) < Sanitaire.STUN_DURATION_SECONDS * 1000) {
+                            if (justTouched) {
+                                stunPlayer(gameId, sprite);
+                            }
+                            isPlayerInjured = true;
                         } else {
                             unstunPlayer(sprite, localPlayerState);
+                            isPlayerInjured = false;
                         }
                     }
                 }
@@ -896,8 +941,12 @@ Template.worldBoard.onRendered(function () {
                 } else if (sprite.body.velocity.y < 0) {
                     sprite.play('up');
                 } else {
-                    sprite.play('idle');
-                    //sprite.animations.stop();
+                    if (isPlayerInjured) {
+                        sprite.play('injured');
+                    }
+                    else {
+                        sprite.play('idle');
+                    }
                 }
             }
 
@@ -920,20 +969,24 @@ Template.worldBoard.onRendered(function () {
 
             // check tile in the direction we are headed
             if (body.velocity.x > 0) {  // right
-                currentTile = { x: Math.floor((body.position.x) / 16), y: Math.floor((body.position.y + 8) / 16)};
+                currentTile = {x: Math.floor((body.position.x) / 16), y: Math.floor((body.position.y + 8) / 16)};
                 nextTile = map.getTile(currentTile.x + 1, currentTile.y, 0);
             } else if (body.velocity.x < 0) {  // left
-                currentTile = { x: Math.floor((body.position.x+16) / 16), y: Math.floor((body.position.y + 8) / 16)};
+                currentTile = {x: Math.floor((body.position.x + 16) / 16), y: Math.floor((body.position.y + 8) / 16)};
                 nextTile = map.getTile(currentTile.x - 1, currentTile.y, 0);
             } else if (body.velocity.y > 0) {  // down
-                currentTile = { x: Math.floor((body.position.x + 8) / 16), y: Math.floor((body.position.y) / 16)};
+                currentTile = {x: Math.floor((body.position.x + 8) / 16), y: Math.floor((body.position.y) / 16)};
                 nextTile = map.getTile(currentTile.x, currentTile.y + 1, 0);
             } else if (body.velocity.y < 0) {  // up
-                currentTile = { x: Math.floor((body.position.x + 8) / 16), y: Math.floor((body.position.y+16) / 16)};
+                currentTile = {x: Math.floor((body.position.x + 8) / 16), y: Math.floor((body.position.y + 16) / 16)};
                 nextTile = map.getTile(currentTile.x, currentTile.y - 1, 0);
             } else {
                 // not walking anywhere, feel free to loiter all you want
                 return true;
+            }
+
+            if (!nextTile) {
+                return false;
             }
 
             return _.indexOf(SanitaireMaps.PATHABLE_TILES, nextTile.index) !== -1;
@@ -1045,34 +1098,37 @@ Template.worldBoard.onRendered(function () {
             // decide if to show buttons
             var shouldShowBuildButton = false;
             var shouldShowDestroyButton = false;
+            var shouldShowBothButtons = false;
 
             // if the barricade record exists
-            if(!!barricade) {
-                if(barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
+            if (!!barricade) {
+                if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.BUILT) {
-                    console.log("X: no need to prompt, this should handled from a crosswalk");
+                    //console.log("X: no need to prompt, this should handled from a crosswalk");
                     return;
                 }
-                else if(barricade.state === Sanitaire.barricadeStates.EMPTY
+                else if (barricade.state === Sanitaire.barricadeStates.EMPTY
                     || barricade.state === Sanitaire.barricadeStates.NONE) {
-                    console.log("X: we should have the option to build at intersection ", intersectionId);
+                    //console.log("X: we should have the option to build at intersection ", intersectionId);
 
                     if (TimeSync.serverTime(new Date()) < barricade.time
                         || barricade.time == Infinity) {
                         shouldShowBuildButton = barricade.buttons === Sanitaire.barricadeButtons.BUILD;
                         shouldShowDestroyButton = barricade.buttons === Sanitaire.barricadeButtons.DESTROY;
+                        shouldShowBothButtons = barricade.buttons === Sanitaire.barricadeButtons.BUILD_AND_DESTROY;
                     } else {
                         shouldShowBuildButton = barricade.nextButtons === Sanitaire.barricadeButtons.BUILD;
                         shouldShowDestroyButton = barricade.nextButtons === Sanitaire.barricadeButtons.DESTROY;
+                        shouldShowBothButtons = barricade.nextButtons === Sanitaire.barricadeButtons.BUILD_AND_DESTROY;
                     }
                 }
                 else {
                     console.log("X: how did we get here?");
                     return;
                 }
-            }else {
-                console.log("X: we should have the option to build at intersection ", intersectionId, ". It has never been built on.");
+            } else {
+                //console.log("X: we should have the option to build at intersection ", intersectionId, ". It has never been built on.");
 
                 shouldShowBuildButton = true;
                 shouldShowDestroyButton = false;
@@ -1083,8 +1139,9 @@ Template.worldBoard.onRendered(function () {
             lastIntersectionId = intersectionId;
 
 
-            Session.set("showing build buttons", shouldShowBuildButton);
+            Session.set("showing build button", shouldShowBuildButton);
             Session.set("showing destroy button", shouldShowDestroyButton);
+            Session.set("showing build and destroy buttons", shouldShowBothButtons);
 
             // stop our player (stops animation and movement)
             player_direction = '';
@@ -1134,7 +1191,7 @@ Template.worldBoard.onRendered(function () {
             }
 
             // only respond to callback if within 3 pixels of the center of the tile
-            if (Math.abs((Math.floor(sprite.position.x)-7) % 16) > 1 && Math.abs((Math.floor(sprite.position.y)-7) % 16) > 1) {
+            if (Math.abs((Math.floor(sprite.position.x) - 7) % 16) > 1 && Math.abs((Math.floor(sprite.position.y) - 7) % 16) > 1) {
                 //console.log("close but not close enough");
                 return;
             }
@@ -1152,30 +1209,33 @@ Template.worldBoard.onRendered(function () {
             // decide if to show buttons
             var shouldShowBuildButton = false;
             var shouldShowDestroyButton = false;
+            var shouldShowBothButtons = false;
 
             // if the barricade is built then offer demolish
-            if(!!barricade) {
-                if(barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
+            if (!!barricade) {
+                if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
                     || barricade.state === Sanitaire.barricadeStates.BUILT) {
-                    console.log("CW: prompting from crosswalk at intersection ", intersectionId, " with barricade: ", barricade);
+                    //console.log("CW: prompting from crosswalk at intersection ", intersectionId, " with barricade: ", barricade);
 
                     if (TimeSync.serverTime(new Date()) < barricade.time
                         || barricade.time == Infinity) {
                         shouldShowBuildButton = barricade.buttons === Sanitaire.barricadeButtons.BUILD;
                         shouldShowDestroyButton = barricade.buttons === Sanitaire.barricadeButtons.DESTROY;
+                        shouldShowBothButtons = barricade.buttons === Sanitaire.barricadeButtons.BUILD_AND_DESTROY;
                     } else {
                         shouldShowBuildButton = barricade.nextButtons === Sanitaire.barricadeButtons.BUILD;
                         shouldShowDestroyButton = barricade.nextButtons === Sanitaire.barricadeButtons.DESTROY;
+                        shouldShowBothButtons = barricade.nextButtons === Sanitaire.barricadeButtons.BUILD_AND_DESTROY;
                     }
 
                     // reset our catch for same intersection
                     movesSincePrompt = 0;
                     lastIntersectionId = intersectionId;
                 }
-                else if(barricade.state === Sanitaire.barricadeStates.EMPTY
+                else if (barricade.state === Sanitaire.barricadeStates.EMPTY
                     || barricade.state === Sanitaire.barricadeStates.NONE) {
-                    console.log("CW: no need to prompt. Intersection ", intersectionId, " is empty.");
+                    //console.log("CW: no need to prompt. Intersection ", intersectionId, " is empty.");
                     return;
                 }
                 else {
@@ -1184,12 +1244,13 @@ Template.worldBoard.onRendered(function () {
                 }
             }
             else {
-                console.log("CW: no need to prompt. Intersection ", intersectionId, " has never been built on.");
+                //console.log("CW: no need to prompt. Intersection ", intersectionId, " has never been built on.");
                 return;
             }
 
-            Session.set("showing build buttons", shouldShowBuildButton);
+            Session.set("showing build button", shouldShowBuildButton);
             Session.set("showing destroy button", shouldShowDestroyButton);
+            Session.set("showing build and destroy buttons", shouldShowBothButtons);
 
             // if we aren't showing buttons, no need to stop
             //if(!shouldShowBuildButton)
@@ -1227,7 +1288,7 @@ Template.worldBoard.onRendered(function () {
         buildBarricade = function () {
 
             // hide buttons
-            Session.set("showing build buttons", false);
+            hideButtons();
 
             if (_.isUndefined(lastPromptTile)) {
                 return;
@@ -1247,8 +1308,7 @@ Template.worldBoard.onRendered(function () {
          */
         demolishBarricade = function () {
             // hide buttons
-            Session.set("showing build buttons", false);
-            Session.set("showing destroy button", false);
+            hideButtons();
 
             if (_.isUndefined(lastPromptTile)) {
                 return;
@@ -1262,38 +1322,14 @@ Template.worldBoard.onRendered(function () {
             localPlayerState.construction.intersectionId = intersectionId;
         };
 
-
         /**
-         *  Color a random road as though a quarantine is completed
+         * Hide buttons for build or demolish from screen
          */
-        function colorRandomRoadGrey() {
-            var numRoads = currentMapInfo.roads.length;
-            updateRoadTiles(map, Math.floor(Math.random()*numRoads), currentMapInfo, SanitaireMaps.streetColorTile.EMPTY);
-        }
-
-        /**
-         *  Color a random road as though people are trapped
-         */
-        function colorRandomRoadYellow() {
-            var numRoads = currentMapInfo.roads.length;
-            updateRoadTiles(map, Math.floor(Math.random()*numRoads), currentMapInfo, SanitaireMaps.streetColorTile.RESPONDERS);
-        }
-
-        /**
-         *  Color a random road as though P0 is isolated
-         */
-        function colorRandomRoadGreen() {
-            var numRoads = currentMapInfo.roads.length;
-            updateRoadTiles(map, Math.floor(Math.random()*numRoads), currentMapInfo, SanitaireMaps.streetColorTile.ISOLATED);
-        }
-
-        /**
-         *  Color a random road as though people are trapped inside w/ P0
-         */
-        function colorRandomRoadRed() {
-            var numRoads = currentMapInfo.roads.length;
-            updateRoadTiles(map, Math.floor(Math.random()*numRoads), currentMapInfo, SanitaireMaps.streetColorTile.CONTAINED);
-        }
+        hideButtons = function () {
+            Session.set("showing build button", false);
+            Session.set("showing destroy button", false);
+            Session.set("showing build and destroy buttons", false);
+        };
 
         /**
          *  when the player begins to swipe we only save mouse/finger coordinates, remove the touch/click
@@ -1312,7 +1348,7 @@ Template.worldBoard.onRendered(function () {
          */
         function endSwipe() {
             // hide buttons
-            Session.set("showing build buttons", false);
+            hideButtons();
 
             // saving mouse/finger coordinates
             endX = phaserGame.input.worldX;
@@ -1367,7 +1403,13 @@ Template.worldBoard.onRendered(function () {
             player.animations.add('up', [11, 12, 13], 10, true);
             player.animations.add('down', [4, 5, 6], 10, true);
             player.animations.add('idle', [15, 16, 17, 18], 5, true);
+            player.animations.add('injured', [22, 23, 24, 25], 5, true);
             player.smoothed = false;
+            if (Sanitaire.PLAYER_UNIQUENESS) {
+                player.tint = determineColorFromPlayerId(playerId);
+            } else {
+                player.tint = '0xFFEE33';  // otherwise everyone is yellow
+            }
 
             phaserGame.physics.enable(player, Phaser.Physics.ARCADE);
 
@@ -1381,6 +1423,111 @@ Template.worldBoard.onRendered(function () {
 
             return player;
         };
+
+        /**
+         * Gets a color for the suit based on the playerId generated
+         * @param playerId
+         * @returns {String} hex value for color of suit
+         */
+        var determineColorFromPlayerId = function (playerId) {
+            var color;
+
+            function getNumberValueForChar(string) {
+                var charCode = string.charCodeAt(0);
+                var value;
+                if (charCode >= 97 && charCode <= 122) {
+                    // lowercase a-z
+                    value = charCode - 97 + 10;
+                } else if (charCode >= 65 && charCode <= 90) {
+                    // uppercase A-Z
+                    value = charCode - 65 + 10 + 26;
+                } else if (charCode >= 48 && charCode <= 57) {
+                    // numbers 0-9
+                    value = charCode - 48;
+                }
+                // normalize the value
+                // 10 Numbers, 26 lowercase, 26 uppercase
+                value = value / 62;
+                return value;
+            }
+
+            // use the first number/letter for HUE
+            var hue = getNumberValueForChar(playerId[0]);
+            // second letter for Saturation (clamp [0.5, 1.0])
+            var sat = 0.5 + getNumberValueForChar(playerId[1]) / 2;
+            // third letter for Value (clamp [0.5, 1.0])
+            var val = 0.5 + getNumberValueForChar(playerId[2]) / 2;
+
+            color = convertHSVtoHex(hue, sat, val);
+
+            return color;
+        };
+
+        /**
+         * Useful for making bright, generative colors
+         * based on formula here: http://www.rapidtables.com/convert/color/hsv-to-rgb.htm
+         * @param h {Number} (0-1)
+         * @param s {Number} (0-1)
+         * @param v {Number} (0-1)
+         * @returns {String} hex value of hsv color
+         */
+        var convertHSVtoHex = function (h, s, v) {
+
+            function componentToHex(c) {
+                var hex = c.toString(16);
+                return hex.length == 1 ? "0" + hex : hex;
+            }
+
+            function rgbToHex(r, g, b) {
+                return "0x" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+            }
+
+            h = h * 360;
+            var c = v * s;
+            var x = c * (1 - Math.abs(Math.floor(h / 60) % 2 - 1));
+            var m = v - c;
+            var R, G, B;
+            switch (Math.floor(h / 60)) {
+                case 0:
+                    R = c;
+                    G = x;
+                    B = 0;
+                    break;
+                case 1:
+                    R = x;
+                    G = c;
+                    B = 0;
+                    break;
+                case 2:
+                    R = 0;
+                    G = c;
+                    B = x;
+                    break;
+                case 3:
+                    R = 0;
+                    G = x;
+                    B = c;
+                    break;
+                case 4:
+                    R = x;
+                    G = 0;
+                    B = c;
+                    break;
+                case 5:
+                    R = c;
+                    G = 0;
+                    B = x;
+                    break;
+                default:
+                    break;
+            }
+            R = Math.floor((R + m) * 255);
+            G = Math.floor((G + m) * 255);
+            B = Math.floor((B + m) * 255);
+
+            return rgbToHex(R, G, B);
+        };
+
     }
 )
 ;
@@ -1394,14 +1541,5 @@ Template.game.events({
     'click #destroyButton': function () {
         // TODO: Make this smarter (it should be calling a meteor method)
         demolishBarricade();
-    },
-
-    'click #cancelButton': function () {
-        // TODO: Make this smarter (it should be calling a meteor method)
-        if (Session.get("showing destroy button"))
-            cancelDestroy();
-        else
-            keepRunning();
     }
-
 });

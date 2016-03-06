@@ -63,7 +63,7 @@
             <h1 class="lobbyCountdownSeconds">{{lobbyCountdownSeconds}}</h1>
         </div>
     {{/if}}
-    <div class="textCenter">
+    <div id="lobby_container" class="textCenter">
         <h1>CORDON SANITAIRE</h1>
         <br>
         <h2>RESPONSE TEAM</h2>
@@ -83,6 +83,10 @@
             </ul>
         </div>
     </div>
+
+    <!-- Container for Phaser Game -->
+    <!--<div id="map-container">-->
+    <!--</div>-->
 </template>
 
 <!-- All in game views -->
@@ -97,7 +101,12 @@
             <span id="distance">Distance: {{updatePatientZeroDistance}} feet</span>
         </div>
         <div id="compass">
-            <img id="compass-img" src="/assets/sprites/PZero_Compass_rotated.png"/>
+            <div id="compass-needle">
+                <img id="compass-img" src="/assets/sprites/PZero_Compass_needle.png"/>
+            </div>
+            <div id="compass-bg">
+                <img id="compass-img" src="/assets/sprites/PZero_Compass_bg.png"/>
+            </div>
         </div>
         {{updatePatientZeroDirection}}
     </div>
@@ -136,8 +145,13 @@
             <a href="#" id="destroyButton" class="centerButton quarantineButton destroyButton">DEMOLISH</a>
             <p class="buttonSubtext">or swipe to keep running</p>
         {{/if}}
-        {{#if showingBuildButtons}}
+        {{#if showingBuildButton}}
                 <a href="#" id="buildButton" class="centerButton quarantineButton buildButton">BUILD</a>
+            <p class="buttonSubtext">or swipe to keep running</p>
+        {{/if}}
+        {{#if showingBuildAndDestroyButtons}}
+            <a href="#" id="buildButton" class="leftButton quarantineButton buildButton">BUILD</a>
+            <a href="#" id="destroyButton" class="rightButton quarantineButton destroyButton">DEMO</a>
             <p class="buttonSubtext">or swipe to keep running</p>
         {{/if}}
         <!--<a href="#" id="mainToggleButton" class="mainButton toggleButton">JOIN</a>-->
@@ -149,7 +163,7 @@
     <div id="intro_container">
     </div>
 
-    <!-- Container for Google Map -->
+    <!-- Container for Phaser Game -->
     <div id="map-container">
         {{> worldBoard gameId=gameId}}
     </div>
@@ -163,13 +177,13 @@
         <p>{{endGameSynopsis}}</p>
         <div class="finalStats">
             <ul class="finalStatsList">
-                <li><img class="statsIcon" src="assets/icons/patientIsolated.png">
+                <li><img class="statsIcon" src="/assets/icons/patientIsolated.png">
                     <p class="statsDesc">Patient Zero {{pZeroStatus}}</p></li>
-                <li><img class="statsIcon" src="assets/icons/quarantineCreated.png">
+                <li><img class="statsIcon" src="/assets/icons/quarantineCreated.png">
                     <p class="statsDesc">{{numQuarantines}} quarantine zones built</p></li>
-                <li><img class="statsIcon" src="assets/icons/barricadeBuilt.png">
+                <li><img class="statsIcon" src="/assets/icons/barricadeBuilt.png">
                     <p class="statsDesc">{{numBarricades}} barricades built</p></li>
-                <li><img class="statsIcon" src="assets/icons/respondentInjured.png">
+                <li><img class="statsIcon" src="/assets/icons/respondentInjured.png">
                     <p class="statsDesc">{{numInjured}}respondents injured</p></li>
             </ul>
         </div>
@@ -188,17 +202,17 @@
         <div>
             <ul class="playerStatsList">
                 <li>games played: {{gamesPlayed}}</li>
-                <li><img class="statsIcon" src="assets/icons/patientIsolated.png">
+                <li><img class="statsIcon" src="/assets/icons/patientIsolated.png">
                     <p class="statsDesc">{{gamesSuccesses}} P0 isolations</p></li>
-                <li><img class="statsIcon" src="assets/icons/quarantineCreated.png">
+                <li><img class="statsIcon" src="/assets/icons/quarantineCreated.png">
                     <p class="statsDesc">{{quarantinesCompleted}} quarantine zones completed</p></li>
-                <li><img class="statsIcon" src="assets/icons/barricadeBuilt.png">
+                <li><img class="statsIcon" src="/assets/icons/barricadeBuilt.png">
                     <p class="statsDesc">{{barricadesBuilt}} barricades built</p></li>
-                <li><img class="statsIcon" src="assets/icons/respondentInjured.png">
+                <li><img class="statsIcon" src="/assets/icons/respondentInjured.png">
                     <p class="statsDesc">{{respondersTrapped}} respondents trapped</p></li>
-                <li><img class="statsIcon" src="assets/icons/respondentInjured.png">
+                <li><img class="statsIcon" src="/assets/icons/respondentInjured.png">
                     <p class="statsDesc">{{respondersReleased}} respondents released</p></li>
-                <li><img class="statsIcon" src="assets/icons/respondentInjured.png">
+                <li><img class="statsIcon" src="/assets/icons/respondentInjured.png">
                     <p class="statsDesc">{{timesInjured}} times injured by P0</p></li>
             </ul>
         </div>
