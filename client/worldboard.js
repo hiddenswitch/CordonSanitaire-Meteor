@@ -294,42 +294,27 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         });
 
         // Update visible patient zero status
-        if (isPZeroContained) {
-            Session.set("patient zero isolated", true);
-            Session.set("patient zero contained", false);
-            Session.set("patient zero loose", false);
-        }
-        else {
-            Session.set("patient zero isolated", false);
-            Session.set("patient zero contained", false);
-            Session.set("patient zero loose", true);
+        // Only update if the status has changed
+        // TODO: May have issues with multiple people update at once
+        if (isPZeroContained){
+            if (patientZeroStatus===SanitairePatientZero.statuses.LOOSE){// check if status has changed
+                patientZeroStatus = SanitairePatientZero.statuses.ISOLATED;
+                Session.set("patient zero isolated", true);
+                Session.set("patient zero contained", false);
+                Session.set("patient zero loose", false);
+                Meteor.call("updatePatientZeroStatus", gameId, "isolated");
+            }
+        } else {
+            if (patientZeroStatus===SanitairePatientZero.statuses.ISOLATED){
+                patientZeroStatus = SanitairePatientZero.statuses.LOOSE;
+                Session.set("patient zero isolated", false);
+                Session.set("patient zero contained", false);
+                Session.set("patient zero loose", true);
+                Meteor.call("updatePatientZeroStatus", gameId, "loose");
+            }
         }
     };
 
-//<<<<<<< HEAD
-    // Update visible patient zero status
-    // Only update if the status has changed
-    // TODO: May have issues with multiple people update at once
-   if (isPZeroContained){
-        if (patientZeroStatus==="loose"){// check if status has changed
-            patientZeroStatus = "isolated";
-            Session.set("patient zero isolated", true);
-            Session.set("patient zero contained", false);
-            Session.set("patient zero loose", false);
-            Meteor.call("updatePatientZeroStatus", gameId, "isolated");
-        }
-    } else {
-        if (patientZeroStatus==="isolated"){
-            patientZeroStatus = "loose";
-            Session.set("patient zero isolated", false);
-            Session.set("patient zero contained", false);
-            Session.set("patient zero loose", true);
-            Meteor.call("updatePatientZeroStatus", gameId, "loose");
-        }
-    }
-
-//=======
-//>>>>>>> a3aeedee43dc29341d2888c60ea4498f7c9b2379
     return barriers;
 };
 
@@ -770,6 +755,8 @@ Template.worldBoard.onRendered(function () {
             //var game = Games.findOne(gameId, {reactive: false});
             //var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
 
+
+
             initializeMeteor();
         }
 
@@ -821,6 +808,12 @@ Template.worldBoard.onRendered(function () {
         function update() {
             // Do patient zero
             var game = Games.findOne(gameId, {reactive: false});
+
+            // pause updates after game has ended
+            if(game.state === "ended"){
+                phaserGame.gamePaused();
+            }
+
             // Todo: temporary solution for end of game
             if (game) {
                 var path = game.patientZero.path;
