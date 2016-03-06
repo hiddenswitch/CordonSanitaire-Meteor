@@ -302,7 +302,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                 Session.set("patient zero isolated", true);
                 Session.set("patient zero contained", false);
                 Session.set("patient zero loose", false);
-                Meteor.call("updatePatientZeroStatus", gameId, "isolated");
+                Meteor.call("updatePatientZeroStatus", gameId, SanitairePatientZero.statuses.ISOLATED);
             }
         } else {
             if (patientZeroStatus===SanitairePatientZero.statuses.ISOLATED){
@@ -310,7 +310,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                 Session.set("patient zero isolated", false);
                 Session.set("patient zero contained", false);
                 Session.set("patient zero loose", true);
-                Meteor.call("updatePatientZeroStatus", gameId, "loose");
+                Meteor.call("updatePatientZeroStatus", gameId, SanitairePatientZero.statuses.LOOSE);
             }
         }
     };
@@ -589,7 +589,7 @@ Template.worldBoard.onRendered(function () {
         // This is a list of timers that are used to schedule when the barricade state transition occurs
         var barricadeTimers = [];
         var patientZeroSprite = null;
-        var patientZeroStatus = "loose";
+        var patientZeroStatus = SanitairePatientZero.statuses.LOOSE;
 
         // KEYS FOR TESTING FEATURES
         var key1, key2, key3, key4;
