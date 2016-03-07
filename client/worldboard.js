@@ -18,10 +18,10 @@ var updateRoadTiles = function (map, roadId, mapInfo, tileState) {
             tileColor = SanitaireMaps.streetColorTile.NONE;
             break;
         case GraphAnalysis.roadStatus.CLOSED_EMPTY:
-            tileColor = SanitaireMaps.streetColorTile.NONE;
+            tileColor = SanitaireMaps.streetColorTile.EMPTY;
             break;
         case GraphAnalysis.roadStatus.CLOSED_RESPONDERS:
-            tileColor = SanitaireMaps.streetColorTile.NONE;
+            tileColor = SanitaireMaps.streetColorTile.RESPONDERS;
             break;
         case GraphAnalysis.roadStatus.CLOSED_CONTAINED:
             tileColor = SanitaireMaps.streetColorTile.CONTAINED;
@@ -327,6 +327,11 @@ var updatePatientZero = function (gameId, patientZeroSprite, phaserGame, patient
         patientZeroSprite = phaserGame.add.sprite(patientZeroCurrentLocation.x * 16, patientZeroCurrentLocation.y * 16, 'patientZero', 1);
         phaserGame.physics.enable(patientZeroSprite, Phaser.Physics.ARCADE);
         patientZeroSprite.body.setSize(10, 14, 2, 1);
+
+        // add a highlight for pzero
+        patientZeroSprite.highlight = phaserGame.add.sprite(patientZeroCurrentLocation.x * 16, patientZeroCurrentLocation.y * 16, 'highlight_pzero_rings', 1);
+        patientZeroSprite.highlight.animations.add('sick', [0, 1, 2, 3, 4], 5, true);
+        patientZeroSprite.highlight.play('sick');
     }
 
     var speed = game.patientZero.speed;
@@ -353,6 +358,9 @@ var updatePatientZeroPosition = function (patientZeroSprite, tilePosition) {
     if (!tilePosition) return;
     patientZeroSprite.position.x = tilePosition.x * 16;
     patientZeroSprite.position.y = tilePosition.y * 16;
+    var offset = (patientZeroSprite.highlight.width - patientZeroSprite.width) / 2;
+    patientZeroSprite.highlight.position.x = patientZeroSprite.position.x - offset;
+    patientZeroSprite.highlight.position.y = patientZeroSprite.position.y - offset;
 };
 
 /**
@@ -404,9 +412,9 @@ var addBuildProgressBar = function (intersectionId, x, y, phaserGame, buildProgr
     x += 8;
 
     var properties = {
-        height: 3,
-        width: 20,
-        padding: 1
+        height: 8,
+        width: 40,
+        padding: 2
     };
 
     var bmd = phaserGame.add.bitmapData(properties.width, properties.height);
@@ -647,7 +655,9 @@ Template.worldBoard.onRendered(function () {
             phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map.png');
             phaserGame.load.image('barricade_horiz', '/assets/sprites/barricade_horiz.png');
             phaserGame.load.spritesheet('player', '/assets/sprites/cdc_man.png', 16, 16);
+            phaserGame.load.spritesheet('highlight_local_player', '/assets/sprites/highlight_local_rings_64x64x8.png', 64, 64);
             phaserGame.load.spritesheet('patientZero', '/assets/sprites/patient_zero_0.png', 16, 16);
+            phaserGame.load.spritesheet('highlight_pzero_rings', '/assets/sprites/highlight_pzero_rings_64x64x5.png', 64, 64);
             phaserGame.load.spritesheet('button', '/assets/buttons/button_sprite_sheet.png', 193, 71);
             phaserGame.stage.disableVisibilityChange = true;
         }
@@ -656,6 +666,7 @@ Template.worldBoard.onRendered(function () {
         var layer;
         var cursors;
         var localPlayerSprite;
+        var localPlayerHighlight;
         var player_direction;
         var button;
 
@@ -688,10 +699,28 @@ Template.worldBoard.onRendered(function () {
             map.addTilesetImage('tiles');
 
             //  Create our layer
-            layer = map.createLayer(0);
+            // Size it to the map if need be for the camera
+            layer = map.createLayer(0, map.width * map.tileWidth, map.height * map.tileHeight);
 
             //  Resize the world
             layer.resizeWorld();
+
+            // Scale the screen to fit
+
+            if(Sanitaire.DEFAULT_ZOOM === "SHOW_FULL_MAP") {
+                Session.set("is game zoomed out", true);
+                var ratioX = phaserGame.camera.view.width / phaserGame.world.bounds.width;
+                var ratioY = phaserGame.world.camera.view.height / phaserGame.world.bounds.height;
+                var ratio = Math.min(ratioX, ratioY);
+                console.log("ratios: ", ratioX, ratioY, ratio);
+                phaserGame.world.scale.x = ratio;
+                phaserGame.world.scale.y = ratio;
+            }
+            else {
+                Session.set("is game zoomed out", false);
+                phaserGame.world.scale.x = Sanitaire.DEFAULT_ZOOM;
+                phaserGame.world.scale.y = Sanitaire.DEFAULT_ZOOM;
+            }
 
             // Create a group to add player sprites to
             playerGroup = phaserGame.add.group();
@@ -894,13 +923,20 @@ Template.worldBoard.onRendered(function () {
                         if ((currentTime - localPlayerState.health.timeWhenTouchedByPatientZero) < Sanitaire.STUN_DURATION_SECONDS * 1000) {
                             if (justTouched) {
                                 stunPlayer(gameId, sprite);
+                                localPlayerHighlight.tint = 0xFF0000;
                             }
                             isPlayerInjured = true;
                         } else {
                             unstunPlayer(sprite, localPlayerState);
                             isPlayerInjured = false;
+                            localPlayerHighlight.tint = 0xFFFFFF;
                         }
                     }
+
+                    // keep our highlight moving with us
+                    var offset = (localPlayerHighlight.width - sprite.width) / 2;
+                    localPlayerHighlight.position.x = sprite.position.x - offset;
+                    localPlayerHighlight.position.y = sprite.position.y - offset;
                 }
 
                 // TODO: Update position on collide.
@@ -946,7 +982,7 @@ Template.worldBoard.onRendered(function () {
                 currentTile = {x: Math.floor((body.position.x) / 16), y: Math.floor((body.position.y + 8) / 16)};
                 nextTile = map.getTile(currentTile.x + 1, currentTile.y, 0);
             } else if (body.velocity.x < 0) {  // left
-                currentTile = {x: Math.floor((body.position.x + 16) / 16), y: Math.floor((body.position.y + 8) / 16)};
+                currentTile = {x: Math.floor((body.position.x + 8) / 16), y: Math.floor((body.position.y + 8) / 16)};
                 nextTile = map.getTile(currentTile.x - 1, currentTile.y, 0);
             } else if (body.velocity.y > 0) {  // down
                 currentTile = {x: Math.floor((body.position.x + 8) / 16), y: Math.floor((body.position.y) / 16)};
@@ -1389,8 +1425,17 @@ Template.worldBoard.onRendered(function () {
 
             player.body.setSize(10, 14, 2, 1);
 
+            //
             if (options.isLocalPlayer) {
-                phaserGame.camera.follow(player);
+                // add a highlight for the local player
+                localPlayerHighlight = phaserGame.add.sprite(options.location.x, options.location.y, 'highlight_local_player', 1);
+                localPlayerHighlight.animations.add('beacon', [0, 1, 2, 3, 4, 5, 6, 7], 5, true);
+                localPlayerHighlight.play('beacon');
+
+                if(Sanitaire.DEFAULT_ZOOM != "SHOW_FULL_MAP") {
+                    // follow the player if our camera isn't showing the full map
+                    phaserGame.camera.follow(player);
+                }
             }
 
             player.playerId = playerId;
