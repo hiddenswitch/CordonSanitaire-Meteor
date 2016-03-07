@@ -137,8 +137,19 @@ Meteor.methods({
      * @param gameId {Number}
      * @param patientZeroStatus {String}
      */
-    updatePatientZeroStatus: function(gameId, patientZeroStatus){
-        return Sanitaire.updatePatientZeroStatus(gameId, patientZeroStatus);
+    updateGameStatsPatientZeroStatus: function(gameId, patientZeroStatus){
+        return Sanitaire.updateGameStatsPatientZeroStatus(gameId, patientZeroStatus);
+    },
+
+    /**
+     * Adds a log for every time a player is injured
+     * @param playerId {String} the player who is injured
+     * @param injuredTime {Number} the time when they were injured
+     * @returns {boolean}
+     */
+    updatePlayerTouchedByPatientZero: function(playerId, injuredTime){
+        return Sanitaire.updatePlayerTouchedByPatientZero(playerId, injuredTime);
     }
+
 
 });
