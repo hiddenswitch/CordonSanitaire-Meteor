@@ -204,6 +204,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                         }, TimeSync.serverTime(new Date()));
                         // hide the display of progress
                         hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
+                        hideButtons();
                         recalculatePatientZero();
                     }
                     else {
@@ -228,6 +229,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                         }, TimeSync.serverTime(new Date()));
                         // hide the display of progress
                         hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
+                        hideButtons();
                         recalculatePatientZero();
                     }
                     else {
@@ -1360,6 +1362,10 @@ Template.worldBoard.onRendered(function () {
 
             // hide buttons
             //hideButtons();
+            Session.set("showing build button", true);
+            Session.set("showing destroy button", false);
+            Session.set("showing build and destroy buttons", false);
+
 
             if (_.isUndefined(lastPromptTile)) {
                 return;
@@ -1380,6 +1386,9 @@ Template.worldBoard.onRendered(function () {
         demolishBarricade = function () {
             // hide buttons
             //hideButtons();
+            Session.set("showing build button", false);
+            Session.set("showing destroy button", true);
+            Session.set("showing build and destroy buttons", false);
 
             if (_.isUndefined(lastPromptTile)) {
                 return;
