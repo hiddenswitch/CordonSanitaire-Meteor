@@ -302,7 +302,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                 Session.set("patient zero isolated", true);
                 Session.set("patient zero contained", false);
                 Session.set("patient zero loose", false);
-                Meteor.call("updatePatientZeroStatus", gameId, patientZeroStatus);
+                Meteor.call("updateGameStatsPatientZeroStatus", gameId, patientZeroStatus);
             }
         } else {
             if (patientZeroStatus===SanitairePatientZero.statuses.ISOLATED){
@@ -310,7 +310,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                 Session.set("patient zero isolated", false);
                 Session.set("patient zero contained", false);
                 Session.set("patient zero loose", true);
-                Meteor.call("updatePatientZeroStatus", gameId, patientZeroStatus);
+                Meteor.call("updateGameStatsPatientZeroStatus", gameId, patientZeroStatus);
             }
         }
     };
@@ -929,6 +929,7 @@ Template.worldBoard.onRendered(function () {
                         if ((currentTime - localPlayerState.health.timeWhenTouchedByPatientZero) < Sanitaire.STUN_DURATION_SECONDS * 1000) {
                             if (justTouched) {
                                 stunPlayer(gameId, sprite);
+                                Meteor.call("updatePlayerTouchedByPatientZero", localPlayerId, currentTime);
                             }
                             isPlayerInjured = true;
                         } else {
