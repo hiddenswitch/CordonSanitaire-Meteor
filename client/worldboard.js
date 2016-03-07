@@ -1043,7 +1043,7 @@ Template.worldBoard.onRendered(function () {
                 currentTile = {x: Math.floor((body.position.x) / 16), y: Math.floor((body.position.y + 8) / 16)};
                 nextTile = map.getTile(currentTile.x + 1, currentTile.y, 0);
             } else if (body.velocity.x < 0) {  // left
-                currentTile = {x: Math.floor((body.position.x + 16) / 16), y: Math.floor((body.position.y + 8) / 16)};
+                currentTile = {x: Math.floor((body.position.x + 8) / 16), y: Math.floor((body.position.y + 8) / 16)};
                 nextTile = map.getTile(currentTile.x - 1, currentTile.y, 0);
             } else if (body.velocity.y > 0) {  // down
                 currentTile = {x: Math.floor((body.position.x + 8) / 16), y: Math.floor((body.position.y) / 16)};
