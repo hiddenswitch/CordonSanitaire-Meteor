@@ -715,7 +715,7 @@ Template.worldBoard.onRendered(function () {
             var filename = Sanitaire.DEFAULT_MAP;
             var mapPath = "/assets/tilemaps/csv/" + filename;
             phaserGame.load.tilemap('map', mapPath, null, Phaser.Tilemap.CSV);
-            phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map.png');
+            phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map_bright.png');
             phaserGame.load.image('barricade_horiz', '/assets/sprites/barricade_horiz.png');
             phaserGame.load.spritesheet('player', '/assets/sprites/cdc_man.png', 16, 16);
             phaserGame.load.spritesheet('highlight_local_player', '/assets/sprites/highlight_local_rings_64x64x8.png', 64, 64);
@@ -742,7 +742,7 @@ Template.worldBoard.onRendered(function () {
             phaserGame.scale.pageAlignHorizontally = true;
             phaserGame.scale.pageAlignVertically = true;
             phaserGame.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-            phaserGame.stage.smoothed = false;
+            //phaserGame.stage.smoothed = false;
             // game.scale.setScreenSize(true);
 
             // nearest neighbor pixel rendering
