@@ -565,7 +565,7 @@ Template.worldBoard.onRendered(function () {
         var localPlayerSprite = Players.findOne(localPlayerId);
         var localPlayerState = {
             construction: {
-                isBuilding: false,
+                state: Sanitaire.barricadeActions.NONE,
                 intersectionId: -1
             },
             health: {
