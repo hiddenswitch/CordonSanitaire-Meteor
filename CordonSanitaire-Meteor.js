@@ -151,7 +151,8 @@ if (Meteor.isClient) {
             return game.gameStats.numberOfBarricadesBuilt;
         },
         numInjured: function () {
-            return -1;
+            var game = Games.findOne(this.gameId);
+            return game.gameStats.numberOfPlayersInjured;
         }
     });
 
