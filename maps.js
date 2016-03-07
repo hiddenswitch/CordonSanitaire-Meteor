@@ -130,7 +130,7 @@ SanitaireMaps.getIntersectionIdForTilePosition = function (x, y, mapInfo) {
     x = Math.floor(x);//x|0;
     y = Math.floor(y);//y|0;
     var key = "(" + x + "," + y + ")";
-    if(mapInfo.mapTiles[key].intersectionId) {
+    if(mapInfo.mapTiles[key].intersectionId >= 0) {
         return mapInfo.mapTiles[key].intersectionId;
     }
     return null;
