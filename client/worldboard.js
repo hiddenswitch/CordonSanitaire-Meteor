@@ -302,7 +302,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                 Session.set("patient zero isolated", true);
                 Session.set("patient zero contained", false);
                 Session.set("patient zero loose", false);
-                Meteor.call("updatePatientZeroStatus", gameId, SanitairePatientZero.statuses.ISOLATED);
+                Meteor.call("updatePatientZeroStatus", gameId, patientZeroStatus);
             }
         } else {
             if (patientZeroStatus===SanitairePatientZero.statuses.ISOLATED){
@@ -310,7 +310,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                 Session.set("patient zero isolated", false);
                 Session.set("patient zero contained", false);
                 Session.set("patient zero loose", true);
-                Meteor.call("updatePatientZeroStatus", gameId, SanitairePatientZero.statuses.LOOSE);
+                Meteor.call("updatePatientZeroStatus", gameId, patientZeroStatus);
             }
         }
     };
@@ -813,6 +813,22 @@ Template.worldBoard.onRendered(function () {
             if(game.state === "ended"){
                 phaserGame.gamePaused();
             }
+
+            // Initializing patient zero status session variables
+            if (!Session.get("patient zero isolated")){
+                Session.set("patient zero isolated", false);
+            }
+
+            if (!Session.get("patient zero contained")){
+                Session.set("patient zero contained", false);
+            }
+
+            if (!Session.get("patient zero loose")){
+                Session.set("patient zero loose", true);
+            }
+
+
+
 
             // Todo: temporary solution for end of game
             if (game) {
