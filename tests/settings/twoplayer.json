@@ -6,7 +6,7 @@
     "demolishTimeSeconds": 3,
     "buildTimeSeconds": 6,
     "stunTimeSeconds": 3,
-    "map":"Simple_60_80.csv",
+    "map":"Simple_56_60.csv",
     "uniqueness":true,
     "zoom": "SHOW_FULL_MAP"
   }
