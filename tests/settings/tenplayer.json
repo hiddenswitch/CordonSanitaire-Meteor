@@ -1,12 +1,12 @@
 {
   "public": {
-    "maxPlayers": 8,
-    "durationSeconds": 180,
+    "maxPlayers": 10,
+    "durationSeconds": 60,
     "countdownSeconds": 9,
     "demolishTimeSeconds": 3,
-    "buildTimeSeconds": 8,
-    "stunTimeSeconds": 3,
-    "map":"Simple_60_80.csv",
+    "buildTimeSeconds": 6,
+    "stunTimeSeconds": 60,
+    "map":"Simple_56_60.csv",
     "uniqueness":true,
     "zoom": "SHOW_FULL_MAP"
   }
