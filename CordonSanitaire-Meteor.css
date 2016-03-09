@@ -184,7 +184,7 @@ start of game */
 }
 
 #distance-container {
-    /*visibility: hidden;*/
+    visibility: hidden;
     background: rgba(0,0,0,1);
     color: white;
     border-radius: 5px;
@@ -194,6 +194,7 @@ start of game */
 }
 
 #compass {
+    visibility: hidden;
     position: fixed;
     top: 70px;
     left: 20px;
