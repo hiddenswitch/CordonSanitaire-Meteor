@@ -1093,13 +1093,13 @@ Template.worldBoard.onRendered(function () {
 
             // if the barricade record exists
             if (!!barricade) {
-                if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
-                    || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
-                    || barricade.state === Sanitaire.barricadeStates.BUILT) {
+                if (barricade.state === Sanitaire.barricadeStates.BUILT) {
                     //console.log("X: no need to prompt, this should handled from a crosswalk");
                     return;
                 }
-                else if (barricade.state === Sanitaire.barricadeStates.EMPTY
+                else if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
+                    || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
+                    || barricade.state === Sanitaire.barricadeStates.EMPTY
                     || barricade.state === Sanitaire.barricadeStates.NONE) {
                     //console.log("X: we should have the option to build at intersection ", intersectionId);
 
@@ -1204,9 +1204,7 @@ Template.worldBoard.onRendered(function () {
 
             // if the barricade is built then offer demolish
             if (!!barricade) {
-                if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
-                    || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
-                    || barricade.state === Sanitaire.barricadeStates.BUILT) {
+                if (barricade.state === Sanitaire.barricadeStates.BUILT) {
                     //console.log("CW: prompting from crosswalk at intersection ", intersectionId, " with barricade: ", barricade);
 
                     if (TimeSync.serverTime(new Date()) < barricade.time
@@ -1224,7 +1222,9 @@ Template.worldBoard.onRendered(function () {
                     movesSincePrompt = 0;
                     lastIntersectionId = intersectionId;
                 }
-                else if (barricade.state === Sanitaire.barricadeStates.EMPTY
+                else if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
+                    || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
+                    || barricade.state === Sanitaire.barricadeStates.EMPTY
                     || barricade.state === Sanitaire.barricadeStates.NONE) {
                     //console.log("CW: no need to prompt. Intersection ", intersectionId, " is empty.");
                     return;
