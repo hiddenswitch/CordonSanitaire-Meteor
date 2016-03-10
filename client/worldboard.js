@@ -407,41 +407,21 @@ var updateDisplayForPatientZeroTracker = function (distance, angle) {
  * @param game {Phaser.Game} the game to add the bars to
  * @param [startWidth=0] {Number}
  */
-var addBuildProgressBar = function (intersectionId, x, y, phaserGame, buildProgressBars, startWidth) {
-    // move the bar to the top middle of the square
-    x += 8;
+var addBuildProgressBar = function (intersectionId, x, y, phaserGame, buildProgressBars, currentValue) {
+    // move the text to the top right of the square
+    x += 16;
 
-    var properties = {
-        height: 8,
-        width: 40,
-        padding: 2
-    };
-
-    var bmd = phaserGame.add.bitmapData(properties.width, properties.height);
-    bmd.ctx.beginPath();
-    bmd.ctx.rect(0, 0, properties.width, properties.height);
-    bmd.ctx.fillStyle = '#1E1E22';
-    bmd.ctx.fill();
-
-    var background = phaserGame.add.sprite(x, y, bmd);
-    background.anchor.set(0.5);
-
-    bmd = phaserGame.add.bitmapData(properties.width / 4 - properties.padding * 2, properties.height - properties.padding * 2);
-    bmd.ctx.beginPath();
-    bmd.ctx.rect(0, 0, properties.width, properties.height);
-    bmd.ctx.fillStyle = '#F2E266';
-    bmd.ctx.fill();
-
-    var foreground = phaserGame.add.sprite(x - background.width / 2, y, bmd);
-    foreground.anchor.y = 0.5;
-    foreground.width = startWidth * background.width;
+    var percentComplete = Math.round(currentValue * 100);
+    var text = phaserGame.add.text(x, y, percentComplete,  { font: "Bold 36px Arial", fill: '#FFFFFF', backgroundColor: '#1E1E22' })
+    text.anchor.x = 0.0;
+    text.anchor.y = 1.0;
+    text.textValue = percentComplete;
 
     buildProgressBars[intersectionId] = {
         x: x,
         y: y,
         intersectionId: intersectionId,
-        background: background,
-        foreground: foreground,
+        text: text,
         tween: null
     };
 };
@@ -453,8 +433,7 @@ var addBuildProgressBar = function (intersectionId, x, y, phaserGame, buildProgr
  */
 var showBuildProgressBar = function (buildProgressBars, intersectionId) {
     // make build progress visible
-    buildProgressBars[intersectionId].background.visible = true;
-    buildProgressBars[intersectionId].foreground.visible = true;
+    buildProgressBars[intersectionId].text.visible = true;
 };
 
 /**
@@ -464,8 +443,7 @@ var showBuildProgressBar = function (buildProgressBars, intersectionId) {
  */
 var hideBuildProgressBar = function (buildProgressBars, intersectionId) {
     // make build progress invisible
-    buildProgressBars[intersectionId].background.visible = false;
-    buildProgressBars[intersectionId].foreground.visible = false;
+    buildProgressBars[intersectionId].text.visible = false;
 };
 
 /**
@@ -486,9 +464,6 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
         addBuildProgressBar(intersectionId, innerTile.x * 16, innerTile.y * 16, phaserGame, buildProgressBars);
     }
 
-    // update the foreground of the build progress bar to show construction
-    var width = buildProgressBars[intersectionId].background.width;
-
     // Stop the tween if it already exists
     if (!!buildProgressBars[intersectionId].tween) {
         buildProgressBars[intersectionId].tween.stop();
@@ -497,22 +472,28 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
 
 
     if (!_.isNull(from)) {
-        buildProgressBars[intersectionId].foreground.width = from * width;
+        buildProgressBars[intersectionId].text.textValue = from * 100;
     }
 
     if (!_.isNull(to)) {
         // to(properties, duration, ease, autoStart, delay, repeat, yoyo)
         var diff = time - TimeSync.serverTime(new Date());
-        var properties = {width: width * to};
+        var properties = {textValue: 100 * to};
         var duration = Math.max(0.1, diff);
         var ease = Phaser.Easing.Linear.None;
         var autoStart = true;
-        buildProgressBars[intersectionId].tween = phaserGame.add.tween(buildProgressBars[intersectionId].foreground).to(
+        buildProgressBars[intersectionId].tween = phaserGame.add.tween(buildProgressBars[intersectionId].text).to(
             properties,
             duration,
             ease,
             autoStart
         );
+        buildProgressBars[intersectionId].tween.onUpdateCallback(updateBuildProgressText);
+
+        function updateBuildProgressText(tween) {
+            var roundValue = Math.floor(tween.target.textValue);
+            tween.target.setText(roundValue);
+        }
     }
 };
 
