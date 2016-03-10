@@ -7,7 +7,7 @@ SanitaireMaps = (Meteor.isClient ? window : global).Maps || {};
  * Tiles for p-zero pathing and legal moves by players
  * @type {number[]}
  */
-SanitaireMaps.PATHABLE_TILES = [8, 9, 10, 11, 12, 15, 33, 37, 38, 39];
+SanitaireMaps.PATHABLE_TILES = [8, 9, 10, 11, 12, 15, 17, 18, 33, 37, 38, 39];
 
 SanitaireMaps.CROSSWALK_TILES = [8, 9, 10, 11];
 
