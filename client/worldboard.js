@@ -812,6 +812,11 @@ Template.worldBoard.onRendered(function () {
                 updatePatientZeroPosition(patientZeroSprite, patientZeroPosition);
             }
 
+            // pause updates after game has ended
+            if(game.state === "ended"){
+                phaserGame.gamePaused();
+            }
+
             for (var playerId in playerSprites) {
                 var sprite = playerSprites[playerId];
 
