@@ -140,18 +140,26 @@ if (Meteor.isClient) {
             return -1;
         },
         pZeroStatus: function () {
-            var game = Games.findOne(this.gameId);
-            return game.gameStats.patientZeroStatus;
-        },
+            var game = Games.findOne(this.gameId, {reactive: false});
+            var status = game.gameStats.patientZeroStatus;
+            if (status === SanitairePatientZero.statuses.ISOLATED){
+                return "Isolated";
+            } else if(status === SanitairePatientZero.statuses.LOOSE){
+                return "Loose"
+            } else{
+                return "Unsure";
+            }
+         },
         numQuarantines: function () {
-            return -1;
+            var game = Games.findOne(this.gameId, {reactive: false});
+            return game.gameStats.numberOfQuarantines;
         },
         numBarricades: function () {
-            var game = Games.findOne(this.gameId);
+            var game = Games.findOne(this.gameId, {reactive: false});
             return game.gameStats.numberOfBarricadesBuilt;
         },
         numInjured: function () {
-            var game = Games.findOne(this.gameId);
+            var game = Games.findOne(this.gameId, {reactive: false});
             return game.gameStats.numberOfPlayersInjured;
         }
     });
