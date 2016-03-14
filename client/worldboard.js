@@ -287,8 +287,10 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         var patientZeroRoadId = SanitaireMaps.getRoadIdForTilePosition(patientZeroCurrentLocation.x, patientZeroCurrentLocation.y, currentMapInfo); // TODO: get actual road id from this game!!!!!!!
         var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
         var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
+        var numQuarantines = GraphAnalysis.getNumberOfQuarantinesCreated(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
+        //console.log("num quarantines "+numQuarantines);
         // color streets according to their state
-        var roadStatuses = GraphAnalysis.getRoadStatus(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
+        var roadStatuses = GraphAnalysis.getRoadStatuses(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
         _.each(roadStatuses, function (roadStatus, roadId) {
             updateRoadTiles(map, roadId, mapInfo, roadStatus);
         });
@@ -313,6 +315,9 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                 Meteor.call("updateGameStatsPatientZeroStatus", gameId, patientZeroStatus);
             }
         }
+
+        // Update Game Document about change in road components
+        Meteor.call("updateNumberOfQuarantines", gameId, numQuarantines);
     };
 
     return barriers;
