@@ -150,7 +150,11 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
             && !_.isUndefined(barricade.progressTime)) {
             // Compute from with time data
             var serverNow = TimeSync.serverTime(new Date());
-            from = inverseLerp(barricade.progressTime, barricade.time, serverNow, true);
+            if (barricade.time != Infinity) {
+                from = inverseLerp(barricade.progressTime, barricade.time, serverNow, true);
+            } else {
+                from = barricade.progress;
+            }
         }
         var to = barricade.time == Infinity ? null : (barricade.nextState === Sanitaire.barricadeStates.BUILT ? 1 : 0);
         updateBuildProgressBar(barricade.intersectionId, from, to, barricade.time, buildProgressBars, phaserGame, mapInfo);
@@ -170,17 +174,12 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                 var game = Games.findOne(gameId);
 
                 // get latest log entry from local user
-                var myLastBarriersLogEntry = _.find(_.sortBy(game.barriersLog, function (logEntry) {
-                        return -logEntry.time;
-                    }),
-                    function (logEntry) {
-                        return logEntry.playerId === Router.current().data().playerId;
-                    }
-                );
+                var player = Players.findOne({gameId: gameId, userId: Meteor.userId()});
+                var myLastBarriersLogEntry = player.lastBarriersLogEntry;
 
                 var isLocalPlayerAtBarricade = false;
 
-                if(myLastBarriersLogEntry) {
+                if (myLastBarriersLogEntry) {
                     if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD || myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
                         if (myLastBarriersLogEntry.intersectionId == barricade.intersectionId) {  // careful, string compared w/ number
                             isLocalPlayerAtBarricade = true;
@@ -412,7 +411,11 @@ var addBuildProgressBar = function (intersectionId, x, y, phaserGame, buildProgr
     x += 16;
 
     var percentComplete = Math.round(currentValue * 100);
-    var text = phaserGame.add.text(x, y, percentComplete,  { font: "Bold 36px Arial", fill: '#FFFFFF', backgroundColor: '#1E1E22' })
+    var text = phaserGame.add.text(x, y, percentComplete, {
+        font: "Bold 36px Arial",
+        fill: '#FFFFFF',
+        backgroundColor: '#1E1E22'
+    })
     text.anchor.x = 0.0;
     text.anchor.y = 1.0;
     text.textValue = percentComplete;
@@ -689,7 +692,7 @@ Template.worldBoard.onRendered(function () {
 
             // Scale the screen to fit
 
-            if(Sanitaire.DEFAULT_ZOOM === "SHOW_FULL_MAP") {
+            if (Sanitaire.DEFAULT_ZOOM === "SHOW_FULL_MAP") {
                 Session.set("is game zoomed out", true);
                 var ratioX = phaserGame.camera.view.width / phaserGame.world.bounds.width;
                 var ratioY = phaserGame.world.camera.view.height / phaserGame.world.bounds.height;
@@ -1032,26 +1035,22 @@ Template.worldBoard.onRendered(function () {
                     break;
             }
 
-            Meteor.call('updatePositionAndVelocity', Router.current().data().gameId, position, velocity, TimeSync.serverTime(new Date()));
+            var gameId = Router.current().data().gameId;
+            Meteor.call('updatePositionAndVelocity', gameId, position, velocity, TimeSync.serverTime(new Date()));
 
             // if we are in the middls of building send a message that we stopped building
-            var game = Games.findOne(Router.current().data().gameId);
+            var game = Games.findOne(gameId);
+            var player = Players.findOne({gameId: gameId, userId: Meteor.userId()});
             // get latest log entry from local user
-            var myLastBarriersLogEntry = _.find(_.sortBy(game.barriersLog, function (logEntry) {
-                    return -logEntry.time;
-                }),
-                function (logEntry) {
-                    return logEntry.playerId === localPlayerId;
-                }
-            );
+            var myLastBarriersLogEntry = player.lastBarriersLogEntry;
 
             // if log entry exists and is of type start build or demolish, then send a message to stop
             if (myLastBarriersLogEntry) {
                 if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD) {
-                    Meteor.call('stopConstruction', Router.current().data().gameId, myLastBarriersLogEntry.intersectionId);
+                    Meteor.call('stopConstruction', gameId, myLastBarriersLogEntry.intersectionId);
                 }
                 else if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
-                    Meteor.call('stopDeconstruction', Router.current().data().gameId, myLastBarriersLogEntry.intersectionId);
+                    Meteor.call('stopDeconstruction', gameId, myLastBarriersLogEntry.intersectionId);
                 }
             }
         }
@@ -1414,7 +1413,7 @@ Template.worldBoard.onRendered(function () {
                 localPlayerHighlight.animations.add('beacon', [0, 1, 2, 3, 4, 5, 6, 7], 5, true);
                 localPlayerHighlight.play('beacon');
 
-                if(Sanitaire.DEFAULT_ZOOM != "SHOW_FULL_MAP") {
+                if (Sanitaire.DEFAULT_ZOOM != "SHOW_FULL_MAP") {
                     // follow the player if our camera isn't showing the full map
                     phaserGame.camera.follow(player);
                 }
