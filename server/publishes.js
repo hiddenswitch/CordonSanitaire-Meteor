@@ -19,7 +19,9 @@ Meteor.publish('game', function (gameId) {
     }
 
     return [
-        Games.find({_id: gameId}),
+        Games.find({_id: gameId}, {fields: {
+            barriersLog: 0
+        }}),
         Players.find({gameId: gameId})
     ]
 });
