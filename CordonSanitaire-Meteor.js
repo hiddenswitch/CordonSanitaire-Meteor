@@ -2,6 +2,13 @@
 
 
 if (Meteor.isClient) {
+
+    // Prevent scroll
+    // Todo: allow player list to scroll in lobby view
+    document.addEventListener('touchmove', function (e) {
+        e.preventDefault();
+    });
+
     Template.signup.helpers({});
 
     Template.signup.events({
@@ -106,6 +113,10 @@ if (Meteor.isClient) {
                 return Session.get("patient zero loose");
             }
             return true;
+        },
+
+        isGameZoomedOut: function() {
+            return Session.get("is game zoomed out");
         },
 
         updatePatientZeroDirection: function(){

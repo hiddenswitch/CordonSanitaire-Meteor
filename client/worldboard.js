@@ -18,10 +18,10 @@ var updateRoadTiles = function (map, roadId, mapInfo, tileState) {
             tileColor = SanitaireMaps.streetColorTile.NONE;
             break;
         case GraphAnalysis.roadStatus.CLOSED_EMPTY:
-            tileColor = SanitaireMaps.streetColorTile.NONE;
+            tileColor = SanitaireMaps.streetColorTile.EMPTY;
             break;
         case GraphAnalysis.roadStatus.CLOSED_RESPONDERS:
-            tileColor = SanitaireMaps.streetColorTile.NONE;
+            tileColor = SanitaireMaps.streetColorTile.RESPONDERS;
             break;
         case GraphAnalysis.roadStatus.CLOSED_CONTAINED:
             tileColor = SanitaireMaps.streetColorTile.CONTAINED;
@@ -342,6 +342,11 @@ var updatePatientZero = function (gameId, patientZeroSprite, phaserGame, patient
         patientZeroSprite = phaserGame.add.sprite(patientZeroCurrentLocation.x * 16, patientZeroCurrentLocation.y * 16, 'patientZero', 1);
         phaserGame.physics.enable(patientZeroSprite, Phaser.Physics.ARCADE);
         patientZeroSprite.body.setSize(10, 14, 2, 1);
+
+        // add a highlight for pzero
+        patientZeroSprite.highlight = phaserGame.add.sprite(patientZeroCurrentLocation.x * 16, patientZeroCurrentLocation.y * 16, 'highlight_pzero_rings', 1);
+        patientZeroSprite.highlight.animations.add('sick', [0, 1, 2, 3, 4], 5, true);
+        patientZeroSprite.highlight.play('sick');
     }
 
     var speed = game.patientZero.speed;
@@ -368,6 +373,9 @@ var updatePatientZeroPosition = function (patientZeroSprite, tilePosition) {
     if (!tilePosition) return;
     patientZeroSprite.position.x = tilePosition.x * 16;
     patientZeroSprite.position.y = tilePosition.y * 16;
+    var offset = (patientZeroSprite.highlight.width - patientZeroSprite.width) / 2;
+    patientZeroSprite.highlight.position.x = patientZeroSprite.position.x - offset;
+    patientZeroSprite.highlight.position.y = patientZeroSprite.position.y - offset;
 };
 
 /**
@@ -414,41 +422,21 @@ var updateDisplayForPatientZeroTracker = function (distance, angle) {
  * @param game {Phaser.Game} the game to add the bars to
  * @param [startWidth=0] {Number}
  */
-var addBuildProgressBar = function (intersectionId, x, y, phaserGame, buildProgressBars, startWidth) {
-    // move the bar to the top middle of the square
-    x += 8;
+var addBuildProgressBar = function (intersectionId, x, y, phaserGame, buildProgressBars, currentValue) {
+    // move the text to the top right of the square
+    x += 16;
 
-    var properties = {
-        height: 3,
-        width: 20,
-        padding: 1
-    };
-
-    var bmd = phaserGame.add.bitmapData(properties.width, properties.height);
-    bmd.ctx.beginPath();
-    bmd.ctx.rect(0, 0, properties.width, properties.height);
-    bmd.ctx.fillStyle = '#1E1E22';
-    bmd.ctx.fill();
-
-    var background = phaserGame.add.sprite(x, y, bmd);
-    background.anchor.set(0.5);
-
-    bmd = phaserGame.add.bitmapData(properties.width / 4 - properties.padding * 2, properties.height - properties.padding * 2);
-    bmd.ctx.beginPath();
-    bmd.ctx.rect(0, 0, properties.width, properties.height);
-    bmd.ctx.fillStyle = '#F2E266';
-    bmd.ctx.fill();
-
-    var foreground = phaserGame.add.sprite(x - background.width / 2, y, bmd);
-    foreground.anchor.y = 0.5;
-    foreground.width = startWidth * background.width;
+    var percentComplete = Math.round(currentValue * 100);
+    var text = phaserGame.add.text(x, y, percentComplete,  { font: "Bold 36px Arial", fill: '#FFFFFF', backgroundColor: '#1E1E22' })
+    text.anchor.x = 0.0;
+    text.anchor.y = 1.0;
+    text.textValue = percentComplete;
 
     buildProgressBars[intersectionId] = {
         x: x,
         y: y,
         intersectionId: intersectionId,
-        background: background,
-        foreground: foreground,
+        text: text,
         tween: null
     };
 };
@@ -460,8 +448,7 @@ var addBuildProgressBar = function (intersectionId, x, y, phaserGame, buildProgr
  */
 var showBuildProgressBar = function (buildProgressBars, intersectionId) {
     // make build progress visible
-    buildProgressBars[intersectionId].background.visible = true;
-    buildProgressBars[intersectionId].foreground.visible = true;
+    buildProgressBars[intersectionId].text.visible = true;
 };
 
 /**
@@ -471,8 +458,7 @@ var showBuildProgressBar = function (buildProgressBars, intersectionId) {
  */
 var hideBuildProgressBar = function (buildProgressBars, intersectionId) {
     // make build progress invisible
-    buildProgressBars[intersectionId].background.visible = false;
-    buildProgressBars[intersectionId].foreground.visible = false;
+    buildProgressBars[intersectionId].text.visible = false;
 };
 
 /**
@@ -493,9 +479,6 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
         addBuildProgressBar(intersectionId, innerTile.x * 16, innerTile.y * 16, phaserGame, buildProgressBars);
     }
 
-    // update the foreground of the build progress bar to show construction
-    var width = buildProgressBars[intersectionId].background.width;
-
     // Stop the tween if it already exists
     if (!!buildProgressBars[intersectionId].tween) {
         buildProgressBars[intersectionId].tween.stop();
@@ -504,22 +487,28 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
 
 
     if (!_.isNull(from)) {
-        buildProgressBars[intersectionId].foreground.width = from * width;
+        buildProgressBars[intersectionId].text.textValue = from * 100;
     }
 
     if (!_.isNull(to)) {
         // to(properties, duration, ease, autoStart, delay, repeat, yoyo)
         var diff = time - TimeSync.serverTime(new Date());
-        var properties = {width: width * to};
+        var properties = {textValue: 100 * to};
         var duration = Math.max(0.1, diff);
         var ease = Phaser.Easing.Linear.None;
         var autoStart = true;
-        buildProgressBars[intersectionId].tween = phaserGame.add.tween(buildProgressBars[intersectionId].foreground).to(
+        buildProgressBars[intersectionId].tween = phaserGame.add.tween(buildProgressBars[intersectionId].text).to(
             properties,
             duration,
             ease,
             autoStart
         );
+        buildProgressBars[intersectionId].tween.onUpdateCallback(updateBuildProgressText);
+
+        function updateBuildProgressText(tween) {
+            var roundValue = Math.floor(tween.target.textValue);
+            tween.target.setText(roundValue);
+        }
     }
 };
 
@@ -660,10 +649,12 @@ Template.worldBoard.onRendered(function () {
             var filename = Sanitaire.DEFAULT_MAP;
             var mapPath = "/assets/tilemaps/csv/" + filename;
             phaserGame.load.tilemap('map', mapPath, null, Phaser.Tilemap.CSV);
-            phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map.png');
+            phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map_simple.png');
             phaserGame.load.image('barricade_horiz', '/assets/sprites/barricade_horiz.png');
             phaserGame.load.spritesheet('player', '/assets/sprites/cdc_man.png', 16, 16);
+            phaserGame.load.spritesheet('highlight_local_player', '/assets/sprites/highlight_local_rings_64x64x8.png', 64, 64);
             phaserGame.load.spritesheet('patientZero', '/assets/sprites/patient_zero_0.png', 16, 16);
+            phaserGame.load.spritesheet('highlight_pzero_rings', '/assets/sprites/highlight_pzero_rings_64x64x5.png', 64, 64);
             phaserGame.load.spritesheet('button', '/assets/buttons/button_sprite_sheet.png', 193, 71);
             phaserGame.stage.disableVisibilityChange = true;
         }
@@ -672,6 +663,7 @@ Template.worldBoard.onRendered(function () {
         var layer;
         var cursors;
         var localPlayerSprite;
+        var localPlayerHighlight;
         var player_direction;
         var button;
 
@@ -684,7 +676,7 @@ Template.worldBoard.onRendered(function () {
             phaserGame.scale.pageAlignHorizontally = true;
             phaserGame.scale.pageAlignVertically = true;
             phaserGame.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-            phaserGame.stage.smoothed = false;
+            //phaserGame.stage.smoothed = false;
             // game.scale.setScreenSize(true);
 
             // nearest neighbor pixel rendering
@@ -704,10 +696,28 @@ Template.worldBoard.onRendered(function () {
             map.addTilesetImage('tiles');
 
             //  Create our layer
-            layer = map.createLayer(0);
+            // Size it to the map if need be for the camera
+            layer = map.createLayer(0, map.width * map.tileWidth, map.height * map.tileHeight);
 
             //  Resize the world
             layer.resizeWorld();
+
+            // Scale the screen to fit
+
+            if(Sanitaire.DEFAULT_ZOOM === "SHOW_FULL_MAP") {
+                Session.set("is game zoomed out", true);
+                var ratioX = phaserGame.camera.view.width / phaserGame.world.bounds.width;
+                var ratioY = phaserGame.world.camera.view.height / phaserGame.world.bounds.height;
+                var ratio = Math.min(ratioX, ratioY);
+                console.log("ratios: ", ratioX, ratioY, ratio);
+                phaserGame.world.scale.x = ratio;
+                phaserGame.world.scale.y = ratio;
+            }
+            else {
+                Session.set("is game zoomed out", false);
+                phaserGame.world.scale.x = Sanitaire.DEFAULT_ZOOM;
+                phaserGame.world.scale.y = Sanitaire.DEFAULT_ZOOM;
+            }
 
             // Create a group to add player sprites to
             playerGroup = phaserGame.add.group();
@@ -935,13 +945,20 @@ Template.worldBoard.onRendered(function () {
                             if (justTouched) {
                                 stunPlayer(gameId, sprite);
                                 Meteor.call("updatePlayerTouchedByPatientZero", localPlayerId, currentTime);
+                                localPlayerHighlight.tint = 0xFF0000;
                             }
                             isPlayerInjured = true;
                         } else {
                             unstunPlayer(sprite, localPlayerState);
                             isPlayerInjured = false;
+                            localPlayerHighlight.tint = 0xFFFFFF;
                         }
                     }
+
+                    // keep our highlight moving with us
+                    var offset = (localPlayerHighlight.width - sprite.width) / 2;
+                    localPlayerHighlight.position.x = sprite.position.x - offset;
+                    localPlayerHighlight.position.y = sprite.position.y - offset;
                 }
 
                 // TODO: Update position on collide.
@@ -987,7 +1004,7 @@ Template.worldBoard.onRendered(function () {
                 currentTile = {x: Math.floor((body.position.x) / 16), y: Math.floor((body.position.y + 8) / 16)};
                 nextTile = map.getTile(currentTile.x + 1, currentTile.y, 0);
             } else if (body.velocity.x < 0) {  // left
-                currentTile = {x: Math.floor((body.position.x + 16) / 16), y: Math.floor((body.position.y + 8) / 16)};
+                currentTile = {x: Math.floor((body.position.x + 8) / 16), y: Math.floor((body.position.y + 8) / 16)};
                 nextTile = map.getTile(currentTile.x - 1, currentTile.y, 0);
             } else if (body.velocity.y > 0) {  // down
                 currentTile = {x: Math.floor((body.position.x + 8) / 16), y: Math.floor((body.position.y) / 16)};
@@ -1117,13 +1134,13 @@ Template.worldBoard.onRendered(function () {
 
             // if the barricade record exists
             if (!!barricade) {
-                if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
-                    || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
-                    || barricade.state === Sanitaire.barricadeStates.BUILT) {
+                if (barricade.state === Sanitaire.barricadeStates.BUILT) {
                     //console.log("X: no need to prompt, this should handled from a crosswalk");
                     return;
                 }
-                else if (barricade.state === Sanitaire.barricadeStates.EMPTY
+                else if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
+                    || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
+                    || barricade.state === Sanitaire.barricadeStates.EMPTY
                     || barricade.state === Sanitaire.barricadeStates.NONE) {
                     //console.log("X: we should have the option to build at intersection ", intersectionId);
 
@@ -1228,9 +1245,7 @@ Template.worldBoard.onRendered(function () {
 
             // if the barricade is built then offer demolish
             if (!!barricade) {
-                if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
-                    || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
-                    || barricade.state === Sanitaire.barricadeStates.BUILT) {
+                if (barricade.state === Sanitaire.barricadeStates.BUILT) {
                     //console.log("CW: prompting from crosswalk at intersection ", intersectionId, " with barricade: ", barricade);
 
                     if (TimeSync.serverTime(new Date()) < barricade.time
@@ -1248,7 +1263,9 @@ Template.worldBoard.onRendered(function () {
                     movesSincePrompt = 0;
                     lastIntersectionId = intersectionId;
                 }
-                else if (barricade.state === Sanitaire.barricadeStates.EMPTY
+                else if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
+                    || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION
+                    || barricade.state === Sanitaire.barricadeStates.EMPTY
                     || barricade.state === Sanitaire.barricadeStates.NONE) {
                     //console.log("CW: no need to prompt. Intersection ", intersectionId, " is empty.");
                     return;
@@ -1430,8 +1447,17 @@ Template.worldBoard.onRendered(function () {
 
             player.body.setSize(10, 14, 2, 1);
 
+            //
             if (options.isLocalPlayer) {
-                phaserGame.camera.follow(player);
+                // add a highlight for the local player
+                localPlayerHighlight = phaserGame.add.sprite(options.location.x, options.location.y, 'highlight_local_player', 1);
+                localPlayerHighlight.animations.add('beacon', [0, 1, 2, 3, 4, 5, 6, 7], 5, true);
+                localPlayerHighlight.play('beacon');
+
+                if(Sanitaire.DEFAULT_ZOOM != "SHOW_FULL_MAP") {
+                    // follow the player if our camera isn't showing the full map
+                    phaserGame.camera.follow(player);
+                }
             }
 
             player.playerId = playerId;
