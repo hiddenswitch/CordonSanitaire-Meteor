@@ -149,7 +149,15 @@ Meteor.methods({
      */
     updatePlayerTouchedByPatientZero: function(playerId, injuredTime){
         return Sanitaire.updatePlayerTouchedByPatientZero(playerId, injuredTime);
+    },
+
+    /**
+     * Update the GameDoc to have the latest number of quarantines created
+     * @param gameId
+     * @param numQuarantines
+     * @returns {*}
+     */
+    updateNumberOfQuarantines: function(gameId, numQuarantines){
+        return Sanitaire.updateNumberOfQuarantines(gameId, numQuarantines);
     }
-
-
 });
