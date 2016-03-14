@@ -71,6 +71,36 @@ GraphAnalysis._isPatientZeroIsolated = function (components, playerRoadIds, pati
 };
 
 /**
+ * Returns the number of quarantines the given graph currently has
+ * @param graph {Object.<Number, [Number]>} An adjacency list representation of the road network
+ * @returns {*}
+ */
+GraphAnalysis.getNumberOfQuarantinesCreated = function(graph, playerRoadIds, patientZeroRoadId, numRoads){
+    var components = GraphAnalysis._getComponents(graph);
+    var numQuarantines = 0;
+    _.each(components, function(component) {
+        var roadStatus = GraphAnalysis._getComponentStatus(component, playerRoadIds, patientZeroRoadId, numRoads);
+        switch (roadStatus) {
+            case GraphAnalysis.roadStatus.OPEN:
+                break;
+            case GraphAnalysis.roadStatus.CLOSED_EMPTY:
+                numQuarantines++;
+                break;
+            case GraphAnalysis.roadStatus.CLOSED_RESPONDERS:
+                numQuarantines++;
+                break;
+            case GraphAnalysis.roadStatus.CLOSED_CONTAINED:
+                numQuarantines++;
+                break;
+            case GraphAnalysis.roadStatus.CLOSED_ISOLATED:
+                numQuarantines++;
+                break;
+        }
+    });
+    return numQuarantines;
+}
+
+/**
  * Get a state for Patient Zero (currently just isolated or not)...
  * @param graph {Object.<Number, [Number]>} An adjacency list representation of the road network
  * @param playerRoadIds {[Number]} An array of roadIds which players are on
@@ -114,7 +144,7 @@ GraphAnalysis.getRoadStatusById = function (graph, roadId, playerRoadIds, patien
  * @param numRoads {Number} the total number of roads, help with determining inside or outside
  * @returns {{GraphAnalysis.roadStatus}} Road statuses organized by roadId
  */
-GraphAnalysis.getRoadStatus = function (graph, playerRoadIds, patientZeroRoadId, numRoads) {
+GraphAnalysis.getRoadStatuses = function (graph, playerRoadIds, patientZeroRoadId, numRoads) {
     var roadStatuses = {};
     var components = GraphAnalysis._getComponents(graph);
 
