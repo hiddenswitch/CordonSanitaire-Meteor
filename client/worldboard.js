@@ -33,7 +33,10 @@ var updateRoadTiles = function (map, roadId, mapInfo, tileState) {
             tileColor = SanitaireMaps.streetColorTile.NONE;
     }
     _.each(mapInfo.roadsById[roadId].innerTiles, function (tile) {
-        map.fill(tileColor, tile.x, tile.y, 1, 1);
+        if(map.getTile(tile.x, tile.y).index != tileColor) {
+            // only color tiles that need to be recolored
+            map.fill(tileColor, tile.x, tile.y, 1, 1);
+        }
     });
 };
 
