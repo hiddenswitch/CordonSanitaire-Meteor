@@ -4,7 +4,7 @@
     "durationSeconds": 60,
     "countdownSeconds": 9,
     "demolishTimeSeconds": 3,
-    "buildTimeSeconds": 6,
+    "buildTimeSeconds": 12,
     "stunTimeSeconds": 60,
     "map":"Simple_56_60.csv",
     "uniqueness":true,
