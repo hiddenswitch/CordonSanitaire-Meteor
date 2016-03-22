@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<script src="phaser.js"></script>
+<script>
+    var scaleValue = 1.0;//1.75;
+    var width = window.innerWidth / scaleValue;
+    var height = window.innerHeight / scaleValue;
+    var phaserGame = new Phaser.Game(width, height, Phaser.AUTO, 'gameboard', {
+        preload: preload,
+        create: create,
+        update: update,
+        render: render
+    });
+
+    function preload(){
+        //var filename = "Simple_40.csv";
+
+        //var mapPath = "https://dl.dropboxusercontent.com/s/md1lo46rpop3dr3/test1.csv?dl=0";//"/assets/tilemaps/csv/" + filename;
+//        var mapPath = "https://dl.dropboxusercontent.com/s/y7jump808pek2ua/Simple_40.csv?dl=0";
+        var mapPath = "test4.csv";
+        phaserGame.load.tilemap('map', mapPath, null, Phaser.Tilemap.CSV);
+        phaserGame.load.image('tiles', "super_basic_map.png" );//'https://dl.dropboxusercontent.com/s/v3dgtezv8n8tmrf/Basic_CS_Map_simple.png?dl=0');
+
+    };
+    function create(){
+        //  Because we're loading CSV map data we have to specify the tile size here or we can't render it
+        map = phaserGame.add.tilemap('map', 16, 16);
+
+        //  Now add in the tileset
+        map.addTilesetImage('tiles');
+
+        //  Create our layer
+        // Size it to the map if need be for the camera
+        layer = map.createLayer(0, map.width * map.tileWidth, map.height * map.tileHeight);
+
+        //  Resize the world
+        layer.resizeWorld();
+    };
+    function update(){
+        //console.log("update");
+    };
+    function render(){
+        //console.log("render");
+    };
+</script>
+</body>
+</html>

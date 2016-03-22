@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+
+    <script>
+        /**
+         * Created by Shinjini on 3/14/2016.
+         */
+
+
+//        SanitaireMaps.PATHABLE_TILES = [8, 9, 10, 11, 12, 15, 17, 18, 33, 37, 38, 39];
+//
+//        SanitaireMaps.CROSSWALK_TILES = [8, 9, 10, 11];
+//
+//        0 = road
+//        1 = building
+//        2 = intersection
+
+         // Making a silly test
+//        var data = [];
+//         for (var i=0; i<5; i++){
+//             var data_row = [];
+//             for(var j=0; j<5; j++){
+//                 data_row.push(8);
+//             }
+//             data.push(data_row);
+//         };
+
+
+        /*
+        5x5 tiles
+        */
+        var Blocks = {
+            SOLID :
+                    [
+                        [1, 1, 1, 1, 1],
+                        [1, 1, 1, 1, 1],
+                        [1, 1, 1, 1, 1],
+                        [1, 1, 1, 1, 1],
+                        [1, 1, 1, 1, 1]
+                    ],
+
+            VERTICAL :
+                    [
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 1, 1]
+                ],
+
+            HORIZONTAL :
+                    [
+                    [1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1],
+                    [0, 0, 0, 0, 0],
+                    [1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1]
+                ],
+
+            PLUS :
+                    [
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 1, 1],
+                    [0, 0, 0, 0, 0],
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 1, 1]
+                ],
+
+            T_LEFT :
+                    [
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 1, 1],
+                    [0, 0, 0, 1, 1],
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 1, 1]
+                ],
+
+            T_RIGHT :
+                    [
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 0, 0],
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 1, 1]
+                ],
+
+            T_UP :
+                    [
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 1, 1],
+                    [0, 0, 0, 0, 0],
+                    [1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1]
+                ],
+
+            T_DOWN :
+                    [
+                    [1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1],
+                    [0, 0, 0, 0, 0],
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 1, 1]
+                ],
+
+            UP_LEFT :
+                    [
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 1, 1],
+                    [0, 0, 0, 1, 1],
+                    [1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1]
+                ],
+
+            UP_RIGHT :
+                    [
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 0, 0],
+                    [1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1]
+                ],
+
+            DOWN_RIGHT :
+                    [
+                    [1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1],
+                    [1, 1, 0, 0, 0],
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 1, 1]
+                ],
+
+            DOWN_LEFT :
+                    [
+                    [1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1],
+                    [0, 0, 0, 1, 1],
+                    [1, 1, 0, 1, 1],
+                    [1, 1, 0, 1, 1]
+                ]
+
+        }
+
+//        var data = [
+//            Blocks.SOLID.concat(Blocks.DOWN_RIGHT,Blocks.HORIZONTAL, Blocks.T_DOWN, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.DOWN_LEFT, Blocks.DOWN_RIGHT, Blocks.HORIZONTAL, Blocks.DOWN_LEFT),
+//            Blocks.DOWN_RIGHT.concat(Blocks.UP_LEFT, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.VERTICAL, Blocks.SOLID, Blocks.VERTICAL),
+//            Blocks.VERTICAL.concat(Blocks.SOLID, Blocks.SOLID, Blocks.T_RIGHT, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.PLUS, Blocks.UP_LEFT, Blocks.SOLID, Blocks.VERTICAL),
+//            Blocks.VERTICAL.concat(Blocks.SOLID, Blocks.SOLID, Blocks.T_RIGHT, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.T_LEFT, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL),
+//            Blocks.VERTICAL.concat(Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.T_RIGHT, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.T_LEFT),
+//            Blocks.VERTICAL.concat(Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL),
+//            Blocks.VERTICAL.concat(Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL),
+//            Blocks.T_RIGHT.concat(Blocks.VERTICAL, Blocks.T_DOWN, Blocks.UP_LEFT, Blocks.SOLID, Blocks.SOLID, Blocks.T_RIGHT, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.UP_LEFT),
+//            Blocks.VERTICAL.concat(Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.SOLID),
+//            Blocks.T_RIGHT.concat(Blocks.VERTICAL, Blocks.T_UP, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.UP_LEFT, Blocks.SOLID, Blocks.SOLID, Blocks.SOLID)
+//        ];
+
+        var data = [];
+        for (var j = 0; j<5; j++){
+            data.push(Blocks.SOLID[j].concat(Blocks.DOWN_RIGHT[j],Blocks.HORIZONTAL[j], Blocks.T_DOWN[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.DOWN_LEFT[j], Blocks.DOWN_RIGHT[j], Blocks.HORIZONTAL[j], Blocks.DOWN_LEFT[j]))
+        };
+        for (var j = 0; j<5; j++){
+            data.push(Blocks.DOWN_RIGHT[j].concat(Blocks.UP_LEFT[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.VERTICAL[j]))
+        };
+        for (var j = 0; j<5; j++){
+            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.SOLID[j], Blocks.T_RIGHT[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.PLUS[j], Blocks.UP_LEFT[j], Blocks.SOLID[j], Blocks.VERTICAL[j]))
+        };
+        for (var j = 0; j<5; j++){
+            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.SOLID[j], Blocks.T_RIGHT[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.T_LEFT[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j]))
+        };
+        for (var j = 0; j<5; j++){
+            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.T_RIGHT[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.T_LEFT[j]))
+        };
+        for (var j = 0; j<5; j++){
+            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j]))
+        };
+        for (var j = 0; j<5; j++){
+            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j]))
+        };
+        for (var j = 0; j<5; j++){
+            data.push(Blocks.T_RIGHT[j].concat(Blocks.HORIZONTAL[j], Blocks.T_DOWN[j], Blocks.UP_LEFT[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.T_RIGHT[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.UP_LEFT[j]))
+        };
+        for (var j = 0; j<5; j++){
+            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.SOLID[j]))
+        };
+        for (var j = 0; j<5; j++){
+            data.push(Blocks.UP_RIGHT[j].concat(Blocks.HORIZONTAL[j], Blocks.T_UP[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.UP_LEFT[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.SOLID[j]))
+        };
+
+
+
+//         var data = [
+//                    [2, 0, 0, 0, 0, 0, 0, 2],
+//                    [0, 1, 1, 1, 1, 1, 1, 0],
+//                    [0, 1, 1, 1, 1, 1, 1, 0],
+//                    [2, 0, 0, 0, 0, 0, 0, 2],
+//                    [0, 1, 1, 1, 1, 1, 1, 1],
+//                    [2, 0, 0, 0, 0, 0, 0, 2],
+//                    [0, 1, 1, 1, 1, 1, 1, 0],
+//                    [2, 0, 0, 0, 0, 0, 0, 2]
+//                    ];
+
+
+
+
+
+        // from http://stackoverflow.com/questions/14964035/how-to-export-javascript-array-info-to-csv-on-client-side
+        //var data = [["name1", "city1", "some other info"], ["name2", "city2", "more info"]];
+        var csvContent = "data:text/csv;charset=utf-8,";
+        data.forEach(function(infoArray, index){
+
+            dataString = infoArray.join(",");
+            csvContent += index < data.length ? dataString+ "\n" : dataString;
+
+        });
+
+
+
+        var encodedUri = encodeURI(csvContent);
+        var link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "test4.csv");
+
+        link.click(); // This will download the data file named "{file name}.csv".
+    </script>
+</body>
+</html>
