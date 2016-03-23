@@ -145,52 +145,77 @@
 
         }
 
-//        var data = [
-//            Blocks.SOLID.concat(Blocks.DOWN_RIGHT,Blocks.HORIZONTAL, Blocks.T_DOWN, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.DOWN_LEFT, Blocks.DOWN_RIGHT, Blocks.HORIZONTAL, Blocks.DOWN_LEFT),
-//            Blocks.DOWN_RIGHT.concat(Blocks.UP_LEFT, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.VERTICAL, Blocks.SOLID, Blocks.VERTICAL),
-//            Blocks.VERTICAL.concat(Blocks.SOLID, Blocks.SOLID, Blocks.T_RIGHT, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.PLUS, Blocks.UP_LEFT, Blocks.SOLID, Blocks.VERTICAL),
-//            Blocks.VERTICAL.concat(Blocks.SOLID, Blocks.SOLID, Blocks.T_RIGHT, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.T_LEFT, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL),
-//            Blocks.VERTICAL.concat(Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.T_RIGHT, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.T_LEFT),
-//            Blocks.VERTICAL.concat(Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL),
-//            Blocks.VERTICAL.concat(Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL),
-//            Blocks.T_RIGHT.concat(Blocks.VERTICAL, Blocks.T_DOWN, Blocks.UP_LEFT, Blocks.SOLID, Blocks.SOLID, Blocks.T_RIGHT, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.UP_LEFT),
-//            Blocks.VERTICAL.concat(Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.SOLID),
-//            Blocks.T_RIGHT.concat(Blocks.VERTICAL, Blocks.T_UP, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.UP_LEFT, Blocks.SOLID, Blocks.SOLID, Blocks.SOLID)
-//        ];
+        var mapBlocks = [];
+        var row1 = [];
+        row1.push(Blocks.SOLID, Blocks.DOWN_RIGHT,Blocks.HORIZONTAL, Blocks.T_DOWN, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.DOWN_LEFT, Blocks.DOWN_RIGHT, Blocks.HORIZONTAL, Blocks.DOWN_LEFT);
+        var row2 = [];
+        row2.push(Blocks.DOWN_RIGHT, Blocks.UP_LEFT, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.VERTICAL, Blocks.SOLID, Blocks.VERTICAL);
+        var row3 = [];
+        row3.push(Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.T_RIGHT, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.PLUS, Blocks.UP_LEFT, Blocks.SOLID, Blocks.VERTICAL);
+        var row4 = [];
+        row4.push(Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.T_RIGHT, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.T_LEFT, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL);
+        var row5 = [];
+        row5.push(Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.T_RIGHT, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.T_LEFT)
+        var row6 = [];
+        row6.push(Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL);
+        var row7 = [];
+        row7.push(Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL);
+        var row8 = [];
+        row8.push(Blocks.T_RIGHT, Blocks.HORIZONTAL, Blocks.T_DOWN, Blocks.UP_LEFT, Blocks.SOLID, Blocks.SOLID, Blocks.T_RIGHT, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.UP_LEFT);
+        var row9 = [];
+        row9.push(Blocks.VERTICAL, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.SOLID, Blocks.VERTICAL, Blocks.SOLID, Blocks.SOLID, Blocks.SOLID);
+        var row10 = [];
+        row10.push(Blocks.UP_RIGHT, Blocks.HORIZONTAL, Blocks.T_UP, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.HORIZONTAL, Blocks.UP_LEFT, Blocks.SOLID, Blocks.SOLID, Blocks.SOLID);
 
-        var data = [];
-        for (var j = 0; j<5; j++){
-            data.push(Blocks.SOLID[j].concat(Blocks.DOWN_RIGHT[j],Blocks.HORIZONTAL[j], Blocks.T_DOWN[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.DOWN_LEFT[j], Blocks.DOWN_RIGHT[j], Blocks.HORIZONTAL[j], Blocks.DOWN_LEFT[j]))
-        };
-        for (var j = 0; j<5; j++){
-            data.push(Blocks.DOWN_RIGHT[j].concat(Blocks.UP_LEFT[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.VERTICAL[j]))
-        };
-        for (var j = 0; j<5; j++){
-            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.SOLID[j], Blocks.T_RIGHT[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.PLUS[j], Blocks.UP_LEFT[j], Blocks.SOLID[j], Blocks.VERTICAL[j]))
-        };
-        for (var j = 0; j<5; j++){
-            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.SOLID[j], Blocks.T_RIGHT[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.T_LEFT[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j]))
-        };
-        for (var j = 0; j<5; j++){
-            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.T_RIGHT[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.T_LEFT[j]))
-        };
-        for (var j = 0; j<5; j++){
-            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j]))
-        };
-        for (var j = 0; j<5; j++){
-            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j]))
-        };
-        for (var j = 0; j<5; j++){
-            data.push(Blocks.T_RIGHT[j].concat(Blocks.HORIZONTAL[j], Blocks.T_DOWN[j], Blocks.UP_LEFT[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.T_RIGHT[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.UP_LEFT[j]))
-        };
-        for (var j = 0; j<5; j++){
-            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.SOLID[j]))
-        };
-        for (var j = 0; j<5; j++){
-            data.push(Blocks.UP_RIGHT[j].concat(Blocks.HORIZONTAL[j], Blocks.T_UP[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.UP_LEFT[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.SOLID[j]))
+        mapBlocks.push(row1, row2, row3, row4, row5, row6, row7, row8, row9, row10);
+
+//        var data = [];
+//        for (var j = 0; j<5; j++){
+//            data.push(Blocks.SOLID[j].concat(Blocks.DOWN_RIGHT[j],Blocks.HORIZONTAL[j], Blocks.T_DOWN[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.DOWN_LEFT[j], Blocks.DOWN_RIGHT[j], Blocks.HORIZONTAL[j], Blocks.DOWN_LEFT[j]))
+//        };
+//        for (var j = 0; j<5; j++){
+//            data.push(Blocks.DOWN_RIGHT[j].concat(Blocks.UP_LEFT[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.VERTICAL[j]))
+//        };
+//        for (var j = 0; j<5; j++){
+//            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.SOLID[j], Blocks.T_RIGHT[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.PLUS[j], Blocks.UP_LEFT[j], Blocks.SOLID[j], Blocks.VERTICAL[j]))
+//        };
+//        for (var j = 0; j<5; j++){
+//            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.SOLID[j], Blocks.T_RIGHT[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.T_LEFT[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j]))
+//        };
+//        for (var j = 0; j<5; j++){
+//            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.T_RIGHT[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.T_LEFT[j]))
+//        };
+//        for (var j = 0; j<5; j++){
+//            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j]))
+//        };
+//        for (var j = 0; j<5; j++){
+//            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j]))
+//        };
+//        for (var j = 0; j<5; j++){
+//            data.push(Blocks.T_RIGHT[j].concat(Blocks.HORIZONTAL[j], Blocks.T_DOWN[j], Blocks.UP_LEFT[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.T_RIGHT[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.UP_LEFT[j]))
+//        };
+//        for (var j = 0; j<5; j++){
+//            data.push(Blocks.VERTICAL[j].concat(Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.VERTICAL[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.SOLID[j]))
+//        };
+//        for (var j = 0; j<5; j++){
+//            data.push(Blocks.UP_RIGHT[j].concat(Blocks.HORIZONTAL[j], Blocks.T_UP[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.HORIZONTAL[j], Blocks.UP_LEFT[j], Blocks.SOLID[j], Blocks.SOLID[j], Blocks.SOLID[j]))
+//        };
+
+        var mapGenerate = function(mapArray){
+            var data = [];
+            for (var rowNum = 0; rowNum<mapArray.length; rowNum++){
+                for (var blockRowNum = 0; blockRowNum<5; blockRowNum++){
+                    var rowData = [];
+                    for (var colNum = 0; colNum<mapArray[rowNum].length; colNum++){
+                        rowData = rowData.concat(mapArray[rowNum][colNum][blockRowNum]);
+                    }
+                    data.push(rowData);
+                };
+            }
+            return data;
         };
 
-
+        var data = mapGenerate(mapBlocks);
 
 //         var data = [
 //                    [2, 0, 0, 0, 0, 0, 0, 2],
@@ -222,7 +247,7 @@
         var encodedUri = encodeURI(csvContent);
         var link = document.createElement("a");
         link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "test4.csv");
+        link.setAttribute("download", "test5.csv");
 
         link.click(); // This will download the data file named "{file name}.csv".
     </script>
