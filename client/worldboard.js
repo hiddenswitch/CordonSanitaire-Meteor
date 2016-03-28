@@ -895,9 +895,6 @@ Template.worldBoard.onRendered(function () {
 
                     // look at the position of patient zero rel to local player
                     var distance = getPatientZeroDistance(patientZeroSprite, sprite);
-                    var angle = getPatientZeroDirectionInDegrees(patientZeroSprite, sprite);
-                    // update compass
-                    updateDisplayForPatientZeroTracker(distance, angle);
 
                     // Check if touched by patient zero
                     var justTouched = isTouchedByPatientZero(localPlayerState, distance);

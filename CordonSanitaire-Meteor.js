@@ -105,35 +105,9 @@ if (Meteor.isClient) {
         showPatientZeroLoose: function () {
             return Session.get("patient zero loose");
         },
-
         isGameZoomedOut: function() {
             return Session.get("is game zoomed out");
-        },
-
-        updatePatientZeroDirection: function(){
-            var angle = Session.get("pzero angle");
-            if(!angle) {
-                return;
-            }
-            var angle = -angle; // negative because of how css works
-            $('#compass-img').css({
-                "-webkit-transform": "rotate(" + angle + "deg)",
-                "-moz-transform": "rotate(" + angle + "deg)",
-                "transform": "rotate(" + angle + "deg)" /* For modern browsers(CSS3)  */
-            });
-        },
-
-        updatePatientZeroDistance: function(){
-            var distance = Session.get("pzero distance");
-            if(!distance) {
-                return 0;
-            }
-            else {
-                return Math.round(distance / 8);    // 8 = scale factor for pixels to feet
-            }
         }
-
-
     });
 
     Template.conclusion.helpers({
