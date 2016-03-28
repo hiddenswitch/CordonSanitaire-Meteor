@@ -33,7 +33,7 @@ var updateRoadTiles = function (map, roadId, mapInfo, tileState) {
             tileColor = SanitaireMaps.streetColorTile.NONE;
     }
     _.each(mapInfo.roadsById[roadId].innerTiles, function (tile) {
-        if(map.getTile(tile.x, tile.y).index != tileColor) {
+        if (map.getTile(tile.x, tile.y).index != tileColor) {
             // only color tiles that need to be recolored
             map.fill(tileColor, tile.x, tile.y, 1, 1);
         }
@@ -183,7 +183,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
 
                 var isLocalPlayerAtBarricade = false;
 
-                if(myLastBarriersLogEntry) {
+                if (myLastBarriersLogEntry) {
                     if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD || myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
                         if (myLastBarriersLogEntry.intersectionId == barricade.intersectionId) {  // careful, string compared w/ number
                             isLocalPlayerAtBarricade = true;
@@ -415,7 +415,11 @@ var addBuildProgressBar = function (intersectionId, x, y, phaserGame, buildProgr
     x += 16;
 
     var percentComplete = Math.round(currentValue * 100);
-    var text = phaserGame.add.text(x, y, percentComplete,  { font: "Bold 36px Arial", fill: '#FFFFFF', backgroundColor: '#1E1E22' })
+    var text = phaserGame.add.text(x, y, percentComplete, {
+        font: "Bold 36px Arial",
+        fill: '#FFFFFF',
+        backgroundColor: '#1E1E22'
+    })
     text.anchor.x = 0.0;
     text.anchor.y = 1.0;
     text.textValue = percentComplete;
@@ -559,9 +563,9 @@ Template.worldBoard.onRendered(function () {
         };
 
         // scale everything a bit to up performance when moving the map
-        var scaleValue = 1.75;
-        var width = window.innerWidth / scaleValue;
-        var height = window.innerHeight / scaleValue;
+        //var scaleValue = 1.75;
+        var width = 640;//window.innerWidth / scaleValue;
+        var height = 800;//window.innerHeight / scaleValue;
 
         var playerSprites = {};   // this is our players list
         var playerGroup;    // Phaser.Group
@@ -624,7 +628,7 @@ Template.worldBoard.onRendered(function () {
             });
         };
 
-        var phaserGame = new Phaser.Game(width, height, Phaser.AUTO, 'gameboard', {
+        var phaserGame = new Phaser.Game(width, height, Phaser.CANVAS, 'gameboard', {
             preload: preload,
             create: create,
             update: update,
@@ -663,12 +667,11 @@ Template.worldBoard.onRendered(function () {
             phaserGame.scale.pageAlignHorizontally = true;
             phaserGame.scale.pageAlignVertically = true;
             phaserGame.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-            //phaserGame.stage.smoothed = false;
-            // game.scale.setScreenSize(true);
+            phaserGame.stage.smoothed = false;
 
             // nearest neighbor pixel rendering
-            //Phaser.Canvas.setImageRenderingCrisp(true);
-            //Phaser.Canvas.setSmoothingEnabled(this.game.context, false);
+            //Phaser.Canvas.setImageRenderingCrisp(canvas);
+            Phaser.Canvas.setSmoothingEnabled(phaserGame.context, false);
         }
 
         function create() {
@@ -691,7 +694,7 @@ Template.worldBoard.onRendered(function () {
 
             // Scale the screen to fit
 
-            if(Sanitaire.DEFAULT_ZOOM === "SHOW_FULL_MAP") {
+            if (Sanitaire.DEFAULT_ZOOM === "SHOW_FULL_MAP") {
                 Session.set("is game zoomed out", true);
                 var ratioX = phaserGame.camera.view.width / phaserGame.world.bounds.width;
                 var ratioY = phaserGame.world.camera.view.height / phaserGame.world.bounds.height;
@@ -892,9 +895,6 @@ Template.worldBoard.onRendered(function () {
 
                     // look at the position of patient zero rel to local player
                     var distance = getPatientZeroDistance(patientZeroSprite, sprite);
-                    var angle = getPatientZeroDirectionInDegrees(patientZeroSprite, sprite);
-                    // update compass
-                    updateDisplayForPatientZeroTracker(distance, angle);
 
                     // Check if touched by patient zero
                     var justTouched = isTouchedByPatientZero(localPlayerState, distance);
@@ -1416,7 +1416,7 @@ Template.worldBoard.onRendered(function () {
                 localPlayerHighlight.animations.add('beacon', [0, 1, 2, 3, 4, 5, 6, 7], 5, true);
                 localPlayerHighlight.play('beacon');
 
-                if(Sanitaire.DEFAULT_ZOOM != "SHOW_FULL_MAP") {
+                if (Sanitaire.DEFAULT_ZOOM != "SHOW_FULL_MAP") {
                     // follow the player if our camera isn't showing the full map
                     phaserGame.camera.follow(player);
                 }

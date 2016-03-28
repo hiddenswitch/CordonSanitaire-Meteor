@@ -95,24 +95,6 @@
     <div id="countdown"><span id="seconds">{{timeLeftInGame.seconds}}</span>.<span
             id="hundredths">{{timeLeftInGame.hundredths}}</span></div>
 
-    <!-- Container for patient zero distance and direction -->
-    <div id="distance-direction-container">
-        <div id="distance-container">
-            <span id="distance">Distance: {{updatePatientZeroDistance}} feet</span>
-        </div>
-        <div id="compass">
-            <div id="compass-needle">
-                <img id="compass-img" src="/assets/sprites/PZero_Compass_needle.png"/>
-            </div>
-            <div id="compass-bg">
-                <img id="compass-img" src="/assets/sprites/PZero_Compass_bg.png"/>
-            </div>
-        </div>
-        {{updatePatientZeroDirection}}
-    </div>
-
-
-
 
     <!-- Logout button for player | Not currently necessary -->
     <!--<input type="button" value="Log Out" class="logoutButton" onclick="userLogout()" />-->
@@ -164,7 +146,7 @@
     </div>
 
     <!-- Container for Phaser Game -->
-    <div id="map-container" style="background:rgb(47,54,61); {{#if isGameZoomedOut}} padding-top: 90px;{{/if}}">
+    <div id="map-container" style="background:rgb(40,54,68); {{#if isGameZoomedOut}} padding-top: 90px; padding-bottom: 400px;{{/if}}">
         {{> worldBoard gameId=gameId}}
     </div>
 </template>
