@@ -33,7 +33,7 @@ var updateRoadTiles = function (map, roadId, mapInfo, tileState) {
             tileColor = SanitaireMaps.streetColorTile.NONE;
     }
     _.each(mapInfo.roadsById[roadId].innerTiles, function (tile) {
-        if(map.getTile(tile.x, tile.y).index != tileColor) {
+        if (map.getTile(tile.x, tile.y).index != tileColor) {
             // only color tiles that need to be recolored
             map.fill(tileColor, tile.x, tile.y, 1, 1);
         }
@@ -183,7 +183,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
 
                 var isLocalPlayerAtBarricade = false;
 
-                if(myLastBarriersLogEntry) {
+                if (myLastBarriersLogEntry) {
                     if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD || myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
                         if (myLastBarriersLogEntry.intersectionId == barricade.intersectionId) {  // careful, string compared w/ number
                             isLocalPlayerAtBarricade = true;
@@ -415,7 +415,11 @@ var addBuildProgressBar = function (intersectionId, x, y, phaserGame, buildProgr
     x += 16;
 
     var percentComplete = Math.round(currentValue * 100);
-    var text = phaserGame.add.text(x, y, percentComplete,  { font: "Bold 36px Arial", fill: '#FFFFFF', backgroundColor: '#1E1E22' })
+    var text = phaserGame.add.text(x, y, percentComplete, {
+        font: "Bold 36px Arial",
+        fill: '#FFFFFF',
+        backgroundColor: '#1E1E22'
+    })
     text.anchor.x = 0.0;
     text.anchor.y = 1.0;
     text.textValue = percentComplete;
@@ -690,7 +694,7 @@ Template.worldBoard.onRendered(function () {
 
             // Scale the screen to fit
 
-            if(Sanitaire.DEFAULT_ZOOM === "SHOW_FULL_MAP") {
+            if (Sanitaire.DEFAULT_ZOOM === "SHOW_FULL_MAP") {
                 Session.set("is game zoomed out", true);
                 var ratioX = phaserGame.camera.view.width / phaserGame.world.bounds.width;
                 var ratioY = phaserGame.world.camera.view.height / phaserGame.world.bounds.height;
@@ -1415,7 +1419,7 @@ Template.worldBoard.onRendered(function () {
                 localPlayerHighlight.animations.add('beacon', [0, 1, 2, 3, 4, 5, 6, 7], 5, true);
                 localPlayerHighlight.play('beacon');
 
-                if(Sanitaire.DEFAULT_ZOOM != "SHOW_FULL_MAP") {
+                if (Sanitaire.DEFAULT_ZOOM != "SHOW_FULL_MAP") {
                     // follow the player if our camera isn't showing the full map
                     phaserGame.camera.follow(player);
                 }
