@@ -16,6 +16,7 @@ Meteor.startup(function () {
         'Simple_Single_01.csv',
         'Simple_Single_02.csv',
         'Simple_40.csv',
+        'Simple_40_50.csv',
         'Simple_60_80.csv',
         'Simple_46_60.csv',
         'Simple_56_60.csv'

@@ -559,9 +559,9 @@ Template.worldBoard.onRendered(function () {
         };
 
         // scale everything a bit to up performance when moving the map
-        var scaleValue = 1.75;
-        var width = window.innerWidth / scaleValue;
-        var height = window.innerHeight / scaleValue;
+        //var scaleValue = 1.75;
+        var width = 640;//window.innerWidth / scaleValue;
+        var height = 800;//window.innerHeight / scaleValue;
 
         var playerSprites = {};   // this is our players list
         var playerGroup;    // Phaser.Group
@@ -624,7 +624,7 @@ Template.worldBoard.onRendered(function () {
             });
         };
 
-        var phaserGame = new Phaser.Game(width, height, Phaser.AUTO, 'gameboard', {
+        var phaserGame = new Phaser.Game(width, height, Phaser.CANVAS, 'gameboard', {
             preload: preload,
             create: create,
             update: update,
@@ -663,12 +663,11 @@ Template.worldBoard.onRendered(function () {
             phaserGame.scale.pageAlignHorizontally = true;
             phaserGame.scale.pageAlignVertically = true;
             phaserGame.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
-            //phaserGame.stage.smoothed = false;
-            // game.scale.setScreenSize(true);
+            phaserGame.stage.smoothed = false;
 
             // nearest neighbor pixel rendering
-            //Phaser.Canvas.setImageRenderingCrisp(true);
-            //Phaser.Canvas.setSmoothingEnabled(this.game.context, false);
+            //Phaser.Canvas.setImageRenderingCrisp(canvas);
+            Phaser.Canvas.setSmoothingEnabled(phaserGame.context, false);
         }
 
         function create() {
