@@ -224,19 +224,18 @@
             }
         };
 
-        var mapGenerate = function(/*Map Size?*/){
+        var mapGenerate = function(mapRows, mapCols){
             // 50x50 is 10x10 blocks
 
             // If at (row, col) = (0, 0), pretend that up and left are SOLID
             // If row = 0, pretend up is SOLID
             // If col = 0, pretend left is SOLID
-            var mapSize = 10;
             var map = [];
-            for (var row = 0; row < 10; row++){
+            for (var row = 0; row < mapRows; row++){
                 map.push([])
                 var up; // these are strings eg, "SOLID"
                 var left;
-                for (var col = 0; col< 10; col++){
+                for (var col = 0; col< mapCols; col++){
                     if (row  == 0){
                         if (col ==0){ // if (i, j) = (0, 0)
                             up = "SOLID";
@@ -262,9 +261,9 @@
 
                     // edge cases
                     var edgeCase = false;
-                    if (row == mapSize -1){
+                    if (row == mapRows -1){
                         edgeCase = true;
-                        if (col == mapSize - 1){ // bottom right cell
+                        if (col == mapCols - 1){ // bottom right cell
                             var allowed = {
                                 "SOLID":.5,
                                 "UP_LEFT":.5
@@ -278,7 +277,7 @@
                                 "UP_LEFT":.2
                             }
                         }
-                    } else if (col == mapSize -1){ // rightmost Column
+                    } else if (col == mapCols -1){ // rightmost Column
                         edgeCase = true;
                         var allowed = {
                             "SOLID":.2,
@@ -292,8 +291,8 @@
                         var allowedKeys = Object.keys(allowed);
                         for (var i = 0; i<allowedKeys.length; i++){
                             var key = allowedKeys[i];
-                            if ((key in possibilitiesFromLeft)&&(key in possibilitiesFromUp)){
-                                var probability = allowed[key]*possibilitiesFromLeft[key]*possibilitiesFromUp[key];
+                            if ((key in possibilitiesFromLeft)&&(key in possibilitiesFromUp)) {
+                                var probability = allowed[key] * possibilitiesFromLeft[key] * possibilitiesFromUp[key];
                                 sumProbabilities += probability;
                                 possibilities[key] = probability;
                             }
@@ -308,7 +307,6 @@
                             }
                         }
                     }
-
                     var possibilitiesKeys = Object.keys(possibilities);
                     var possibilitiesProbRanges = [];
                     var probRange = 0;
@@ -357,7 +355,7 @@
             return data;
         };
 
-        var data = mapDecode(mapGenerate());
+        var data = mapDecode(mapGenerate(10,8));
 //        console.log(data);
 
 
@@ -378,7 +376,7 @@
         var encodedUri = encodeURI(csvContent);
         var link = document.createElement("a");
         link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "test10.csv");
+        link.setAttribute("download", "test12.csv");
 
         link.click(); // This will download the data file named "{file name}.csv".
 
