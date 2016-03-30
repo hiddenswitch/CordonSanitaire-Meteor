@@ -4,10 +4,6 @@
 SanitaireMaps = (Meteor.isClient ? window : global).Maps || {};
 
 Meteor.startup(function () {
-    // Early exit if Maps already exist.
-    if (Maps.find().count() !== 0) {
-        return;
-    }
 
     // These are the map IDs to use for new games
     var mapInfos = _.map([
@@ -27,6 +23,11 @@ Meteor.startup(function () {
     _.each(mapInfos, function (mapInfo) {
         var mapUrl = mapInfo.url;
         var mapName = mapInfo._id;
+
+        if (Maps.find(mapName).count() !== 0) {
+            return;
+        }
+
         HTTP.get(Meteor.absoluteUrl(mapUrl), function (error, result) {
             var lines = result.content.split('\n');
             lines = _.filter(lines, function (line) {
@@ -45,7 +46,7 @@ Meteor.startup(function () {
     });
 });
 
-SanitaireMaps.IPhaserTileMap = function(mapDocument) {
+SanitaireMaps.IPhaserTileMap = function (mapDocument) {
     this.height = mapDocument.tiles.length;
     this.width = mapDocument.tiles[0].length;
     // TODO: Remove the hard coding of tile width and height here
@@ -55,12 +56,12 @@ SanitaireMaps.IPhaserTileMap = function(mapDocument) {
     this.tiles = mapDocument.tiles;
 };
 
-SanitaireMaps.IPhaserTile = function(x, y, index) {
+SanitaireMaps.IPhaserTile = function (x, y, index) {
     this.x = x;
     this.y = y;
     this.index = index;
 };
 
-SanitaireMaps.IPhaserTileMap.prototype.getTile = function(x, y, layer) {
+SanitaireMaps.IPhaserTileMap.prototype.getTile = function (x, y, layer) {
     return new SanitaireMaps.IPhaserTile(x, y, this._document.tiles[y][x]);
 };
