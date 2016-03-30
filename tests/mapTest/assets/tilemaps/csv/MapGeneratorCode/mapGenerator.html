@@ -376,7 +376,9 @@
         var encodedUri = encodeURI(csvContent);
         var link = document.createElement("a");
         link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "test12.csv");
+        var millis = new Date();
+        var filename = "cs_map_" + millis.getTime() + ".csv"
+        link.setAttribute("download", filename);
 
         link.click(); // This will download the data file named "{file name}.csv".
 
