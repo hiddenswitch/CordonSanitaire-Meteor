@@ -153,7 +153,11 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
             && !_.isUndefined(barricade.progressTime)) {
             // Compute from with time data
             var serverNow = TimeSync.serverTime(new Date());
-            from = inverseLerp(barrier.progressTime, barrier.time, serverNow);
+            if (barricade.time != Infinity) {
+                from = inverseLerp(barricade.progressTime, barricade.time, serverNow, true);
+            } else {
+                from = barricade.progress;
+            }
         }
         var to = barricade.time == Infinity ? null : (barricade.nextState === Sanitaire.barricadeStates.BUILT ? 1 : 0);
         updateBuildProgressBar(barricade.intersectionId, from, to, barricade.time, buildProgressBars, phaserGame, mapInfo);
@@ -173,13 +177,8 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                 var game = Games.findOne(gameId);
 
                 // get latest log entry from local user
-                var myLastBarriersLogEntry = _.find(_.sortBy(game.barriersLog, function (logEntry) {
-                        return -logEntry.time;
-                    }),
-                    function (logEntry) {
-                        return logEntry.playerId === Router.current().data().playerId;
-                    }
-                );
+                var player = Players.findOne({gameId: gameId, userId: Meteor.userId()});
+                var myLastBarriersLogEntry = player.lastBarriersLogEntry;
 
                 var isLocalPlayerAtBarricade = false;
 
@@ -480,6 +479,7 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
 
     if (!_.isNull(from)) {
         buildProgressBars[intersectionId].text.textValue = from * 100;
+        console.log(from);
     }
 
     if (!_.isNull(to)) {
@@ -1034,26 +1034,22 @@ Template.worldBoard.onRendered(function () {
                     break;
             }
 
-            Meteor.call('updatePositionAndVelocity', Router.current().data().gameId, position, velocity, TimeSync.serverTime(new Date()));
+            var gameId = Router.current().data().gameId;
+            Meteor.call('updatePositionAndVelocity', gameId, position, velocity, TimeSync.serverTime(new Date()));
 
             // if we are in the middls of building send a message that we stopped building
-            var game = Games.findOne(Router.current().data().gameId);
+            var game = Games.findOne(gameId);
+            var player = Players.findOne({gameId: gameId, userId: Meteor.userId()});
             // get latest log entry from local user
-            var myLastBarriersLogEntry = _.find(_.sortBy(game.barriersLog, function (logEntry) {
-                    return -logEntry.time;
-                }),
-                function (logEntry) {
-                    return logEntry.playerId === localPlayerId;
-                }
-            );
+            var myLastBarriersLogEntry = player.lastBarriersLogEntry;
 
             // if log entry exists and is of type start build or demolish, then send a message to stop
             if (myLastBarriersLogEntry) {
                 if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD) {
-                    Meteor.call('stopConstruction', Router.current().data().gameId, myLastBarriersLogEntry.intersectionId);
+                    Meteor.call('stopConstruction', gameId, myLastBarriersLogEntry.intersectionId);
                 }
                 else if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
-                    Meteor.call('stopDeconstruction', Router.current().data().gameId, myLastBarriersLogEntry.intersectionId);
+                    Meteor.call('stopDeconstruction', gameId, myLastBarriersLogEntry.intersectionId);
                 }
             }
         }

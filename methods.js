@@ -61,6 +61,10 @@ Meteor.methods({
         // Reconstruct all the necessary information
         var thisPlayer = Players.findOne({gameId: gameId, userId: this.userId});
 
+        if (!thisPlayer) {
+            return;
+        }
+
         return Sanitaire.updatePlayerPositionAndVelocity(thisPlayer._id, position, velocity, updatedAt);
     },
 
@@ -70,6 +74,11 @@ Meteor.methods({
      * @param intersectionId {Number} id of specific intersection under construction
      */
     startConstruction: function (gameId, intersectionId) {
+        // Do not simulate
+        if (this.isSimulation) {
+            return;
+        }
+
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
         }
@@ -87,6 +96,11 @@ Meteor.methods({
      * @param intersectionId {Number} id of a specifi intersection under construction
      */
     stopConstruction: function (gameId, intersectionId) {
+        // Do not simulate
+        if (this.isSimulation) {
+            return;
+        }
+
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
         }
@@ -104,6 +118,11 @@ Meteor.methods({
      * @param intersectionId {Number} id of a specific intersection under deconstruction
      */
     startDeconstruction: function (gameId, intersectionId) {
+        // Do not simulate
+        if (this.isSimulation) {
+            return;
+        }
+
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
         }
@@ -121,6 +140,11 @@ Meteor.methods({
      * @param intersectionId {Number} id of a specific intersection under deconstruction
      */
     stopDeconstruction: function (gameId, intersectionId) {
+        // Do not simulate
+        if (this.isSimulation) {
+            return;
+        }
+
         if (!this.userId) {
             throw new Meteor.Error(403, 'Permission denied.');
         }
