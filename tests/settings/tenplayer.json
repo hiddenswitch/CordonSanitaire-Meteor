@@ -8,6 +8,7 @@
     "stunTimeSeconds": 60,
     "map":"Simple_40_50.csv",
     "uniqueness":true,
-    "zoom": "SHOW_FULL_MAP"
+    "zoom": "SHOW_FULL_MAP",
+    "timeRestrictedEntry": [0,1,2,3,4,5,20,21,22,23,24,25,40,41,42,43,44,45]
   }
 }
