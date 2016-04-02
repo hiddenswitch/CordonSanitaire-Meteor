@@ -20,19 +20,19 @@ SanitaireMaps.streetColorTile = {
     /**
      * Closed quarantine but noone inside. Color GREY
      */
-    EMPTY: 33,
+    GREY: 33,
     /**
      * Only healthy people trapped. Color YELLOW
      */
-    RESPONDERS: 38,
+    YELLOW: 38,
     /**
      * Patient Zero contained with healthy people. Color RED
      */
-    CONTAINED: 37,
+    RED: 37,
     /**
      * Patient Zero isolated. Color GREEN
      */
-    ISOLATED: 39
+    GREEN: 39
 };
 
 /**
