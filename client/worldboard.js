@@ -18,16 +18,16 @@ var updateRoadTiles = function (map, roadId, mapInfo, tileState) {
             tileColor = SanitaireMaps.streetColorTile.NONE;
             break;
         case GraphAnalysis.roadStatus.CLOSED_EMPTY:
-            tileColor = SanitaireMaps.streetColorTile.EMPTY;
+            tileColor = SanitaireMaps.streetColorTile.NONE;
             break;
         case GraphAnalysis.roadStatus.CLOSED_RESPONDERS:
-            tileColor = SanitaireMaps.streetColorTile.RESPONDERS;
+            tileColor = SanitaireMaps.streetColorTile.NONE;
             break;
         case GraphAnalysis.roadStatus.CLOSED_CONTAINED:
-            tileColor = SanitaireMaps.streetColorTile.CONTAINED;
+            tileColor = SanitaireMaps.streetColorTile.YELLOW;
             break;
         case GraphAnalysis.roadStatus.CLOSED_ISOLATED:
-            tileColor = SanitaireMaps.streetColorTile.ISOLATED;
+            tileColor = SanitaireMaps.streetColorTile.GREEN;
             break;
         default:
             tileColor = SanitaireMaps.streetColorTile.NONE;
