@@ -48,7 +48,11 @@
     {{> loginButtons}}
     <div class="textCenter">
         <div class="textCenter vertCenter">
-            <button class="inputButton playButton" id="play">Play now</button>
+            {{#if showPlayButton}}
+                <button class="inputButton playButton" id="play">Play now</button>
+            {{else}}
+                <button class="inputButton playButton" id="later">Come back later</button>
+            {{/if}}
             <button class="inputButton profileButton" id="profile">My profile</button>
             <button class="inputButton tutButton" id="tutorial">Tutorial</button>
         </div>
