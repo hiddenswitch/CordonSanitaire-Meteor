@@ -38,6 +38,25 @@ if (Meteor.isClient) {
         }
     });
 
+    // let's keep the time til next game up to date by attaching an interval
+    var timerTilNextGameDependency = new Tracker.Dependency();
+    Meteor.setInterval(function () {
+        timerTilNextGameDependency.changed();
+    }, 1000);
+
+    Template.mainmenu.helpers({
+        showPlayButton: function () {
+            timerTilNextGameDependency.depend(); // keeps this called every 1000ms
+            if(Sanitaire.TIME_RESTRICTED_ENTRY === "NO_RESTRICTION") {
+                return true;
+            }
+            else {
+                var date = new Date();
+                return _.indexOf(Sanitaire.TIME_RESTRICTED_ENTRY, date.getMinutes()) != -1;
+            }
+        }
+    });
+
     // let's keep the time left in game up to date by attaching an interval
     var timerDependency = new Tracker.Dependency();
     Meteor.setInterval(function () {
