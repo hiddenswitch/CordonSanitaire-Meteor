@@ -191,3 +191,76 @@ if (Meteor.isClient) {
 //--------------------------
 // Meteor API - Cloud code
 //--------------------------
+
+if (Meteor.isServer) {
+    /* Create a Cron Object */
+    Cron = {};
+    /* Create a private startup method */
+    Cron._startup = function () {
+        if (Meteor.isClient) {
+            return;
+        }
+        Cron.jobs();
+        return SyncedCron.start();
+    };
+
+    /* Using encapsulation lets store this function */
+
+    Cron.initialize = function () {
+        return Cron._startup();
+    };
+    /* Let's startup! */
+    Meteor.startup(Cron.initialize);
+
+    // Our Twilio Number
+    var twilioNumber;
+    var accountSid;
+    var authToken;
+    if (!_.isUndefined(Meteor.settings)
+        && !_.isUndefined(Meteor.settings.private)
+        && !_.isUndefined(Meteor.settings.private.twilio.account_sid)
+        && !_.isUndefined(Meteor.settings.private.twilio.auth_token
+        && !_.isUndefined(Meteor.settings.private.twilio.number))) {
+        accountSid = Meteor.settings.private.twilio.account_sid;
+        authToken = Meteor.settings.private.twilio.auth_token;
+        twilioNumber = Meteor.settings.private.twilio.number;
+    }
+
+    var twilio = Twilio(accountSid, authToken);
+
+    var sendMessage = function (numbers) {
+        /* SEE TWILIO API DOCS HERE: http://twilio.github.io/twilio-node/ */
+        _.each(numbers, function (number) {
+            twilio.messages.create({
+                to: number,
+                from: twilioNumber,
+                body: 'FAKE URGENT. Patient Zero detected with contagion. Response needed! http://cordon.meteorapp.com'
+
+            }, function (err, res) {
+                if (err) {
+                    console.log(err);
+                }
+                if (!err) {
+                    console.log(res.from);
+                    console.log(res.body);
+                }
+            });
+        });
+    };
+
+    Cron.jobs = function () {
+        SyncedCron.add({
+            name: "Twilio Cron Job",
+            schedule: function (parser) {
+                return parser.recur().on(59).minute(); // called on the 59th minute...
+            },
+            job: function () {
+                /* do something here */
+                // look to see who is signed up to receive a text message now
+                // send text message to those people
+                // if you digging through github, feel free to say hi to Jonathan Bobrow :)
+                sendMessage(['+18186207518']);
+            }
+        });
+    }
+}
