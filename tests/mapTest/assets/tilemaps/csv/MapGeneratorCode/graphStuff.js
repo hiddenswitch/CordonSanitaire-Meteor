@@ -4,7 +4,7 @@
 
 
 var bfs = function (map, source, seen) {
-    console.log(seen.size);
+    //console.log(seen.size);
     var component = new Set(); // a set of all nodes from current
     if (!seen.has(source)) {
         var nextLevel = new Set([source]);
