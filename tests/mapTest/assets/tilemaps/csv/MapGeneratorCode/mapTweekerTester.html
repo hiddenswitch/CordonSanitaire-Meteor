@@ -21,6 +21,7 @@
             var height = 10;
             var mapName;
             var currentMap;
+            var density = 1;
 
         </script>
     </div>
@@ -154,41 +155,42 @@
 
             }
 
+            // weights do no have to add to 1, the will be normalized in all cases
             var PathToRight = {
                 YES: {
-                    "HORIZONTAL":.142851,
-                    "PLUS":.142851,
-                    "T_LEFT":.142851,
-                    "T_UP":.142851,
-                    "T_DOWN":.142851,
-                    "UP_LEFT":.142851,
-                    "DOWN_LEFT":.142851
+                    "HORIZONTAL":1,
+                    "PLUS":1,
+                    "T_LEFT":1,
+                    "T_UP":1,
+                    "T_DOWN":1,
+                    "UP_LEFT":1,
+                    "DOWN_LEFT":1
                 },
                 NO: {
-                    "SOLID":.2,
-                    "VERTICAL":.2,
-                    "T_RIGHT":.2,
-                    "UP_RIGHT":.2,
-                    "DOWN_RIGHT":.2
+                    "SOLID":1,
+                    "VERTICAL":1,
+                    "T_RIGHT":1,
+                    "UP_RIGHT":1,
+                    "DOWN_RIGHT":1
                 }
             }
 
             var PathDown = {
                 YES: {
-                    "VERTICAL":.142851,
-                    "PLUS":.142851,
-                    "T_LEFT":.142851,
-                    "T_RIGHT":.142851,
-                    "T_UP":.142851,
-                    "UP_LEFT":.142851,
-                    "UP_RIGHT":.142851
+                    "VERTICAL":1,
+                    "PLUS":1,
+                    "T_LEFT":1,
+                    "T_RIGHT":1,
+                    "T_UP":1,
+                    "UP_LEFT":1,
+                    "UP_RIGHT":1
                 },
                 NO: {
-                    "SOLID":.2,
-                    "HORIZONTAL":.2,
-                    "T_DOWN":.2,
-                    "DOWN_RIGHT":.2,
-                    "DOWN_LEFT":.2
+                    "SOLID":1,
+                    "HORIZONTAL":1,
+                    "T_DOWN":1,
+                    "DOWN_RIGHT":1,
+                    "DOWN_LEFT":1
                 }
             }
 
@@ -299,26 +301,26 @@
                             edgeCase = true;
                             if (col == mapCols - 1){ // bottom right cell
                                 var allowed = {
-                                    "SOLID":.5,
-                                    "UP_LEFT":.5
+                                    "SOLID":1,
+                                    "UP_LEFT":1
                                 }
                             } else { // bottom row
                                 var allowed = {
-                                    "SOLID":.2,
-                                    "HORIZONTAL":.2,
-                                    "T_UP": .2,
-                                    "UP_RIGHT":.2,
-                                    "UP_LEFT":.2
+                                    "SOLID":1,
+                                    "HORIZONTAL":1,
+                                    "T_UP": 1,
+                                    "UP_RIGHT":1,
+                                    "UP_LEFT":1
                                 }
                             }
                         } else if (col == mapCols -1){ // rightmost Column
                             edgeCase = true;
                             var allowed = {
-                                "SOLID":.2,
-                                "VERTICAL":.2,
-                                "T_LEFT":.2,
-                                "UP_LEFT":.2,
-                                "DOWN_LEFT":.2
+                                "SOLID":1,
+                                "VERTICAL":1,
+                                "T_LEFT":1,
+                                "UP_LEFT":1,
+                                "DOWN_LEFT":1
                             }
                         }
                         if (edgeCase){
