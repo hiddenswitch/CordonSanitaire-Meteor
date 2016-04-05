@@ -2,10 +2,15 @@
  * Created by Shinjini on 4/4/2016.
  */
 
+var TileType = {
+    PASSABLE: new Set([0,2, 5]),
+    NOT_PASSABLE: new Set([1])
 
-var bfs = function (map, source, seen) {
+}
+
+var bfs = function (map, source, seen, tileType) {
     //console.log(seen.size);
-    var component = new Set(); // a set of all nodes from current
+    var component = []; // an array of all nodes from current. Node: [y,x]
     if (!seen.has(source)) {
         var nextLevel = new Set([source]);
     } else {
@@ -20,40 +25,44 @@ var bfs = function (map, source, seen) {
             //console.log(seen);
 
             if (!seen.has(v)) {
-                //console.log(seen);
-                //console.log(v);
-                component.add(v);
                 seen.add(v);
                 var next = [];
                 v = v.split(",");
                 v = [parseInt(v[0]),parseInt(v[1])];
-                if ((v[0]>0) && (map[v[0]-1][v[1]] === 0)){//up
+                component.push(v);
+                if ((v[0]>0) && tileType.has(map[v[0]-1][v[1]])){//up
+                    //console.log(map[v[0]-1][v[1]]);
                     var u = [v[0]-1, v[1]];
+                    u = u.join();
                     if (!seen.has(u)) {
                         next.push(u);
                     }
                 }
-                if ((v[0]<map.length-1) && (map[v[0]+1][v[1]] === 0)){//down
+                if ((v[0]<map.length-1) && tileType.has(map[v[0]+1][v[1]])){//down
                     var u = [v[0]+1,v[1]];
+                    u = u.join();
                     if (!seen.has(u)) {
                         next.push(u);
                     }
                 }
-                if ((v[1]>0) && (map[v[0]][v[1]-1] === 0)){//left
+                if ((v[1]>0) && tileType.has(map[v[0]][v[1]-1])){//left
                     var u = [v[0],v[1]-1];
+                    u = u.join();
                     if (!seen.has(u)) {
                         next.push(u);
                     }
                 }
-                if ((v[1]<map.length-1) && (map[v[0]][v[1]+1] === 0)){//right
+                if ((v[1]<map.length-1) && tileType.has(map[v[0]][v[1]+1])){//right
                     var u = [v[0],v[1]+1];
+                    u = u.join();
                     if (!seen.has(u)) {
                         next.push(u);
                     }
                 }
                 //console.log(next);
                 next.forEach(function (u) {
-                    nextLevel.add(u.join());
+                    //console.log(u);
+                    nextLevel.add(u);
                 });
             }
         });
@@ -61,17 +70,16 @@ var bfs = function (map, source, seen) {
     return component;
 };
 
-var findComponents = function(map){
+var findComponents = function(map, tileType){
     var seen = new Set();
-    //console.log(seen);
     var components = [];
-    for (var i = 0; i< map.length; i++){
-        for (var j = 0; j<map[0].length; j++){
-            if (map[i][j] === 0){
+    for (var i = 0; i< map.length; i++){ // i is y is row
+        for (var j = 0; j<map[0].length; j++){ // j is x is col
+            if (tileType.has(map[i][j])){
                 var source = [i,j];
                 source = source.join();
-                var component = bfs(map, source, seen);
-                if (component.size>0){
+                var component = bfs(map, source, seen, tileType);
+                if (component.length>0){
                     components.push(component);
                 }
             }
