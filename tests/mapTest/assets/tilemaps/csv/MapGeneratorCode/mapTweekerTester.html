@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <link rel="stylesheet" type="text/css" href="mapboardcss.css">
+</head>
+<body>
+<!--<form action="" method="GET">-->
+<!--<input type="text" name="map">-->
+<!--<input type="submit">-->
+<!--</form>-->
+<div id="mapboard"></div>
+<div id="scripts">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src="phaser.js"></script>
+    <script type="text/javascript" src="dat.gui.js"></script>
+    <div id="globalVariables">
+        <script>
+            var width = 10;
+            var height = 10;
+            var mapName;
+            var currentMap;
+
+        </script>
+    </div>
+    <div id="mapGenerator">
+        <script>
+            /**
+             * Created by Shinjini on 3/14/2016.
+             */
+
+
+            //        SanitaireMaps.PATHABLE_TILES = [8, 9, 10, 11, 12, 15, 17, 18, 33, 37, 38, 39];
+            //
+            //        SanitaireMaps.CROSSWALK_TILES = [8, 9, 10, 11];
+            //
+            //        0 = road
+            //        1 = building
+            //        2 = intersection
+
+
+            /*
+            5x5 tiles
+            */
+            var Blocks = {
+                SOLID :
+                        [
+                            [1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1]
+                        ],
+
+                VERTICAL :
+                        [
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 1, 1]
+                        ],
+
+                HORIZONTAL :
+                        [
+                            [1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1],
+                            [0, 0, 0, 0, 0],
+                            [1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1]
+                        ],
+
+                PLUS :
+                        [
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 1, 1],
+                            [0, 0, 0, 0, 0],
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 1, 1]
+                        ],
+
+                T_LEFT :
+                        [
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 1, 1],
+                            [0, 0, 0, 1, 1],
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 1, 1]
+                        ],
+
+                T_RIGHT :
+                        [
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 0, 0],
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 1, 1]
+                        ],
+
+                T_UP :
+                        [
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 1, 1],
+                            [0, 0, 0, 0, 0],
+                            [1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1]
+                        ],
+
+                T_DOWN :
+                        [
+                            [1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1],
+                            [0, 0, 0, 0, 0],
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 1, 1]
+                        ],
+
+                UP_LEFT :
+                        [
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 1, 1],
+                            [0, 0, 0, 1, 1],
+                            [1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1]
+                        ],
+
+                UP_RIGHT :
+                        [
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 0, 0],
+                            [1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1]
+                        ],
+
+                DOWN_RIGHT :
+                        [
+                            [1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1],
+                            [1, 1, 0, 0, 0],
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 1, 1]
+                        ],
+
+                DOWN_LEFT :
+                        [
+                            [1, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1],
+                            [0, 0, 0, 1, 1],
+                            [1, 1, 0, 1, 1],
+                            [1, 1, 0, 1, 1]
+                        ]
+
+            }
+
+            var PathToRight = {
+                YES: {
+                    "HORIZONTAL":.142851,
+                    "PLUS":.142851,
+                    "T_LEFT":.142851,
+                    "T_UP":.142851,
+                    "T_DOWN":.142851,
+                    "UP_LEFT":.142851,
+                    "DOWN_LEFT":.142851
+                },
+                NO: {
+                    "SOLID":.2,
+                    "VERTICAL":.2,
+                    "T_RIGHT":.2,
+                    "UP_RIGHT":.2,
+                    "DOWN_RIGHT":.2
+                }
+            }
+
+            var PathDown = {
+                YES: {
+                    "VERTICAL":.142851,
+                    "PLUS":.142851,
+                    "T_LEFT":.142851,
+                    "T_RIGHT":.142851,
+                    "T_UP":.142851,
+                    "UP_LEFT":.142851,
+                    "UP_RIGHT":.142851
+                },
+                NO: {
+                    "SOLID":.2,
+                    "HORIZONTAL":.2,
+                    "T_DOWN":.2,
+                    "DOWN_RIGHT":.2,
+                    "DOWN_LEFT":.2
+                }
+            }
+
+            var BlockSuccessors = {
+                "SOLID": {
+                    right: PathToRight.NO,
+                    down: PathDown.NO
+                },
+                "VERTICAL":{
+                    right: PathToRight.NO,
+                    down: PathDown.YES
+                },
+                "HORIZONTAL":{
+                    right: PathToRight.YES,
+                    down: PathDown.NO
+                },
+                "PLUS":{
+                    right: PathToRight.YES,
+                    down: PathDown.YES
+                },
+                "T_LEFT":{
+                    right: PathToRight.NO,
+                    down: PathDown.YES
+                },
+                "T_RIGHT":{
+                    right: PathToRight.YES,
+                    down:PathDown.YES
+                },
+                "T_UP":{
+                    right: PathToRight.YES,
+                    down: PathDown.NO
+                },
+                "T_DOWN":{
+                    right: PathToRight.YES,
+                    down: PathDown.YES
+                },
+                "UP_LEFT":{
+                    right: PathToRight.NO,
+                    down: PathDown.NO
+                },
+                "UP_RIGHT":{
+                    right: PathToRight.YES,
+                    down:PathDown.NO
+                },
+                "DOWN_RIGHT":{
+                    right: PathToRight.YES,
+                    down: PathDown.YES
+                },
+                "DOWN_LEFT":{
+                    right: PathToRight.NO,
+                    down: PathDown.YES
+                }
+            };
+
+            /*
+             Generates a conceptual map based on descriptions of crossings.
+             For example,
+
+                |_|
+
+                11011 11111 11011
+                11011 11111 11011
+                11000 00000 00011
+                11111 11111 11111
+                11111 11111 11111
+
+             would be:
+                [["UP_RIGHT", "HORIZONTAL", "UP_LEFT"]
+             */
+            var mapDescriptionGenerate = function(mapRows, mapCols){
+                // 50x50 is 10x10 blocks
+
+                // If at (row, col) = (0, 0), pretend that up and left are SOLID
+                // If row = 0, pretend up is SOLID
+                // If col = 0, pretend left is SOLID
+                var map = [];
+                for (var row = 0; row < mapRows; row++){
+                    map.push([])
+                    var up; // these are strings eg, "SOLID"
+                    var left;
+                    for (var col = 0; col< mapCols; col++){
+                        if (row  == 0){
+                            if (col ==0){ // if (i, j) = (0, 0)
+                                up = "SOLID";
+                                left = "SOLID";
+                            } else {
+                                up = "SOLID";
+                                left = map[row][col-1];
+                            }
+                        }
+                        else if (col == 0){ // will not have the case (i, j) = (0, 0)
+                            up = map[row-1][col];
+                            left = "SOLID";
+                        } else { // all other cases
+                            up = map[row-1][col];
+                            left = map[row][col-1];
+                        }
+                        // find intersection
+                        var possibilitiesFromUp = BlockSuccessors[up].down;
+                        var possibilitiesFromUpKeys = Object.keys(possibilitiesFromUp);
+                        var possibilitiesFromLeft = BlockSuccessors[left].right;
+                        var possibilities = {};
+                        var sumProbabilities = 0;
+
+                        // edge cases
+                        var edgeCase = false;
+                        if (row == mapRows -1){
+                            edgeCase = true;
+                            if (col == mapCols - 1){ // bottom right cell
+                                var allowed = {
+                                    "SOLID":.5,
+                                    "UP_LEFT":.5
+                                }
+                            } else { // bottom row
+                                var allowed = {
+                                    "SOLID":.2,
+                                    "HORIZONTAL":.2,
+                                    "T_UP": .2,
+                                    "UP_RIGHT":.2,
+                                    "UP_LEFT":.2
+                                }
+                            }
+                        } else if (col == mapCols -1){ // rightmost Column
+                            edgeCase = true;
+                            var allowed = {
+                                "SOLID":.2,
+                                "VERTICAL":.2,
+                                "T_LEFT":.2,
+                                "UP_LEFT":.2,
+                                "DOWN_LEFT":.2
+                            }
+                        }
+                        if (edgeCase){
+                            var allowedKeys = Object.keys(allowed);
+                            for (var i = 0; i<allowedKeys.length; i++){
+                                var key = allowedKeys[i];
+                                if ((key in possibilitiesFromLeft)&&(key in possibilitiesFromUp)) {
+                                    var probability = allowed[key] * possibilitiesFromLeft[key] * possibilitiesFromUp[key];
+                                    sumProbabilities += probability;
+                                    possibilities[key] = probability;
+                                }
+                            }
+                        } else {
+                            for (var i = 0; i<possibilitiesFromUpKeys.length; i++){
+                                var key = possibilitiesFromUpKeys[i];
+                                if (key in possibilitiesFromLeft){
+                                    var probability = possibilitiesFromLeft[key]*possibilitiesFromUp[key];
+                                    sumProbabilities += probability;
+                                    possibilities[key] = probability;
+                                }
+                            }
+                        }
+                        var possibilitiesKeys = Object.keys(possibilities);
+                        var possibilitiesProbRanges = [];
+                        var probRange = 0;
+                        for (var i = 0; i<possibilitiesKeys.length; i++){
+                            var key = possibilitiesKeys[i];
+                            var newProb = possibilities[key]/sumProbabilities;
+                            possibilities[key] = newProb; // don't actually need to do this
+                            probRange += newProb;
+                            possibilitiesProbRanges.push(probRange);
+                        }
+
+                        // get random number
+                        var rand = Math.random();
+                        var index;
+                        for (var i = 0; i<possibilitiesKeys.length; i++){
+                            if (rand<possibilitiesProbRanges[i]){
+                                index = i;
+                                break;
+                            }
+                        }
+                        var newBlock = possibilitiesKeys[index];
+                        if (!newBlock){
+                            newBlock = "SOLID"; // sometimes happens for the last cell
+                        }
+                        map[row].push(newBlock);
+                    }
+                }
+                return map
+            }
+
+            /*
+                Decodes a mapdescription to produce an array of 0-1 which represents the map
+             */
+            var mapDecode = function(mapDescription){
+                var data = [];
+                for (var rowNum = 0; rowNum<mapDescription.length; rowNum++){
+                    for (var blockRowNum = 0; blockRowNum<5; blockRowNum++){
+                        var rowData = [];
+                        for (var colNum = 0; colNum<mapDescription[rowNum].length; colNum++){
+                            var description = mapDescription[rowNum][colNum];
+                            var descriptionArray = Blocks[description];
+                            rowData = rowData.concat(descriptionArray[blockRowNum]);
+                        }
+                        data.push(rowData);
+                    };
+                }
+                return data;
+            };
+
+            /*
+                Generates a random row*col map
+             */
+            var mapGenerate = function(row, col){
+                return mapDecode(mapDescriptionGenerate(row, col));
+            }
+
+        </script>
+    </div>
+    <div id="displayMap">
+        <script>
+            /*
+                displays the map as a canvas element inside #mapboard
+            */
+            var displayMap = function(map){
+                $("#mapboard").html("");
+                var width = map[0].length;         // width in pixels
+                var height = map.length;
+
+                // Create canvas
+                var canvas = document.createElement('canvas');
+                var context = canvas.getContext('2d');
+                context.webkitImageSmoothingEnabled = false;
+                context.mozImageSmoothingEnabled = false;
+                context.imageSmoothingEnabled = false; /// future
+                var imgData = context.createImageData(width, height);
+
+                canvas.height = height;
+                canvas.width = width;
+
+                for (var x = 0; x < imgData.width; x++)  {
+                    for (var y = 0; y < imgData.height; y++)  {
+
+                        // Index of the pixel in the array
+                        var idx = (x + y * width) * 4;
+
+                        // If you want to know the values of the pixel
+//                                var r = canvasData.data[idx + 0];
+//                                var g = canvasData.data[idx + 1];
+//                                var b = canvasData.data[idx + 2];
+//                                var a = canvasData.data[idx + 3];
+                        var r;
+                        var g;
+                        var b;
+                        if (map[y][x] === 1){ // building
+//                                    r = 43
+//                                    g = 104;
+//                                    b = 118;
+                            r = 169;
+                            g = 169;
+                            b = 169;
+                        } else if (map[y][x] === 0){ // road
+//                                    r = 169;
+//                                    g = 169;
+//                                    b = 169;
+                            r = 0;
+                            g = 0;
+                            b = 0;
+                        } else {
+                            r = 255;
+                            g = 255;
+                            b = 255;
+                        }
+
+                        // If you want to update the values of the pixel
+                        imgData.data[idx + 0] = r; // Red channel
+                        imgData.data[idx + 1] = g; // Green channel
+                        imgData.data[idx + 2] = b; // Blue channel
+                        imgData.data[idx + 3] = 255; // Alpha channel
+                    }
+                }
+
+                // put data to context at (0, 0)
+                context.putImageData(imgData, 0, 0);
+
+                $("#mapboard").html(canvas);
+                $("#mapboard canvas").css({
+                    "image-rendering": "optimizeSpeed",             /*// Older versions of FF*/
+                    "image-rendering": "-moz-crisp-edges",          /*// FF 6.0+*/
+                    "image-rendering": "-webkit-optimize-contrast", /*// Webkit (non standard naming)*/
+                    "image-rendering": "-o-crisp-edges",            /*// OS X & Windows Opera (12.02+)*/
+                    "image-rendering": "crisp-edges",               /*// Possible future browsers.*/
+                    "image-rendering": "pixelated",
+                    "-ms-interpolation-mode": "nearest-neighbor"   /*// IE (non standard naming)*/
+                }).css({
+                    width: width*10 + "px",
+                    height: "auto"
+                });
+            }
+        </script>
+    </div>
+    <div id="dat.gui">
+        <script type="text/javascript">
+
+            var mapTweeker = function() {
+                this.mapNameToSave = "newMap";
+                this.mapNameToLoad = "test12";
+                this.width = width;
+                this.height = height;
+                this.update = function(){
+                    var map = mapGenerate(Math.ceil(this.height),Math.ceil(this.width));
+                    currentMap = map;
+                    displayMap(map);
+                };
+                this.load = function(){
+                    mapName = this.mapNameToLoad;
+                    $.get(mapName + ".csv", function(data) {
+                        var rows = data.split("\n");
+
+                        var parsedMap = [];
+                        for (var i = 0; i<rows.length-1; i++){
+                            var cols = rows[i].split(",");
+                            parsedMap.push(cols);
+                            for (var j = 0; j<parsedMap[i].length;j++){
+                                parsedMap[i][j] = parseInt(parsedMap[i][j]);
+                            }
+                        }
+
+                        currentMap = parsedMap;
+                        // display parsed map
+                        displayMap(parsedMap);
+                    });
+
+
+
+                };
+                this.save = function(){
+                    var csvContent = "data:text/csv;charset=utf-8,";
+                    currentMap.forEach(function(infoArray, index){
+                        dataString = infoArray.join(",");
+                        csvContent += index < currentMap.length ? dataString+ "\n" : dataString;
+
+                    });
+
+
+                    var encodedUri = encodeURI(csvContent);
+                    var link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    var name = this.mapNameToSave;
+                    if (!name){
+                        var millis = new Date();
+                        var filename = "cs_map_" + millis.getTime() + ".csv";
+                    } else {
+                        var filename = name + ".csv";
+                    }
+
+                    link.setAttribute("download", filename);
+
+                    link.click(); // This will download the data file named "{file name}.csv".
+
+                };
+            };
+        </script>
+    </div>
+    <div id="queryString">
+        <script>
+            var QueryString = function () {
+                // This function is anonymous, is executed immediately and
+                // the return value is assigned to QueryString!
+                var query_string = {};
+                var query = window.location.search.substring(1);
+                var vars = query.split("&");
+                for (var i=0;i<vars.length;i++) {
+                    var pair = vars[i].split("=");
+                    // If first entry with this name
+                    if (typeof query_string[pair[0]] === "undefined") {
+                        query_string[pair[0]] = decodeURIComponent(pair[1]);
+                        // If second entry with this name
+                    } else if (typeof query_string[pair[0]] === "string") {
+                        var arr = [ query_string[pair[0]],decodeURIComponent(pair[1]) ];
+                        query_string[pair[0]] = arr;
+                        // If third or later entry with this name
+                    } else {
+                        query_string[pair[0]].push(decodeURIComponent(pair[1]));
+                    }
+                }
+                return query_string;
+            }();
+        </script>
+    </div>
+    <script>
+        window.onload = function() {
+            var mapTweekerUI = new mapTweeker();
+            var gui = new dat.GUI();
+
+            var f1 = gui.addFolder("tweek");
+            f1.add(mapTweekerUI, 'mapNameToSave');
+            f1.add(mapTweekerUI, 'width', 1, 20);
+            f1.add(mapTweekerUI, 'height', 1, 20);
+            f1.add(mapTweekerUI, 'update');
+            f1.add(mapTweekerUI, 'save');
+            f1.closed = false;
+
+            var f2 = gui.addFolder("load");
+            f2.add(mapTweekerUI, 'mapNameToLoad');
+            f2.add(mapTweekerUI, 'load');
+            f2.closed = false;
+
+            var map = mapGenerate(height,width);
+            currentMap = map;
+            displayMap(map);
+        };
+    </script>
+</div>
+</body>
+</html>
