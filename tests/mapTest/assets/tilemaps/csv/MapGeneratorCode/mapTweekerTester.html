@@ -25,6 +25,7 @@
 
         </script>
     </div>
+    <script type="text/javascript" src="graphStuff.js"></script>
     <div id="mapGenerator">
         <script>
             /**
@@ -398,11 +399,45 @@
                 Generates a random row*col map
              */
             var mapGenerate = function(row, col){
-                return mapDecode(mapDescriptionGenerate(row, col));
+                var map = mapDecode(mapDescriptionGenerate(row, col));
+                combineDisconnected(map);
+                return map;
+            }
+
+            /** http://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+             * Randomize array element order in-place.
+             * Using Durstenfeld shuffle algorithm.
+             */
+            function shuffleArray(array) {
+                for (var i = array.length - 1; i > 0; i--) {
+                    var j = Math.floor(Math.random() * (i + 1));
+                    var temp = array[i];
+                    array[i] = array[j];
+                    array[j] = temp;
+                }
+                return array;
+            }
+
+            // mutates
+            var combineDisconnected = function(map){
+                var components = findComponents(map);
+                shuffleArray(components);
+                if (components.length>1){
+                    for (var i = 0; i < components.length; i++){
+                        if (!(i===0)){
+                            var first = i-1;
+                            var second = i;
+                            // select two random points in 1st and 2nd component
+                            // join them
+                        }
+                    }
+                    console.log(components.length);
+                }
             }
 
         </script>
     </div>
+
     <div id="displayMap">
         <script>
             /*
