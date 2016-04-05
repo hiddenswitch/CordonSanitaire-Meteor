@@ -47,7 +47,7 @@ if (Meteor.isClient) {
     Template.mainmenu.helpers({
         showPlayButton: function () {
             timerTilNextGameDependency.depend(); // keeps this called every 1000ms
-            if(Sanitaire.TIME_RESTRICTED_ENTRY === "NO_RESTRICTION") {
+            if (Sanitaire.TIME_RESTRICTED_ENTRY === "NO_RESTRICTION") {
                 return true;
             }
             else {
@@ -82,11 +82,11 @@ if (Meteor.isClient) {
         lobbyCountdownSeconds: function () {
             // returns the current time til start for the lobby
             timerDependency.depend();   // keeps this called every 10ms
-            var game = Games.findOne(this.gameId, {fields: {countdownStartTime:1}});
+            var game = Games.findOne(this.gameId, {fields: {countdownStartTime: 1}});
             var millisSinceCountdownStarted = new Date() - game.countdownStartTime;
             var totalCountdownSeconds = Meteor.settings && Meteor.settings.public && Meteor.settings.public.countdownSeconds || 10;
 
-            var countdown = totalCountdownSeconds - Math.floor(millisSinceCountdownStarted/1000);
+            var countdown = totalCountdownSeconds - Math.floor(millisSinceCountdownStarted / 1000);
             return countdown;
         }
     });
@@ -113,7 +113,7 @@ if (Meteor.isClient) {
             return Session.get("showing destroy button");
         },
         showingBuildAndDestroyButtons: function () {
-            return Session.get("showing build and destroy buttons");;
+            return Session.get("showing build and destroy buttons");
         },
         showPatientZeroIsolated: function () {
             return Session.get("patient zero isolated");
