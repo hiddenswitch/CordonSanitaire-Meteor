@@ -7,9 +7,15 @@ SanitaireMaps = (Meteor.isClient ? window : global).Maps || {};
  * Tiles for p-zero pathing and legal moves by players
  * @type {number[]}
  */
-SanitaireMaps.PATHABLE_TILES = [8, 9, 10, 11, 12, 15, 17, 18, 33, 37, 38, 39];
+SanitaireMaps.PATHABLE_TILES = [8, 9, 10, 11, 12, 15, 17, 18, 19, 20, 21, 22, 23, 36, 37, 38, 39];
+
+SanitaireMaps.ROAD_TILES = [12, 19, 20, 21, 22, 23];
 
 SanitaireMaps.CROSSWALK_TILES = [8, 9, 10, 11];
+
+SanitaireMaps.INTERSECTION_TILES = [15];
+
+SanitaireMaps.QUARANTINE_TILES = [13, 14];
 
 /**
  * Tile colors for colored streets
@@ -20,7 +26,7 @@ SanitaireMaps.streetColorTile = {
     /**
      * Closed quarantine but noone inside. Color GREY
      */
-    GREY: 33,
+    GREY: 36,
     /**
      * Only healthy people trapped. Color YELLOW
      */
@@ -139,19 +145,19 @@ SanitaireMaps.getIntersectionIdForTilePosition = function (x, y, mapInfo) {
 SanitaireMaps.getMapInfo = function (phaserTileMapInterface) {
     function isTileCrosswalk(tile) {
         // index of crosswalk tiles
-        return (tile.index === 8 || tile.index === 9 || tile.index === 10 || tile.index === 11);
+        return _.indexOf(SanitaireMaps.CROSSWALK_TILES, tile.index) != -1;
     }
 
     function isTileIntersection(tile) {
-        return tile.index === 15;
+        return _.indexOf(SanitaireMaps.INTERSECTION_TILES, tile.index) != -1;
     }
 
     function isTileRoad(tile) {
-        return tile.index === 12;
+        return _.indexOf(SanitaireMaps.ROAD_TILES, tile.index) != -1;
     }
 
     function isTileQuarantine(tile) {
-        return (tile.index === 13 || tile.index === 14);
+        return _.indexOf(SanitaireMaps.QUARANTINE_TILES, tile.index) != -1;
     }
 
     // create a dictionary of all map tiles

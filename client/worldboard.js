@@ -12,30 +12,37 @@
  */
 var updateRoadTiles = function (map, roadId, mapInfo, tileState) {
 
-    var tileColor;
+    var newTileColor;
     switch (tileState) {
         case GraphAnalysis.roadStatus.OPEN:
-            tileColor = SanitaireMaps.streetColorTile.NONE;
+            newTileColor = SanitaireMaps.streetColorTile.NONE;
             break;
         case GraphAnalysis.roadStatus.CLOSED_EMPTY:
-            tileColor = SanitaireMaps.streetColorTile.NONE;
+            newTileColor = SanitaireMaps.streetColorTile.NONE;
             break;
         case GraphAnalysis.roadStatus.CLOSED_RESPONDERS:
-            tileColor = SanitaireMaps.streetColorTile.NONE;
+            newTileColor = SanitaireMaps.streetColorTile.NONE;
             break;
         case GraphAnalysis.roadStatus.CLOSED_CONTAINED:
-            tileColor = SanitaireMaps.streetColorTile.YELLOW;
+            newTileColor = SanitaireMaps.streetColorTile.YELLOW;
             break;
         case GraphAnalysis.roadStatus.CLOSED_ISOLATED:
-            tileColor = SanitaireMaps.streetColorTile.GREEN;
+            newTileColor = SanitaireMaps.streetColorTile.GREEN;
             break;
         default:
-            tileColor = SanitaireMaps.streetColorTile.NONE;
+            newTileColor = SanitaireMaps.streetColorTile.NONE;
     }
     _.each(mapInfo.roadsById[roadId].innerTiles, function (tile) {
-        if (map.getTile(tile.x, tile.y).index != tileColor) {
-            // only color tiles that need to be recolored
-            map.fill(tileColor, tile.x, tile.y, 1, 1);
+        var currentTileColor = map.getTile(tile.x, tile.y).index;
+
+        if (currentTileColor != newTileColor) {
+            // check the other road tiles now that there are more
+            if(!(newTileColor === SanitaireMaps.streetColorTile.NONE
+                && _.indexOf(SanitaireMaps.ROAD_TILES, currentTileColor) != -1)){
+
+                // only color tiles that need to be recolored
+                map.fill(newTileColor, tile.x, tile.y, 1, 1);
+            }
         }
     });
 };
@@ -640,7 +647,7 @@ Template.worldBoard.onRendered(function () {
             var filename = Sanitaire.DEFAULT_MAP;
             var mapPath = "/assets/tilemaps/csv/" + filename;
             phaserGame.load.tilemap('map', mapPath, null, Phaser.Tilemap.CSV);
-            phaserGame.load.image('tiles', '/assets/tilemaps/tiles/Basic_CS_Map_simple.png');
+            phaserGame.load.image('tiles', '/assets/tilemaps/tiles/MembersWeekMap_01.png');
             phaserGame.load.image('barricade_horiz', '/assets/sprites/barricade_horiz.png');
             phaserGame.load.spritesheet('player', '/assets/sprites/cdc_man.png', 16, 16);
             phaserGame.load.spritesheet('highlight_local_player', '/assets/sprites/highlight_local_rings_64x64x8.png', 64, 64);
