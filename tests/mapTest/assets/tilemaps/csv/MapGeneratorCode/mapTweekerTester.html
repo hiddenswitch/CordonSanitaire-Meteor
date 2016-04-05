@@ -154,7 +154,7 @@
                             [1, 1, 0, 1, 1]
                         ]
 
-            }
+            };
 
             // weights do no have to add to 1, the will be normalized in all cases
             var PathToRight = {
@@ -399,7 +399,20 @@
                 Generates a random row*col map
              */
             var mapGenerate = function(row, col){
-                var map = mapDecode(mapDescriptionGenerate(row, col));
+                var mapEmpty = true;
+                while (mapEmpty){
+                    var map = mapDecode(mapDescriptionGenerate(row, col));
+                    if ((map.length === Blocks.SOLID.length)&&(map[0].length === Blocks.SOLID.length)){ // for the 5x5 map that will always be empty
+                        break;
+                    }
+                    for (var i = 0; i<map.length; i++){
+                        for (var j = 0; j<map[0].length; j++){
+                            if (map[i][j] === 0){
+                                mapEmpty = false;
+                            }
+                        }
+                    }
+                }
                 combineDisconnected(map);
                 return map;
             }
@@ -420,17 +433,113 @@
 
             // mutates
             var combineDisconnected = function(map){
-                var components = findComponents(map);
-                shuffleArray(components);
+                var components = findComponents(map, TileType.PASSABLE);
                 if (components.length>1){
-                    for (var i = 0; i < components.length-1; i++){
-                        var first = i;
-                        var second = i+1;
-                        // select two random points in 1st and 2nd component
+                    shuffleArray(components);
+                    for (var compNum = 0; compNum < components.length-1; compNum++){
+                        var first = components[compNum];
+                        var second = components[compNum+1];
+                        // select a point in 1st and 2nd component
                         // join them
+                        var point1 = first[Math.floor(first.length/2)];
+                        var point2 = second[Math.floor(second.length/2)];
+                        var x1 = point1[1];
+                        var y1 = point1[0];
+                        var x2 = point2[1];
+                        var y2 = point2[0];
+
+                        var center = findBlockCenter(map, y1, x1);
+                        x1 = center[1];
+                        y1 = center[0];
+                        center = findBlockCenter(map, y2, x2);
+                        x2 = center[1];
+                        y2 = center[0];
+
+                        var x_start;
+                        var x_end;
+                        var y_start;
+                        var y_end;
+                        var x_hold;
+                        var y_hold;
+                        if (x1<x2){
+                            x_start = x1;
+                            x_end = x2;
+                        } else {
+                            x_start = x2;
+                            x_end = x1;
+                        }
+                        if (y1<y2){
+                            y_start = y1;
+                            y_end = y2;
+                        } else {
+                            y_start = y2;
+                            y_end = y1;
+                        }
+
+                        if ((x1<x2 && y1<y2) || (x2<x1 && y2<y1)){ //low high
+                            x_hold = x_start;
+                            y_hold = y_end;
+                        } else{ //low low
+                            x_hold = x_start;
+                            y_hold = y_start;
+                        }
+
+
+                        for (var i = x_start; i<x_end+1; i++){
+                            if (map[y_hold][i] === 1){
+                                map[y_hold][i] = 0;
+                            }
+                        }
+
+                        for (var j = y_start; j<y_end+1; j++){
+                            if (map[j][x_hold] === 1){
+                                map[j][x_hold] = 0;
+                            }
+                        }
                     }
-                    console.log(components.length);
                 }
+
+            };
+
+            var findBlockCenter = function(map, row, col){
+                if (row>map.length-1 || row<0){
+                    return [];
+                }
+                if (col>map[0].length-1 || col<0){
+                    return [];
+                }
+                var blockLen = Blocks.SOLID.length;
+                var row_start = row - Math.floor((blockLen-1)/2);
+                var col_start = col - Math.floor((blockLen-1)/2);
+                var row_end = row + Math.ceil((blockLen-1)/2);
+                var col_end = col + Math.ceil((blockLen-1)/2);
+                if (row_start<0){
+                    row_start = 0;
+                }
+                if (row_end>map.length-1){
+                    row_end = map.length-1;
+                }
+                if (col_start<0){
+                    col_start = 0;
+                }
+                if (col_end>map[0].length-1){
+                    col_end = map[0].length-1;
+                }
+                for (var i = row_start; i<row_end+1; i++){
+                    for (var j = col_start; j<col_end+1; j++){
+                        if ((i%blockLen)=== Math.floor((blockLen-1)/2) &&
+                                (j%blockLen)=== Math.floor((blockLen-1)/2)){
+                            if (map[i][j] === 0){
+                                return [i,j]
+                            }
+                        }
+                    }
+                }
+
+
+                return [];
+
+
             }
 
         </script>
@@ -485,6 +594,10 @@
                             r = 0;
                             g = 0;
                             b = 0;
+                        } else if (map[y][x] === 2){ //intersection
+                            r = 50;
+                            g = 50;
+                            b = 50;
                         } else {
                             r = 255;
                             g = 255;
@@ -541,19 +654,23 @@
                     if (density === 0){
                         density = 1;
                     } else if (density<0){
-                        density = 1/density;
+                        density = 10/(-density);
                     } else {
-                        density = 1*density;
+                        density = 5*density;
                     }
-                    PathDown.YES.PLUS = density;
-                    PathToRight.YES.PLUS = density;
                     if (this.deadends){
-                        PathDown.YES.SOLID = .2;
-                        PathToRight.YES.SOLID = .2;
+                        PathDown.YES.SOLID = .5;
+                        PathToRight.YES.SOLID = .5;
                     } else {
                         PathDown.YES.SOLID = 0;
                         PathToRight.YES.SOLID = 0;
                     }
+                    PathDown.YES.VERTICAL = 2/density;
+                    PathDown.NO.HORIZONTAL = 2/density;
+                    PathToRight.YES.HORIZONTAL = 2/density;
+                    PathToRight.NO.VERTICAL = 2/density;
+                    PathDown.NO.SOLID = 5/density;
+                    PathToRight.NO.SOLID = 5/density;
                     mapUpdate(Math.round(this.height),Math.round(this.width));
                 };
                 this.load = function(){
@@ -641,7 +758,7 @@
             f1.add(mapTweekerUI, 'mapNameToSave');
             f1.add(mapTweekerUI, 'width', 1, 20);
             f1.add(mapTweekerUI, 'height', 1, 20);
-            f1.add(mapTweekerUI, 'density', -100, 100);
+            f1.add(mapTweekerUI, 'density', -10, 10);
             f1.add(mapTweekerUI, 'deadends');
             f1.add(mapTweekerUI, 'update');
             f1.add(mapTweekerUI, 'save');
