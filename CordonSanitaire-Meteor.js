@@ -30,6 +30,9 @@ if (Meteor.isClient) {
                 Router.go('game', {gameId: gameId}, {query: {playerId: playerId}});
             });
         },
+        'click button#notify-me': function () {
+            Router.go('sms_signup', {userId: Meteor.userId()});
+        },
         'click button#profile': function () {
             Router.go('profile', {userId: Meteor.userId()});
         },
@@ -157,6 +160,41 @@ if (Meteor.isClient) {
         'click button#mainmenu': function () {
             // go back to mainmenu
             Router.go('mainmenu');
+        }
+    });
+
+    Template.sms_signup.events({
+        'click button#submit_sms': function () {
+            // get cell number from dom
+            var cellNumber = document.getElementById("sms_number").value;
+            // format the cell number correctly
+            // submit number to the database
+            var userId = Meteor.userId();
+            // update the user's cell number
+            Meteor.users.update(userId, {
+                $set: {cellNumber: cellNumber}
+            });
+            // update the dom to confirm sign up
+            // route to notify
+            Router.go('notify');
+        },
+        'click button#mainmenu': function () {
+            // go back to mainmenu
+            Router.go('mainmenu');
+        }
+    });
+
+    Template.notify.events({
+        'click button#mainmenu': function () {
+            // go back to mainmenu
+            Router.go('mainmenu');
+        }
+    });
+
+    Template.notify.helpers({
+        alreadySignedUp: function () {
+            // TODO: check to see if the user is signed up to receive at some time
+            return false;
         }
     });
 
