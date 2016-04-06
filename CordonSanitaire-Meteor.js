@@ -265,7 +265,7 @@ if (Meteor.isServer) {
                 // look to see who is signed up to receive a text message now
                 // send text message to those people
                 // if you digging through github, feel free to say hi to Jonathan Bobrow :)
-                sendMessage(['+18186207518']);
+                //sendMessage(['+18186207518']);
             }
         });
     }
