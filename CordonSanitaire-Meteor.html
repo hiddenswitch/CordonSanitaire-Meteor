@@ -50,13 +50,38 @@
             {{#if showPlayButton}}
                 <button class="inputButton playButton" id="play">Play now</button>
             {{else}}
-                <button class="inputButton playButton" id="later">Come back later</button>
+                <div>
+                    <p>No game in progress</p>
+                    <button class="inputButton playButton" id="notify-me">Text Me</button>
+                    <p>for the next game.</p>
+                </div>
             {{/if}}
             <!--<button class="inputButton profileButton" id="profile">My profile</button>-->
             <button class="inputButton tutButton" id="tutorial">Tutorial</button>
             <br>
             <br>
             <p style="padding: 0 40px; font-size: .8em;">Check out the tutorial if this is your first time playing!!</p>
+        </div>
+    </div>
+</template>
+
+<!-- Sign up for Twilio -->
+<template name="sms_signup">
+    <div class="textCenter">
+        <input type="text" id="sms_number">
+        <button class="inputButton" id="submit_sms">text me</button>
+        <div class="bottomDiv">
+            <button id="mainmenu" class="inputButton">Main Menu</button>
+        </div>
+    </div>
+</template>
+
+<!-- Notification Confirmation Page -->
+<template name="notify">
+    <div class="textCenter">
+        <p>We've got you signed up for the next game. No one knows when the next outbreak might be, but we'll let you know when we need more responders.</p>
+        <div class="bottomDiv">
+            <button id="mainmenu" class="inputButton">Main Menu</button>
         </div>
     </div>
 </template>

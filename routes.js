@@ -35,7 +35,7 @@ Router.route('/mainmenu', function () {
         return;
     }
 
-    // TODO: Check to see if user has seen the tutorial, and show it before game if not yet seen
+    // Check to see if user has seen the tutorial, and show it before game if not yet seen
     // (Comment this out if we only want players to access tutorial on their own)
     var user = Meteor.users.findOne(userId, {fields: {hasSeenTutorial: 1}});
     var hasSeenTutorial = user.hasSeenTutorial;
@@ -68,7 +68,19 @@ Router.route('/tutorial', function () {
     $(document.body).css('background-color', '#ffffff');
 }, {name: 'tutorial'});
 
-Router.route('/notify/:userId', function () {
+Router.route('/sms_signup/:userId', function () {
+    var userId = Meteor.userId();
+    var user = Meteor.users.findOne(userId, {fields: {cellNumber: 1}});
+    var cellNumber = user.cellNumber;
+    if (cellNumber != null) {
+        this.redirect('notify');
+        return;
+    }
+    this.render('sms_signup');
+    $(document.body).css('background-color', '#ffffff');
+}, {name: 'sms_signup'});
+
+Router.route('/notify', function () {
     this.render('notify');
     $(document.body).css('background-color', '#ffffff');
 }, {name: 'notify'});
