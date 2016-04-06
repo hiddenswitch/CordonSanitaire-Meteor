@@ -37,25 +37,41 @@ Router.route('/mainmenu', function () {
 
     // TODO: Check to see if user has seen the tutorial, and show it before game if not yet seen
     // (Comment this out if we only want players to access tutorial on their own)
-    //var user = Meteor.users.findOne(userId, {fields: {hasSeenTutorial: 1}});
-    //var hasSeenTutorial = user.hasSeenTutorial;
-    //if (!hasSeenTutorial) {
-    //    this.render('tutorial');
-    //    return;
-    //}
+    var user = Meteor.users.findOne(userId, {fields: {hasSeenTutorial: 1}});
+    var hasSeenTutorial = user.hasSeenTutorial;
+    if (!hasSeenTutorial) {
+        this.redirect('tutorial');
+        return;
+    }
 
     this.render('mainmenu');
     $(document.body).css('background-color', '#ffffff');
 }, {name: 'mainmenu'});
 
+// this gives permission to the client to update the Meteor.users collection
+// but only for themselves... sorry hackerzzz
+Meteor.users.allow({
+   update:function(userId, doc) {
+       return userId === doc._id;
+   }
+});
+
 Router.route('/tutorial', function () {
+    var userId = Meteor.userId();
+
+    // update the user to show that they have seen the tutorial
+    Meteor.users.update(userId, {
+        $set: {hasSeenTutorial: true}
+    });
+
     this.render('tutorial');
-
-    // TODO: update the user to show that they have seen the tutorial
-
     $(document.body).css('background-color', '#ffffff');
 }, {name: 'tutorial'});
 
+Router.route('/notify/:userId', function () {
+    this.render('notify');
+    $(document.body).css('background-color', '#ffffff');
+}, {name: 'notify'});
 
 Router.route('/profile/:userId', function () {
     this.render('profile');
