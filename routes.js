@@ -70,9 +70,9 @@ Router.route('/tutorial', function () {
 
 Router.route('/sms_signup/:userId', function () {
     var userId = Meteor.userId();
-    var user = Meteor.users.findOne(userId, {fields: {cellNumber: 1}});
-    var cellNumber = user.cellNumber;
-    if (cellNumber != null) {
+    var user = Meteor.users.findOne(userId, {fields: {sms: 1}});
+    var sms = user.sms;
+    if (sms != null) {
         this.redirect('notify');
         return;
     }

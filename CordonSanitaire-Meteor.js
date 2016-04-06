@@ -167,12 +167,20 @@ if (Meteor.isClient) {
         'click button#submit_sms': function () {
             // get cell number from dom
             var cellNumber = document.getElementById("sms_number").value;
-            // format the cell number correctly
+            // TODO: format the cell number correctly
             // submit number to the database
             var userId = Meteor.userId();
             // update the user's cell number
+            var millis = TimeSync.serverTime(new Date());
+            var date = new Date(millis);
+            var hourToText = (date.getHours() + 1) % 24;
             Meteor.users.update(userId, {
-                $set: {cellNumber: cellNumber}
+                $set: {
+                    sms: {
+                        number: cellNumber,
+                        hourToText: hourToText
+                    }
+                }
             });
             // update the dom to confirm sign up
             // route to notify
@@ -272,13 +280,13 @@ if (Meteor.isServer) {
 
     var twilio = Twilio(accountSid, authToken);
 
-    var sendMessage = function (numbers) {
+    var sendMessageToNumbers = function (message, numbers) {
         /* SEE TWILIO API DOCS HERE: http://twilio.github.io/twilio-node/ */
         _.each(numbers, function (number) {
             twilio.messages.create({
                 to: number,
                 from: twilioNumber,
-                body: 'FAKE URGENT. Patient Zero detected with contagion. Response needed! http://cordon.meteorapp.com'
+                body: message
 
             }, function (err, res) {
                 if (err) {
@@ -292,6 +300,16 @@ if (Meteor.isServer) {
         });
     };
 
+    var findUsersToSMS = function() {
+        /* do something here */
+        // look to see who is signed up to receive a text message now
+        var date = new Date();
+        var currentHour = (date.getHours() + 1) % 24;   // this is related to the 59th minute... i.e. text those signed up for the next hour
+        var users = Meteor.users.find({"sms.hourToText": currentHour}).fetch()
+
+        return users;
+    };
+
     Cron.jobs = function () {
         SyncedCron.add({
             name: "Twilio Cron Job",
@@ -299,12 +317,11 @@ if (Meteor.isServer) {
                 return parser.recur().on(59).minute(); // called on the 59th minute...
             },
             job: function () {
-                /* do something here */
-                // look to see who is signed up to receive a text message now
-                // send text message to those people
-                // if you digging through github, feel free to say hi to Jonathan Bobrow :)
-                //sendMessage(['+18186207518']);
+                var users = findUsersToSMS();
+                var numbers = users.map(function(user) { return user.sms.number; });
+                var message = 'FAKE URGENT. Patient Zero detected with contagion. Response needed! http://cordon.meteorapp.com';
+                sendMessageToNumbers(message, numbers);
             }
         });
-    }
+    };
 }
