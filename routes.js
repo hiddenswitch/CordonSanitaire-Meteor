@@ -35,12 +35,24 @@ Router.route('/mainmenu', function () {
         return;
     }
 
+    // TODO: Check to see if user has seen the tutorial, and show it before game if not yet seen
+    // (Comment this out if we only want players to access tutorial on their own)
+    //var user = Meteor.users.findOne(userId, {fields: {hasSeenTutorial: 1}});
+    //var hasSeenTutorial = user.hasSeenTutorial;
+    //if (!hasSeenTutorial) {
+    //    this.render('tutorial');
+    //    return;
+    //}
+
     this.render('mainmenu');
     $(document.body).css('background-color', '#ffffff');
 }, {name: 'mainmenu'});
 
 Router.route('/tutorial', function () {
     this.render('tutorial');
+
+    // TODO: update the user to show that they have seen the tutorial
+
     $(document.body).css('background-color', '#ffffff');
 }, {name: 'tutorial'});
 
@@ -70,15 +82,6 @@ Router.route('/g/:gameId', function () {
         this.render('loading');
         return;
     }
-
-    // Check to see if user has seen the tutorial, and show it before game if not yet seen
-    // (Comment this out if we only want players to access tutorial on their own)
-    //var user = Meteor.users.findOne(userId, {fields: {hasSeenTutorial: 1}});
-    //var hasSeenTutorial = user.hasSeenTutorial;
-    //if (!hasSeenTutorial) {
-    //    this.render('tutorial');
-    //    return;
-    //}
 
     switch (game.state) {
         case Sanitaire.gameStates.LOBBY:
