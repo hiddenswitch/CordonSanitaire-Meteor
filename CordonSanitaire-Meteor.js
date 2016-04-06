@@ -30,6 +30,9 @@ if (Meteor.isClient) {
                 Router.go('game', {gameId: gameId}, {query: {playerId: playerId}});
             });
         },
+        'click button#notify-me': function () {
+            Router.go('sms_signup', {userId: Meteor.userId()});
+        },
         'click button#profile': function () {
             Router.go('profile', {userId: Meteor.userId()});
         },
@@ -47,7 +50,7 @@ if (Meteor.isClient) {
     Template.mainmenu.helpers({
         showPlayButton: function () {
             timerTilNextGameDependency.depend(); // keeps this called every 1000ms
-            if(Sanitaire.TIME_RESTRICTED_ENTRY === "NO_RESTRICTION") {
+            if (Sanitaire.TIME_RESTRICTED_ENTRY === "NO_RESTRICTION") {
                 return true;
             }
             else {
@@ -82,11 +85,11 @@ if (Meteor.isClient) {
         lobbyCountdownSeconds: function () {
             // returns the current time til start for the lobby
             timerDependency.depend();   // keeps this called every 10ms
-            var game = Games.findOne(this.gameId, {fields: {countdownStartTime:1}});
+            var game = Games.findOne(this.gameId, {fields: {countdownStartTime: 1}});
             var millisSinceCountdownStarted = new Date() - game.countdownStartTime;
             var totalCountdownSeconds = Meteor.settings && Meteor.settings.public && Meteor.settings.public.countdownSeconds || 10;
 
-            var countdown = totalCountdownSeconds - Math.floor(millisSinceCountdownStarted/1000);
+            var countdown = totalCountdownSeconds - Math.floor(millisSinceCountdownStarted / 1000);
             return countdown;
         }
     });
@@ -113,7 +116,7 @@ if (Meteor.isClient) {
             return Session.get("showing destroy button");
         },
         showingBuildAndDestroyButtons: function () {
-            return Session.get("showing build and destroy buttons");;
+            return Session.get("showing build and destroy buttons");
         },
         showPatientZeroIsolated: function () {
             return Session.get("patient zero isolated");
@@ -124,8 +127,14 @@ if (Meteor.isClient) {
         showPatientZeroLoose: function () {
             return Session.get("patient zero loose");
         },
-        isGameZoomedOut: function() {
+        isGameZoomedOut: function () {
             return Session.get("is game zoomed out");
+        },
+        gameBottomPadding: function () {
+            // Note: This extends the game div to fill the blank space underneath the canvas...
+            // this will probably be filled with background art at some point, but does need to be dynamic to window size
+            var padding = window.innerHeight - 490; // 90px is top padding, and gameboard is 400px tall
+            return padding > 0 ? padding : 0;
         }
     });
 
@@ -151,6 +160,41 @@ if (Meteor.isClient) {
         'click button#mainmenu': function () {
             // go back to mainmenu
             Router.go('mainmenu');
+        }
+    });
+
+    Template.sms_signup.events({
+        'click button#submit_sms': function () {
+            // get cell number from dom
+            var cellNumber = document.getElementById("sms_number").value;
+            // format the cell number correctly
+            // submit number to the database
+            var userId = Meteor.userId();
+            // update the user's cell number
+            Meteor.users.update(userId, {
+                $set: {cellNumber: cellNumber}
+            });
+            // update the dom to confirm sign up
+            // route to notify
+            Router.go('notify');
+        },
+        'click button#mainmenu': function () {
+            // go back to mainmenu
+            Router.go('mainmenu');
+        }
+    });
+
+    Template.notify.events({
+        'click button#mainmenu': function () {
+            // go back to mainmenu
+            Router.go('mainmenu');
+        }
+    });
+
+    Template.notify.helpers({
+        alreadySignedUp: function () {
+            // TODO: check to see if the user is signed up to receive at some time
+            return false;
         }
     });
 
@@ -191,3 +235,76 @@ if (Meteor.isClient) {
 //--------------------------
 // Meteor API - Cloud code
 //--------------------------
+
+if (Meteor.isServer) {
+    /* Create a Cron Object */
+    Cron = {};
+    /* Create a private startup method */
+    Cron._startup = function () {
+        if (Meteor.isClient) {
+            return;
+        }
+        Cron.jobs();
+        return SyncedCron.start();
+    };
+
+    /* Using encapsulation lets store this function */
+
+    Cron.initialize = function () {
+        return Cron._startup();
+    };
+    /* Let's startup! */
+    Meteor.startup(Cron.initialize);
+
+    // Our Twilio Number
+    var twilioNumber;
+    var accountSid;
+    var authToken;
+    if (!_.isUndefined(Meteor.settings)
+        && !_.isUndefined(Meteor.settings.private)
+        && !_.isUndefined(Meteor.settings.private.twilio.account_sid)
+        && !_.isUndefined(Meteor.settings.private.twilio.auth_token
+        && !_.isUndefined(Meteor.settings.private.twilio.number))) {
+        accountSid = Meteor.settings.private.twilio.account_sid;
+        authToken = Meteor.settings.private.twilio.auth_token;
+        twilioNumber = Meteor.settings.private.twilio.number;
+    }
+
+    var twilio = Twilio(accountSid, authToken);
+
+    var sendMessage = function (numbers) {
+        /* SEE TWILIO API DOCS HERE: http://twilio.github.io/twilio-node/ */
+        _.each(numbers, function (number) {
+            twilio.messages.create({
+                to: number,
+                from: twilioNumber,
+                body: 'FAKE URGENT. Patient Zero detected with contagion. Response needed! http://cordon.meteorapp.com'
+
+            }, function (err, res) {
+                if (err) {
+                    console.log(err);
+                }
+                if (!err) {
+                    console.log(res.from);
+                    console.log(res.body);
+                }
+            });
+        });
+    };
+
+    Cron.jobs = function () {
+        SyncedCron.add({
+            name: "Twilio Cron Job",
+            schedule: function (parser) {
+                return parser.recur().on(59).minute(); // called on the 59th minute...
+            },
+            job: function () {
+                /* do something here */
+                // look to see who is signed up to receive a text message now
+                // send text message to those people
+                // if you digging through github, feel free to say hi to Jonathan Bobrow :)
+                //sendMessage(['+18186207518']);
+            }
+        });
+    }
+}
