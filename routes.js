@@ -37,8 +37,9 @@ Router.route('/mainmenu', function () {
 
     // Check to see if user has seen the tutorial, and show it before game if not yet seen
     // (Comment this out if we only want players to access tutorial on their own)
-    var user = Meteor.users.findOne(userId, {fields: {hasSeenTutorial: 1}});
+    var user = Meteor.users.findOne(userId);
     var hasSeenTutorial = user.hasSeenTutorial;
+    console.log(user);
     if (!hasSeenTutorial) {
         this.redirect('tutorial');
         return;
@@ -50,40 +51,33 @@ Router.route('/mainmenu', function () {
 
 // this gives permission to the client to update the Meteor.users collection
 // but only for themselves... sorry hackerzzz
-Meteor.users.allow({
-   update:function(userId, doc) {
-       return userId === doc._id;
-   }
-});
+//Meteor.users.allow({
+//   update:function(userId, doc) {
+//       return userId === doc._id;
+//   }
+//});
 
 Router.route('/tutorial', function () {
     var userId = Meteor.userId();
 
     // update the user to show that they have seen the tutorial
-    Meteor.users.update(userId, {
-        $set: {hasSeenTutorial: true}
+    Meteor.call('finishTutorial', function(error, info) {
+        console.log("finish tutorial callback", error, info);
     });
 
     this.render('tutorial');
     $(document.body).css('background-color', '#ffffff');
 }, {name: 'tutorial'});
 
-Router.route('/sms_signup/:userId', function () {
+Router.route('/options/:userId', function () {
     var userId = Meteor.userId();
     var user = Meteor.users.findOne(userId, {fields: {sms: 1}});
     var sms = user.sms;
     if (sms != null) {
-        this.redirect('notify');
-        return;
     }
-    this.render('sms_signup');
+    this.render('options');
     $(document.body).css('background-color', '#ffffff');
-}, {name: 'sms_signup'});
-
-Router.route('/notify', function () {
-    this.render('notify');
-    $(document.body).css('background-color', '#ffffff');
-}, {name: 'notify'});
+}, {name: 'options'});
 
 Router.route('/profile/:userId', function () {
     this.render('profile');

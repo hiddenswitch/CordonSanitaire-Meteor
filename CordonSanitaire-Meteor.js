@@ -30,14 +30,34 @@ if (Meteor.isClient) {
                 Router.go('game', {gameId: gameId}, {query: {playerId: playerId}});
             });
         },
-        'click button#notify-me': function () {
-            Router.go('sms_signup', {userId: Meteor.userId()});
-        },
         'click button#profile': function () {
             Router.go('profile', {userId: Meteor.userId()});
         },
         'click button#tutorial': function () {
             Router.go('tutorial');
+        },
+        'click button#submit_sms': function () {
+            // get cell number from dom
+            var cellNumber = document.getElementById("sms_number").value;
+            // submit number to server
+            Meteor.call('addSMSNumber', cellNumber, function (error, info) {
+                if (error) {
+                    //console.log("let's ask again politely", error); // Catch the
+                    alert(cellNumber + " is not a recognized cell number");
+                    console.log(cellNumber, "is not a recognized cell number");
+                }
+                else {
+                    if (!info) {
+                        // if number entered was null
+                        alert("please enter a cell number");
+                        console.log("please enter a cell number");
+                    }
+                    else {
+                        // SUCCESS, let the user know we'll text them!
+                        console.log("show that we'll text this number as a receipt", info);
+                    }
+                }
+            });
         }
     });
 
@@ -56,6 +76,24 @@ if (Meteor.isClient) {
             else {
                 var date = new Date();
                 return _.indexOf(Sanitaire.TIME_RESTRICTED_ENTRY, date.getMinutes()) != -1;
+            }
+        },
+        showTextSignUp: function () {
+            var userId = Meteor.userId();
+            var user = Meteor.users.findOne(userId, {fields: {sms: 1}});
+            var sms = user.sms;
+            return (sms === null);
+        },
+        cellNumber: function () {
+            var userId = Meteor.userId();
+            var user = Meteor.users.findOne(userId, {fields: {sms: 1}});
+            var sms = user.sms;
+            if(sms != null) {
+                return sms.number;
+            }
+            else {
+                console.log("odd, no number on record");
+                return '(555)555-1234';
             }
         }
     });
@@ -160,51 +198,6 @@ if (Meteor.isClient) {
         'click button#mainmenu': function () {
             // go back to mainmenu
             Router.go('mainmenu');
-        }
-    });
-
-    Template.sms_signup.events({
-        'click button#submit_sms': function () {
-            // get cell number from dom
-            var cellNumber = document.getElementById("sms_number").value;
-            // submit number to server
-            Meteor.call('addSMSNumber', cellNumber, function (error, info) {
-                if(error) {
-                    //console.log("let's ask again politely", error); // Catch the
-                    console.log(cellNumber, "is not a recognized cell number");
-                }
-                else {
-                    if(!info) {
-                        // if number entered was null
-                        console.log("please enter a cell number");
-                    }
-                    else {
-                        console.log("show that we'll text this number as a receipt", info);
-                    }
-                }
-                // update the dom to confirm sign up
-
-                // route to notify
-                Router.go('notify');
-            });
-        },
-        'click button#mainmenu': function () {
-            // go back to mainmenu
-            Router.go('mainmenu');
-        }
-    });
-
-    Template.notify.events({
-        'click button#mainmenu': function () {
-            // go back to mainmenu
-            Router.go('mainmenu');
-        }
-    });
-
-    Template.notify.helpers({
-        alreadySignedUp: function () {
-            // TODO: check to see if the user is signed up to receive at some time
-            return false;
         }
     });
 
