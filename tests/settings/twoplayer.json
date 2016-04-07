@@ -3,6 +3,7 @@
     "maxPlayers": 2,
     "durationSeconds": 60,
     "countdownSeconds": 5,
+    "maximumLobbyWaitSeconds": 20,
     "demolishTimeSeconds": 3,
     "buildTimeSeconds": 6,
     "stunTimeSeconds": 60,

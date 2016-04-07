@@ -116,6 +116,9 @@ Router.route('/g/:gameId', function () {
         case Sanitaire.gameStates.ENDED:
             this.render('conclusion');
             return;
+        case Sanitaire.gameStates.EXPIRED:
+            this.render('expired');
+            return;
         default:
             this.render('loading');
             return;
