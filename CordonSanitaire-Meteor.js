@@ -30,14 +30,34 @@ if (Meteor.isClient) {
                 Router.go('game', {gameId: gameId}, {query: {playerId: playerId}});
             });
         },
-        'click button#notify-me': function () {
-            Router.go('sms_signup', {userId: Meteor.userId()});
-        },
         'click button#profile': function () {
             Router.go('profile', {userId: Meteor.userId()});
         },
         'click button#tutorial': function () {
             Router.go('tutorial');
+        },
+        'click button#submit_sms': function () {
+            // get cell number from dom
+            var cellNumber = document.getElementById("sms_number").value;
+            // submit number to server
+            Meteor.call('addSMSNumber', cellNumber, function (error, info) {
+                if (error) {
+                    //console.log("let's ask again politely", error); // Catch the
+                    alert(cellNumber + " is not a recognized cell number");
+                    console.log(cellNumber, "is not a recognized cell number");
+                }
+                else {
+                    if (!info) {
+                        // if number entered was null
+                        alert("please enter a cell number");
+                        console.log("please enter a cell number");
+                    }
+                    else {
+                        // SUCCESS, let the user know we'll text them!
+                        console.log("show that we'll text this number as a receipt", info);
+                    }
+                }
+            });
         }
     });
 
@@ -56,6 +76,24 @@ if (Meteor.isClient) {
             else {
                 var date = new Date();
                 return _.indexOf(Sanitaire.TIME_RESTRICTED_ENTRY, date.getMinutes()) != -1;
+            }
+        },
+        showTextSignUp: function () {
+            var userId = Meteor.userId();
+            var user = Meteor.users.findOne(userId, {fields: {sms: 1}});
+            var sms = user.sms;
+            return (sms === null);
+        },
+        cellNumber: function () {
+            var userId = Meteor.userId();
+            var user = Meteor.users.findOne(userId, {fields: {sms: 1}});
+            var sms = user.sms;
+            if(sms != null) {
+                return sms.number;
+            }
+            else {
+                console.log("odd, no number on record");
+                return '(555)555-1234';
             }
         }
     });
@@ -163,41 +201,6 @@ if (Meteor.isClient) {
         }
     });
 
-    Template.sms_signup.events({
-        'click button#submit_sms': function () {
-            // get cell number from dom
-            var cellNumber = document.getElementById("sms_number").value;
-            // format the cell number correctly
-            // submit number to the database
-            var userId = Meteor.userId();
-            // update the user's cell number
-            Meteor.users.update(userId, {
-                $set: {cellNumber: cellNumber}
-            });
-            // update the dom to confirm sign up
-            // route to notify
-            Router.go('notify');
-        },
-        'click button#mainmenu': function () {
-            // go back to mainmenu
-            Router.go('mainmenu');
-        }
-    });
-
-    Template.notify.events({
-        'click button#mainmenu': function () {
-            // go back to mainmenu
-            Router.go('mainmenu');
-        }
-    });
-
-    Template.notify.helpers({
-        alreadySignedUp: function () {
-            // TODO: check to see if the user is signed up to receive at some time
-            return false;
-        }
-    });
-
     Template.profile.helpers({
         username: function () {
             return Meteor.userId();
@@ -263,8 +266,8 @@ if (Meteor.isServer) {
     if (!_.isUndefined(Meteor.settings)
         && !_.isUndefined(Meteor.settings.private)
         && !_.isUndefined(Meteor.settings.private.twilio.account_sid)
-        && !_.isUndefined(Meteor.settings.private.twilio.auth_token
-        && !_.isUndefined(Meteor.settings.private.twilio.number))) {
+        && !_.isUndefined(Meteor.settings.private.twilio.auth_token)
+        && !_.isUndefined(Meteor.settings.private.twilio.number)) {
         accountSid = Meteor.settings.private.twilio.account_sid;
         authToken = Meteor.settings.private.twilio.auth_token;
         twilioNumber = Meteor.settings.private.twilio.number;
@@ -272,13 +275,13 @@ if (Meteor.isServer) {
 
     var twilio = Twilio(accountSid, authToken);
 
-    var sendMessage = function (numbers) {
+    var sendMessageToNumbers = function (message, numbers) {
         /* SEE TWILIO API DOCS HERE: http://twilio.github.io/twilio-node/ */
         _.each(numbers, function (number) {
             twilio.messages.create({
                 to: number,
                 from: twilioNumber,
-                body: 'FAKE URGENT. Patient Zero detected with contagion. Response needed! http://cordon.meteorapp.com'
+                body: message
 
             }, function (err, res) {
                 if (err) {
@@ -292,6 +295,16 @@ if (Meteor.isServer) {
         });
     };
 
+    var findUsersToSMS = function () {
+        /* do something here */
+        // look to see who is signed up to receive a text message now
+        var date = new Date();
+        var currentHour = (date.getHours() + 1) % 24;   // this is related to the 59th minute... i.e. text those signed up for the next hour
+        var users = Meteor.users.find({"sms.hourToText": currentHour}).fetch()
+
+        return users;
+    };
+
     Cron.jobs = function () {
         SyncedCron.add({
             name: "Twilio Cron Job",
@@ -299,12 +312,14 @@ if (Meteor.isServer) {
                 return parser.recur().on(59).minute(); // called on the 59th minute...
             },
             job: function () {
-                /* do something here */
-                // look to see who is signed up to receive a text message now
-                // send text message to those people
-                // if you digging through github, feel free to say hi to Jonathan Bobrow :)
-                //sendMessage(['+18186207518']);
+                var users = findUsersToSMS();
+                var numbers = users.map(function (user) {
+                    return user.sms.number;
+                });
+                var message = 'FAKE URGENT. Patient Zero detected with contagion. Response needed! http://cordon.meteorapp.com';
+                console.log("sending text message to these numbers", numbers);
+                //sendMessageToNumbers(message, numbers);
             }
         });
-    }
+    };
 }

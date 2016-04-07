@@ -49,6 +49,7 @@ button {
     top: 2px;
     right: 2px
 }
+
 /* An invisible full screen object that serves as a container for the info box - hidden at
 start of game */
 #overlay {
@@ -81,8 +82,8 @@ start of game */
     color: white;
 }
 
-#intro p{
-    color:white;
+#intro p {
+    color: white;
 }
 
 #version {
@@ -127,21 +128,21 @@ start of game */
     margin: 0 0 10px 0;
 }
 
-.minibox h2{
+.minibox h2 {
     font-size: 1.3em;
     font-weight: bold;
     text-align: center;
     color: #000000;
 }
 
-#lobby_count p{
+#lobby_count p {
     line-height: 1.3em;
 }
 
 #lobby_container {
     width: 100%;
     height: 100%;
-    background: rgba(255,255,255,0.8);
+    background: rgba(255, 255, 255, 0.8);
     position: absolute;
 }
 
@@ -158,7 +159,7 @@ start of game */
     margin: 5%;
     height: 50px;
     line-height: 50px;
-    background: rgba(0,0,0,1);
+    background: rgba(0, 0, 0, 1);
     color: white;
     font-family: sans-serif;
     font-size: 2.3em;
@@ -185,7 +186,7 @@ start of game */
 
 #distance-container {
     visibility: hidden;
-    background: rgba(0,0,0,1);
+    background: rgba(0, 0, 0, 1);
     color: white;
     border-radius: 5px;
     padding: 6px 10px 6px 30px;
@@ -371,20 +372,20 @@ start of game */
     margin: 0 10% 0 10%;
     font-size: 14px;
     font-weight: bold;
-    color: rgba(164,182,200,1.0);
+    color: rgba(164, 182, 200, 1.0);
     text-align: center;
 }
 
 .cancelButton {
-    background-color: rgba(164,182,200,0.9);
+    background-color: rgba(164, 182, 200, 0.9);
 }
 
 .buildButton {
-    background-color: rgba(253,238,74,0.9);
+    background-color: rgba(253, 238, 74, 0.9);
 }
 
 .destroyButton {
-    background-color: rgba(253,238,74,0.9);
+    background-color: rgba(253, 238, 74, 0.9);
 }
 
 /* Main button styling */
@@ -427,18 +428,18 @@ start of game */
     z-index: 1100;
 }
 
-#title{
+#title {
     font-size: .67em;
     padding: 20px 30px;
     color: white;
 }
 
-#intro_container img{
+#intro_container img {
     width: 85%;
     margin: 0 7.5%;
 }
 
-#intro_text{
+#intro_text {
     font-size: .7em;
     font-weight: lighter;
     text-align: left;
@@ -459,7 +460,7 @@ start of game */
     font-size: 16px;
     width: 70%;
     height: 50px;
-    margin-top:20px;
+    margin-top: 20px;
     margin-left: auto;
     margin-right: auto;
     border-radius: 0px;
@@ -482,12 +483,42 @@ start of game */
 #signup_body {
     text-align: center;
     margin: auto;
-    width:100%;
+    width: 100%;
     display: block;
     position: fixed;
     bottom: 0;
     padding-bottom: 20px;
     right: 0.3%;
+}
+
+.mainMenuText {
+    width: 70%;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    font-size: .7em;
+}
+
+.cellNumber {
+    font-weight: bold;
+}
+
+#sms_number {
+    border: 1.5px solid black;
+    background-size: 100%; /* To fill the dimensions of container (button), or */
+    background-size: 40px auto; /* to specify dimensions explicitly */
+    font-family: 'Open Sans', sans-serif;
+    background-color: white;
+    color: #000;
+    font-weight: 700;
+    font-size: 16px;
+    text-align: center;
+    width: 70%;
+    height: 50px;
+    margin-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 0px;
 }
 
 /* spacing */
@@ -502,7 +533,7 @@ start of game */
 }
 
 .vertCenter {
-    margin-top:50%;
+    margin-top: 50%;
 }
 
 .lilMargin {
@@ -521,7 +552,7 @@ start of game */
 }
 
 #players ul {
-   list-style: none;
+    list-style: none;
 }
 
 #players li {
@@ -535,7 +566,7 @@ start of game */
 .bottomDiv {
     text-align: center;
     margin: auto;
-    width:100%;
+    width: 100%;
     display: block;
     position: fixed;
     bottom: 0;
@@ -546,14 +577,14 @@ start of game */
 .profImg {
     background-color: black;
     border-radius: 30px;
-    height:60px;
-    width:60px;
+    height: 60px;
+    width: 60px;
     margin: 0 auto;
     margin-top: 10px;
 }
 
 .playerStatsList {
-    list-style-type:none;
+    list-style-type: none;
     font-family: 'Open Sans', sans-serif;
     font-weight: 400;
     padding: 0;
@@ -571,7 +602,7 @@ start of game */
 
 .statsIcon {
     display: inline-block;
-    width:15%;
+    width: 15%;
     vertical-align: middle;
 }
 

@@ -6,9 +6,16 @@
     "demolishTimeSeconds": 3,
     "buildTimeSeconds": 6,
     "stunTimeSeconds": 60,
-    "map":"Simple_40_50.csv",
+    "map":"Simple_40_50_Members_01.csv",
     "uniqueness":true,
     "zoom": "SHOW_FULL_MAP",
-    "timeRestrictedEntry": "NO_RESTRICTION"
+    "timeRestrictedEntry": [59]
+  },
+  "private": {
+    "twilio": {
+      "number": "+19495367529",
+      "account_sid": "ACe1411ef11ed3bd884ac1ae80b39ea1af",
+      "auth_token": "4e7f5bfd0715adf2a51651523edd7df7"
+    }
   }
 }
