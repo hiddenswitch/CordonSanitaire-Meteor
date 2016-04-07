@@ -49,6 +49,8 @@
         <div class="textCenter vertCenter">
             {{#if showPlayButton}}
                 <button class="inputButton playButton" id="play">Play now</button>
+                <button class="inputButton tutButton" id="tutorial">Tutorial</button>
+                <button class="inputButton optionsButton" id="options">Options</button>
             {{else}}
                 <div>
                     {{#if showTextSignUp}}
@@ -57,6 +59,7 @@
                             outbreak</p>
                         <input type="text" id="sms_number" placeholder="(555)555-1234">
                         <button class="inputButton" id="submit_sms">text me</button>
+                        <button class="inputButton tutButton" id="tutorial">Tutorial</button>
                     {{else}}
                         <p class="mainMenuText">No game in progress. You'll be notified at <span
                                 class="cellNumber">{{cellNumber}}</span> when the next outbreak occurs.</p>
@@ -236,7 +239,19 @@
 
 <template name="expired">
     <div class="textCenter">
-        <p>Not enough responders joined. Try again or we'll let you know for the next outbreak.</p>
+        <p>Not enough responders joined.</p>
+        <button class="inputButton" id="try-again">Try Again</button>
+        <p>or we'll let you know for the next outbreak.</p>
+        <div class="bottomDiv">
+            <button id="mainmenu" class="inputButton">Main Menu</button>
+        </div>
+    </div>
+</template>
+
+<template name="options">
+    <div class="textCenter">
+        <button class="inputButton" id="removeSMS">Remove SMS</button>
+        <button class="inputButton" id="signOut">Sign Out</button>
         <div class="bottomDiv">
             <button id="mainmenu" class="inputButton">Main Menu</button>
         </div>
