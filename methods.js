@@ -131,5 +131,32 @@ Meteor.methods({
 
         return Sanitaire.addConstructionMessageToLog(gameId, thisPlayer._id, intersectionId, messageType, new Date());
     }
-
 });
+
+if (Meteor.isServer) {
+    Meteor.methods({
+        /**
+         * Add an SMS number for a user to the database
+         * @param number
+         */
+        addSMSNumber: function (number) {
+            if (!this.userId) {
+                throw new Meteor.Error(403, 'Permission denied.');
+            }
+
+            // pass the needed information
+            return SanitaireTextMessage.addSMSNumberForUser(number, this.userId, new Date());
+        },
+
+        /**
+         * Remove the number stored with this user
+         */
+        removeSMSNumber: function () {
+            if (!this.userId) {
+                throw new Meteor.Error(403, 'Permission denied.');
+            }
+
+            return SanitaireTextMessage.removeSMSNumberForUser(this.userId);
+        }
+    });
+}

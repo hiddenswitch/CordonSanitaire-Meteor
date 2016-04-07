@@ -167,24 +167,26 @@ if (Meteor.isClient) {
         'click button#submit_sms': function () {
             // get cell number from dom
             var cellNumber = document.getElementById("sms_number").value;
-            // TODO: format the cell number correctly
-            // submit number to the database
-            var userId = Meteor.userId();
-            // update the user's cell number
-            var millis = TimeSync.serverTime(new Date());
-            var date = new Date(millis);
-            var hourToText = (date.getHours() + 1) % 24;
-            Meteor.users.update(userId, {
-                $set: {
-                    sms: {
-                        number: cellNumber,
-                        hourToText: hourToText
+            // submit number to server
+            Meteor.call('addSMSNumber', cellNumber, function (error, info) {
+                if(error) {
+                    //console.log("let's ask again politely", error); // Catch the
+                    console.log(cellNumber, "is not a recognized cell number");
+                }
+                else {
+                    if(!info) {
+                        // if number entered was null
+                        console.log("please enter a cell number");
+                    }
+                    else {
+                        console.log("show that we'll text this number as a receipt", info);
                     }
                 }
+                // update the dom to confirm sign up
+
+                // route to notify
+                Router.go('notify');
             });
-            // update the dom to confirm sign up
-            // route to notify
-            Router.go('notify');
         },
         'click button#mainmenu': function () {
             // go back to mainmenu
@@ -271,8 +273,8 @@ if (Meteor.isServer) {
     if (!_.isUndefined(Meteor.settings)
         && !_.isUndefined(Meteor.settings.private)
         && !_.isUndefined(Meteor.settings.private.twilio.account_sid)
-        && !_.isUndefined(Meteor.settings.private.twilio.auth_token
-        && !_.isUndefined(Meteor.settings.private.twilio.number))) {
+        && !_.isUndefined(Meteor.settings.private.twilio.auth_token)
+        && !_.isUndefined(Meteor.settings.private.twilio.number)) {
         accountSid = Meteor.settings.private.twilio.account_sid;
         authToken = Meteor.settings.private.twilio.auth_token;
         twilioNumber = Meteor.settings.private.twilio.number;
@@ -300,7 +302,7 @@ if (Meteor.isServer) {
         });
     };
 
-    var findUsersToSMS = function() {
+    var findUsersToSMS = function () {
         /* do something here */
         // look to see who is signed up to receive a text message now
         var date = new Date();
@@ -318,9 +320,12 @@ if (Meteor.isServer) {
             },
             job: function () {
                 var users = findUsersToSMS();
-                var numbers = users.map(function(user) { return user.sms.number; });
+                var numbers = users.map(function (user) {
+                    return user.sms.number;
+                });
                 var message = 'FAKE URGENT. Patient Zero detected with contagion. Response needed! http://cordon.meteorapp.com';
-                sendMessageToNumbers(message, numbers);
+                console.log("sending text message to these numbers", numbers);
+                //sendMessageToNumbers(message, numbers);
             }
         });
     };
