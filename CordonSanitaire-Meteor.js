@@ -88,7 +88,7 @@ if (Meteor.isClient) {
             var userId = Meteor.userId();
             var user = Meteor.users.findOne(userId, {fields: {sms: 1}});
             var sms = user.sms;
-            if(sms != null) {
+            if (sms != null) {
                 return sms.number;
             }
             else {
@@ -129,6 +129,23 @@ if (Meteor.isClient) {
 
             var countdown = totalCountdownSeconds - Math.floor(millisSinceCountdownStarted / 1000);
             return countdown;
+        },
+        secondsTilExpire: function () {
+            timerDependency.depend();   // keeps this called every 10ms
+            var game = Games.findOne(Router.current().params.gameId);
+            var now = new Date();
+            var secondsTilExpire = Sanitaire.MAX_LOBBY_TIME_SECONDS - Math.ceil((now - game.lastPlayerJoinedAt)/1000);
+            // color the number red if getting low...
+            if(secondsTilExpire <= 5) {
+                document.getElementById("lobbyExpireTime").style.color = '#FF0000';
+                document.getElementById("lobbyExpireTime").style.fontWeight = 'bold';
+            }else {
+                document.getElementById("lobbyExpireTime").style.color = '#000000';
+                document.getElementById("lobbyExpireTime").style.fontWeight = 'normal';
+            }
+            // clamp
+            secondsTilExpire = secondsTilExpire < 0 ? 0 : secondsTilExpire;
+            return secondsTilExpire;
         }
     });
 
@@ -234,6 +251,13 @@ if (Meteor.isClient) {
             Router.go('mainmenu');
         }
     });
+
+    Template.expired.events({
+        'click button#mainmenu': function () {
+            // go back to mainmenu
+            Router.go('mainmenu');
+        }
+    });
 }
 //--------------------------
 // Meteor API - Cloud code
@@ -321,5 +345,41 @@ if (Meteor.isServer) {
                 //sendMessageToNumbers(message, numbers);
             }
         });
+
+        // clean up the empty games
+        SyncedCron.add({
+            name: "Clean up lobbies",
+            schedule: function (parser) {
+                return parser.recur().every().second(); // called every second (needed to quickly expire games)
+            },
+            job: function () {
+                // take a look at game lobbies not in a complete state...
+                // in theory, there should only ever be a single game in lobby state at a time
+                gamesInLobbyState = Games.find({"state": Sanitaire.gameStates.LOBBY}).fetch();
+                _.each(gamesInLobbyState, function (game) {
+                    var now = new Date();
+                    // check to see last time someone joined the lobby
+                    var lastPlayerJoinedAt = new Date(game.lastPlayerJoinedAt);
+                    console.log("game in state: ", game.state, lastPlayerJoinedAt, game.joinedUserIds);
+                    var timeOfExpiration = new Date(lastPlayerJoinedAt.getTime() + Sanitaire.MAX_LOBBY_TIME_SECONDS * 1000);
+                    var timeTilExpiration = timeOfExpiration - now;
+                    if (timeTilExpiration <= 0) {
+                        console.log("this should be expired");
+                        Sanitaire._expireGame(game._id);
+                    }
+                    else {
+                        console.log("not yet expired");
+                    }
+                });
+                // FOR DEBUG PURPOSES, SHOW EXPIRED GAMES
+                //gamesInExpiredState = Games.find({"state": Sanitaire.gameStates.EXPIRED}).fetch();
+                //// check to see their creation time
+                //_.each(gamesInExpiredState, function (game) {
+                //    var createdDate = new Date(game.createdAt);
+                //    console.log("game in state: ", game.state, createdDate, game.joinedUserIds);
+                //});
+            }
+        });
+
     };
 }
