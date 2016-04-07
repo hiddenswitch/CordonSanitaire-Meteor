@@ -293,8 +293,22 @@ if (Meteor.isClient) {
 
         },
         'click button#signOut': function () {
-            // Remove SMS
+            // Sign out of the account
             console.log("Sign Out of this account");
+            // Remove the users number before logging out, since there is no way back in
+            Meteor.call('removeSMSNumber', function (error, info) {
+                if (error) {
+                    alert("failed to remove your number.");
+                }
+                else {
+                    // SUCCESS, let the user know we'll text them!
+                    //console.log("show that we removed this number as a receipt", info);
+                    alert("Your number has been removed and you will be logged out.");
+                }
+            });
+            Meteor.logout();
+            // go back to mainmenu, which should send directly to splash or signup
+            Router.go('mainmenu');
         }
     });
 }
