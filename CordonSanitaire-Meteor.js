@@ -58,6 +58,9 @@ if (Meteor.isClient) {
                     }
                 }
             });
+        },
+        'click button#options': function () {
+            Router.go('options',{userId: Meteor.userId()});
         }
     });
 
@@ -256,6 +259,56 @@ if (Meteor.isClient) {
         'click button#mainmenu': function () {
             // go back to mainmenu
             Router.go('mainmenu');
+        },
+        'click button#try-again': function () {
+            // find a game to join
+            Meteor.call('matchMakeAndJoin', function (e, info) {
+                var gameId = info.gameId;
+                var playerId = info.playerId;
+                // load lobby to wait for start of game
+                Router.go('game', {gameId: gameId}, {query: {playerId: playerId}});
+            });
+        }
+    });
+
+    Template.options.events({
+        'click button#mainmenu': function () {
+            // go back to mainmenu
+            Router.go('mainmenu');
+        },
+        'click button#removeSMS': function () {
+            // Remove SMS
+            console.log("Remove SMS");
+            Meteor.call('removeSMSNumber', function (error, info) {
+                if (error) {
+                    //console.log("let's ask again politely", error); // Catch the
+                    alert("failed to remove your number.");
+                }
+                else {
+                    // SUCCESS, let the user know we'll text them!
+                    //console.log("show that we removed this number as a receipt", info);
+                    alert("Your number has been removed.");
+                }
+            });
+
+        },
+        'click button#signOut': function () {
+            // Sign out of the account
+            console.log("Sign Out of this account");
+            // Remove the users number before logging out, since there is no way back in
+            Meteor.call('removeSMSNumber', function (error, info) {
+                if (error) {
+                    alert("failed to remove your number.");
+                }
+                else {
+                    // SUCCESS, let the user know we'll text them!
+                    //console.log("show that we removed this number as a receipt", info);
+                    alert("Your number has been removed and you will be logged out.");
+                }
+            });
+            Meteor.logout();
+            // go back to mainmenu, which should send directly to splash or signup
+            Router.go('mainmenu');
         }
     });
 }
@@ -333,7 +386,7 @@ if (Meteor.isServer) {
         SyncedCron.add({
             name: "Twilio Cron Job",
             schedule: function (parser) {
-                return parser.recur().on(59).minute(); // called on the 59th minute...
+                return parser.recur().on(19,39,59).minute(); // called on the 59th minute...
             },
             job: function () {
                 var users = findUsersToSMS();
@@ -342,7 +395,7 @@ if (Meteor.isServer) {
                 });
                 var message = 'FAKE URGENT. Patient Zero detected with contagion. Response needed! http://cordon.meteorapp.com';
                 console.log("sending text message to these numbers", numbers);
-                //sendMessageToNumbers(message, numbers);
+                sendMessageToNumbers(message, numbers);
             }
         });
 
