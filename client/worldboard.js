@@ -169,9 +169,17 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         var to = barricade.time == Infinity ? null : (barricade.nextState === Sanitaire.barricadeStates.BUILT ? 1 : 0);
         updateBuildProgressBar(barricade.intersectionId, from, to, barricade.time, buildProgressBars, phaserGame, mapInfo);
 
-        if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
-            || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION) {
+        if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION ||
+            barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION) {
             showBuildProgressBar(buildProgressBars, barricade.intersectionId);
+        }
+
+        if (barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION &&
+            barricade.time > -Infinity && barricade.time < Infinity) {
+            //TODO: look into why this happens twice :( (barricade time is off each time by a few millis)
+            console.log("demolition started @", barricade.intersectionId);
+            //console.log("barricade time: ", barricade.time);
+            recalculatePatientZero();
         }
 
         // Set new timer
@@ -179,6 +187,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
             && barricade.time < Infinity) {
             var transitionToNextState = function () {
                 drawBarricade(map, barricade.nextState, barricade.intersectionId, currentMapInfo);
+
 
                 // get the game
                 var game = Games.findOne(gameId);
@@ -219,6 +228,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                         // hide the display of progress
                         hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
                         recalculatePatientZero();
+                        Meteor.call('stopConstruction', gameId, parseInt(barricade.intersectionId));
                     }
                     else {
                         console.log("build completed @", barricade.intersectionId, "by someone else");
@@ -232,27 +242,18 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                     if (isLocalPlayerAtBarricade) {
                         console.log("demolition completed @", barricade.intersectionId, "by you");
                         // congrats, you finished demolishing someone's hard work... I guess you put in some work too
-                        var centerTilePosition = SanitaireMaps.getIntersectionTilePositionForId(barricade.intersectionId, currentMapInfo.intersections);
-                        Meteor.call('updatePositionAndVelocity', gameId, {
-                            x: centerTilePosition.x * 16,
-                            y: centerTilePosition.y * 16
-                        }, {
-                            x: 0,
-                            y: 0
-                        }, TimeSync.serverTime(new Date()));
-                        // hide the display of progress
                         hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
-                        recalculatePatientZero();
+                        Meteor.call('stopDeconstruction', gameId, parseInt(barricade.intersectionId));
                     }
                     else {
                         console.log("demolition completed @", barricade.intersectionId, "by someone else");
                         // hide the display of progress
                         hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
-                        recalculatePatientZero();
                     }
                 }
-                else if (barricade.nextState === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
-                    || barricade.nextState === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION) {
+                else if (barricade.nextState === Sanitaire.barricadeStates.UNDER_CONSTRUCTION ||
+                    barricade.nextState === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION) {
+                    console.log("I don't believe we ever get here... but if you see this... somehow we did");
                     showBuildProgressBar(buildProgressBars, barricade.intersectionId);
                 }
             };
@@ -1283,7 +1284,7 @@ Template.worldBoard.onRendered(function () {
          */
         buildBarricade = function () {
             // don't respond if button isn't activated
-            if(!buildButtonAvailable) return;
+            if (!buildButtonAvailable) return;
 
             // hide buttons
             hideButtons();
@@ -1306,7 +1307,7 @@ Template.worldBoard.onRendered(function () {
          */
         demolishBarricade = function () {
             // don't respond if button isn't activated
-            if(!demolishButtonAvailable) return;
+            if (!demolishButtonAvailable) return;
 
             // hide buttons
             hideButtons();
@@ -1318,9 +1319,20 @@ Template.worldBoard.onRendered(function () {
             // tell game we are starting to demolish a quarantine
             var intersectionId = SanitaireMaps.getIntersectionIdForTilePosition(lastPromptTile.x, lastPromptTile.y, currentMapInfo);
             Meteor.call('startDeconstruction', gameId, intersectionId, new Date());
+
             // update state of player
             localPlayerState.construction.isBuilding = true;
             localPlayerState.construction.intersectionId = intersectionId;
+
+            // move player to center of intersection
+            var centerTilePosition = SanitaireMaps.getIntersectionTilePositionForId(intersectionId, currentMapInfo.intersections);
+            Meteor.call('updatePositionAndVelocity', gameId, {
+                x: centerTilePosition.x * 16,
+                y: centerTilePosition.y * 16
+            }, {
+                x: 0,
+                y: 0
+            }, TimeSync.serverTime(new Date()));
         };
 
         showButtons = function (isBuild, isDemolish, isBoth) {
@@ -1329,10 +1341,10 @@ Template.worldBoard.onRendered(function () {
 
             if (isBoth) {
                 buildButton.style.color = 'rgba(0, 0, 0, 1)';
-                buildButton.style.borderColor  = 'rgba(0, 0, 0, 1)';
+                buildButton.style.borderColor = 'rgba(0, 0, 0, 1)';
                 buildButton.style.background = 'rgba(253, 238, 74, 0.9)';
                 demoButton.style.color = 'rgba(0, 0, 0, 1)';
-                demoButton.style.borderColor  = 'rgba(0, 0, 0, 1)';
+                demoButton.style.borderColor = 'rgba(0, 0, 0, 1)';
                 demoButton.style.background = 'rgba(253, 238, 74, 0.9)';
                 buildButtonAvailable = true;
                 demolishButtonAvailable = true;
