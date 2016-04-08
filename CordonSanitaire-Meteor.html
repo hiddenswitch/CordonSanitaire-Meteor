@@ -99,11 +99,14 @@
         <h2>RESPONSE TEAM</h2>
         <h4>squad: {{gameId}}</h4>
         <br>
-        <div>
-            <p class="lobbyP"><span id="respondersPresent">{{numberOfPlayersPresent}}</span> responders present</p>
-            <p class="lobbyP">Need <span id="respondersToJoin"><b>{{numberOfPlayersNeeded}}</b></span> more in <span
-                    id="lobbyExpireTime">{{secondsTilExpire}} seconds</span></p>
-        </div>
+        {{#if showLobbyCountdown}}
+        {{else}}
+            <div>
+                <p class="lobbyP"><span id="respondersPresent">{{numberOfPlayersPresent}}</span> responders present</p>
+                <p class="lobbyP">Need <span id="respondersToJoin"><b>{{numberOfPlayersNeeded}}</b></span> more in <span
+                        id="lobbyExpireTime">{{secondsTilExpire}} seconds</span></p>
+            </div>
+        {{/if}}
         <br>
         <!-- List of players in lobby-->
         <div id="players">
@@ -154,22 +157,9 @@
     </div>
 
     <div id="bottom_container">
-        {{#if showingDestroyButton}}
-            <a href="#" id="destroyButton" class="centerButton quarantineButton destroyButton">DEMOLISH</a>
-            <p class="buttonSubtext">or swipe to keep running</p>
-        {{/if}}
-        {{#if showingBuildButton}}
-            <a href="#" id="buildButton" class="centerButton quarantineButton buildButton">BUILD</a>
-            <p class="buttonSubtext">or swipe to keep running</p>
-        {{/if}}
-        {{#if showingBuildAndDestroyButtons}}
-            <a href="#" id="buildButton" class="leftButton quarantineButton buildButton">BUILD</a>
-            <a href="#" id="destroyButton" class="rightButton quarantineButton destroyButton">DEMO</a>
-            <p class="buttonSubtext">or swipe to keep running</p>
-        {{/if}}
-        <!--<a href="#" id="mainToggleButton" class="mainButton toggleButton">JOIN</a>-->
-        <!--<a href="#" id="shoutButton" class="mainButton shoutButton" onclick="sendShout()">SHOUT!</a>-->
-        <!--<a href="#" id="helloButton" class="mainButton helloButton" onclick="sendHello()">HELLO!</a>-->
+        <a href="#" id="buildButton" class="leftButton quarantineButton buildButton">BUILD</a>
+        <a href="#" id="destroyButton" class="rightButton quarantineButton destroyButton">DEMO</a>
+        <p class="buttonSubtext">or swipe to keep running</p>
     </div>
 
     <!-- container for introduction screen -->

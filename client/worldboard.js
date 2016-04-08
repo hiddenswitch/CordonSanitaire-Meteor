@@ -3,6 +3,10 @@
  * © 2015 All Rights Reserved
  **/
 
+// Manage if buttons are available
+var buildButtonAvailable = false;
+var demolishButtonAvailable = false;
+
 /**
  * Color the road at a specific id to show quarantine state
  * @param map {Phaser.Map} A phaser map
@@ -37,8 +41,8 @@ var updateRoadTiles = function (map, roadId, mapInfo, tileState) {
 
         if (currentTileColor != newTileColor) {
             // check the other road tiles now that there are more
-            if(!(newTileColor === SanitaireMaps.streetColorTile.NONE
-                && _.indexOf(SanitaireMaps.ROAD_TILES, currentTileColor) != -1)){
+            if (!(newTileColor === SanitaireMaps.streetColorTile.NONE
+                && _.indexOf(SanitaireMaps.ROAD_TILES, currentTileColor) != -1)) {
 
                 // only color tiles that need to be recolored
                 map.fill(newTileColor, tile.x, tile.y, 1, 1);
@@ -1139,10 +1143,7 @@ Template.worldBoard.onRendered(function () {
             movesSincePrompt = 0;
             lastIntersectionId = intersectionId;
 
-
-            Session.set("showing build button", shouldShowBuildButton);
-            Session.set("showing destroy button", shouldShowDestroyButton);
-            Session.set("showing build and destroy buttons", shouldShowBothButtons);
+            showButtons(shouldShowBuildButton, shouldShowDestroyButton, shouldShowBothButtons);
 
             // stop our player (stops animation and movement)
             player_direction = '';
@@ -1249,13 +1250,7 @@ Template.worldBoard.onRendered(function () {
                 return;
             }
 
-            Session.set("showing build button", shouldShowBuildButton);
-            Session.set("showing destroy button", shouldShowDestroyButton);
-            Session.set("showing build and destroy buttons", shouldShowBothButtons);
-
-            // if we aren't showing buttons, no need to stop
-            //if(!shouldShowBuildButton)
-            //    return;
+            showButtons(shouldShowBuildButton, shouldShowDestroyButton, shouldShowBothButtons);
 
             // stop our player (stops animation and movement)
             player_direction = '';
@@ -1287,6 +1282,8 @@ Template.worldBoard.onRendered(function () {
          * place build a quarantine on the corner that a player arrives at
          */
         buildBarricade = function () {
+            // don't respond if button isn't activated
+            if(!buildButtonAvailable) return;
 
             // hide buttons
             hideButtons();
@@ -1308,6 +1305,9 @@ Template.worldBoard.onRendered(function () {
          * Send a message to log demolishing a barricade has begun
          */
         demolishBarricade = function () {
+            // don't respond if button isn't activated
+            if(!demolishButtonAvailable) return;
+
             // hide buttons
             hideButtons();
 
@@ -1323,13 +1323,56 @@ Template.worldBoard.onRendered(function () {
             localPlayerState.construction.intersectionId = intersectionId;
         };
 
+        showButtons = function (isBuild, isDemolish, isBoth) {
+            var buildButton = document.getElementById("buildButton");
+            var demoButton = document.getElementById("destroyButton");
+
+            if (isBoth) {
+                buildButton.style.color = 'rgba(0, 0, 0, 1)';
+                buildButton.style.borderColor  = 'rgba(0, 0, 0, 1)';
+                buildButton.style.background = 'rgba(253, 238, 74, 0.9)';
+                demoButton.style.color = 'rgba(0, 0, 0, 1)';
+                demoButton.style.borderColor  = 'rgba(0, 0, 0, 1)';
+                demoButton.style.background = 'rgba(253, 238, 74, 0.9)';
+                buildButtonAvailable = true;
+                demolishButtonAvailable = true;
+            } else if (isBuild) {
+                buildButton.style.color = 'rgba(0, 0, 0, 1)';
+                buildButton.style.borderColor = 'rgba(0, 0, 0, 1)';
+                buildButton.style.background = 'rgba(253, 238, 74, 0.9)';
+                demoButton.style.color = 'rgba(0, 0, 0, 0.2)';
+                demoButton.style.borderColor = 'rgba(0, 0, 0, 0.2)';
+                demoButton.style.background = 'rgba(164, 182, 200, 0.2)';
+                buildButtonAvailable = true;
+                demolishButtonAvailable = false;
+            } else if (isDemolish) {
+                buildButton.style.color = 'rgba(0, 0, 0, 0.2)';
+                buildButton.style.borderColor = 'rgba(0, 0, 0, 0.2)';
+                buildButton.style.background = 'rgba(164, 182, 200, 0.2)';
+                demoButton.style.color = 'rgba(0, 0, 0, 1)';
+                demoButton.style.borderColor = 'rgba(0, 0, 0, 1)';
+                demoButton.style.background = 'rgba(253, 238, 74, 0.9)';
+                buildButtonAvailable = false;
+                demolishButtonAvailable = true;
+            }
+        };
+
         /**
          * Hide buttons for build or demolish from screen
          */
         hideButtons = function () {
-            Session.set("showing build button", false);
-            Session.set("showing destroy button", false);
-            Session.set("showing build and destroy buttons", false);
+            buildButtonAvailable = false;
+            demolishButtonAvailable = false;
+
+            var buildButton = document.getElementById("buildButton");
+            var demoButton = document.getElementById("destroyButton");
+
+            buildButton.style.color = 'rgba(0, 0, 0, 0.2)';
+            buildButton.style.borderColor = 'rgba(0, 0, 0, 0.2)';
+            buildButton.style.background = 'rgba(164, 182, 200, 0.2)';
+            demoButton.style.color = 'rgba(0, 0, 0, 0.2)';
+            demoButton.style.borderColor = 'rgba(0, 0, 0, 0.2)';
+            demoButton.style.background = 'rgba(164, 182, 200, 0.2)';
         };
 
         /**

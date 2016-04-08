@@ -331,9 +331,9 @@ start of game */
     -moz-user-select: none;
     -ms-user-select: none;
 
-    -moz-border-radius: 50px;
-    -webkit-border-radius: 50px;
-    border-radius: 50px;
+    -moz-border-radius: 20px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
     border: 3px solid #000000;
     display: inline-block;
     cursor: pointer;
@@ -355,14 +355,15 @@ start of game */
 
 .leftButton {
     bottom: 40px;
-    width: 30%;
-    margin: 0 55% 0 15%;
+    width: 40%;
+    margin: 0 55% 0 5%;
 }
 
 .rightButton {
     bottom: 40px;
-    width: 30%;
-    margin: 0 15% 0 55%;
+    width: 40%;
+    margin: 0 5% 0 55%;
+
 }
 
 .buttonSubtext {
@@ -381,11 +382,15 @@ start of game */
 }
 
 .buildButton {
-    background-color: rgba(253, 238, 74, 0.9);
+    color: rgba(0, 0, 0, 0.2);
+    border-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(164, 182, 200, 0.2);
 }
 
 .destroyButton {
-    background-color: rgba(253, 238, 74, 0.9);
+    color: rgba(0, 0, 0, 0.2);
+    border-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(164, 182, 200, 0.2);
 }
 
 /* Main button styling */
