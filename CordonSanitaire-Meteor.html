@@ -101,7 +101,8 @@
         <br>
         <div>
             <p class="lobbyP"><span id="respondersPresent">{{numberOfPlayersPresent}}</span> responders present</p>
-            <p class="lobbyP">Need <span id="respondersToJoin"><b>{{numberOfPlayersNeeded}}</b></span> more in <span id="lobbyExpireTime">{{secondsTilExpire}} seconds</span></p>
+            <p class="lobbyP">Need <span id="respondersToJoin"><b>{{numberOfPlayersNeeded}}</b></span> more in <span
+                    id="lobbyExpireTime">{{secondsTilExpire}} seconds</span></p>
         </div>
         <br>
         <!-- List of players in lobby-->
@@ -249,8 +250,11 @@
 
 <template name="options">
     <div class="textCenter">
-        <button class="inputButton" id="removeSMS">Remove SMS</button>
-        <button class="inputButton" id="signOut">Sign Out</button>
+        <div class="vertCenter">
+            <button class="inputButton" id="removeSMS">Remove SMS</button>
+            <button class="inputButton" id="signOut">Delete Account</button>
+            <a href="mailto:playful@media.mit.edu" class="inputButton" id="contact">Contact Us</a>
+        </div>
         <div class="bottomDiv">
             <button id="mainmenu" class="inputButton">Main Menu</button>
         </div>

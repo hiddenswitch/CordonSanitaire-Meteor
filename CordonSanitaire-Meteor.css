@@ -606,3 +606,33 @@ start of game */
     vertical-align: middle;
 }
 
+/* Chrome, Safari, Opera */
+@-webkit-keyframes playButtonAnimation {
+    0%  {background-color:white;}
+    50%   {background-color: #ff4444;}
+    100%   {background-color:white;}
+}
+
+/* Standard syntax */
+@keyframes playButtonAnimation {
+    0%  {background-color:white;}
+    50%   {background-color:#ff4444;}
+    100%   {background-color:white;}
+}
+
+.playButton {
+    -webkit-animation-name: playButtonAnimation; /* Chrome, Safari, Opera */
+    -webkit-animation-duration: 1.2s; /* Chrome, Safari, Opera */
+    -webkit-animation-iteration-count: infinite; /* Chrome, Safari, Opera */
+    -webkit-animation-timing-function: ease-in-out;
+    animation-name: playButtonAnimation ;
+    animation-duration: 1.2s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+}
+
+#contact {
+    display: block;
+    line-height: 50px;
+    text-decoration: none;
+}
