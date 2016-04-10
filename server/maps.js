@@ -15,6 +15,7 @@ Meteor.startup(function () {
         'Simple_40_50.csv',
         'Simple_40_50_Members_01.csv',
         'Simple_40_50_Members_02.csv',
+        'Simple_40_50_Members_03.csv',
         'Simple_60_80.csv',
         'Simple_46_60.csv',
         'Simple_56_60.csv'
@@ -26,8 +27,9 @@ Meteor.startup(function () {
         var mapUrl = mapInfo.url;
         var mapName = mapInfo._id;
 
+        // Makes sure to reload maps that already exist on the server
         if (Maps.find(mapName).count() !== 0) {
-            return;
+            Maps.remove(mapName);
         }
 
         HTTP.get(Meteor.absoluteUrl(mapUrl), function (error, result) {
