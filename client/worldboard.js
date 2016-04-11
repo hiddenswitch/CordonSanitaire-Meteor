@@ -300,7 +300,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         console.log("checking pzero and updating road colors");
         var patientZeroRoadId = SanitaireMaps.getRoadIdForTilePosition(patientZeroCurrentLocation.x, patientZeroCurrentLocation.y, currentMapInfo); // TODO: get actual road id from this game!!!!!!!
         var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
-        var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
+        var isPZeroIsolated = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
         // color streets according to their state
         var roadStatuses = GraphAnalysis.getRoadStatus(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
         _.each(roadStatuses, function (roadStatus, roadId) {
@@ -308,7 +308,9 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         });
 
         // Update visible patient zero status
-        if (isPZeroContained) {
+        if (isPZeroIsolated) {
+            console.log("should end game now, p-zero isolated");
+            //Sanitaire._endGame(gameId);
             Session.set("patient zero isolated", true);
             Session.set("patient zero contained", false);
             Session.set("patient zero loose", false);
