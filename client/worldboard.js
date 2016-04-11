@@ -652,7 +652,7 @@ Template.worldBoard.onRendered(function () {
             var filename = Sanitaire.DEFAULT_MAP;
             var mapPath = "/assets/tilemaps/csv/" + filename;
             phaserGame.load.tilemap('map', mapPath, null, Phaser.Tilemap.CSV);
-            phaserGame.load.image('tiles', '/assets/tilemaps/tiles/MembersWeekMap.png');
+            phaserGame.load.image('tiles', '/assets/tilemaps/tiles/MembersWeekFull.png');
             phaserGame.load.image('barricade_horiz', '/assets/sprites/barricade_horiz.png');
             phaserGame.load.spritesheet('player', '/assets/sprites/cdc_man.png', 16, 16);
             phaserGame.load.spritesheet('highlight_local_player', '/assets/sprites/highlight_local_rings_64x64x8.png', 64, 64);
