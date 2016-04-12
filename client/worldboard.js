@@ -158,13 +158,13 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         drawBarricade(map, barricade.state, barricade.intersectionId, currentMapInfo);
 
         var from = _.isUndefined(barricade.progress) ? null : barricade.progress;
-        if (_.isNull(from)
+        if ((_.isNull(from) || barricade.progress === 0)
             && barricade.time != Infinity
             && !_.isUndefined(barricade.time)
             && !_.isUndefined(barricade.progressTime)) {
             // Compute from with time data
             var serverNow = TimeSync.serverTime(new Date());
-            from = inverseLerp(barrier.progressTime, barrier.time, serverNow);
+            from = inverseLerp(barricade.progressTime, barricade.time, serverNow);
         }
         var to = barricade.time == Infinity ? null : (barricade.nextState === Sanitaire.barricadeStates.BUILT ? 1 : 0);
         updateBuildProgressBar(barricade.intersectionId, from, to, barricade.time, buildProgressBars, phaserGame, mapInfo);
@@ -504,7 +504,13 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
 
 
     if (!_.isNull(from)) {
-        buildProgressBars[intersectionId].text.textValue = from * 100;
+        var tv = buildProgressBars[intersectionId].text.textValue;
+        if (from == 0
+            && parseInt(tv) != parseInt(from.toString())) {
+            //debugger;
+            console.log(tv);
+        }
+        buildProgressBars[intersectionId].text.textValue = Math.floor(from * 100).toString();
     }
 
     if (!_.isNull(to)) {
@@ -524,7 +530,7 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
 
         function updateBuildProgressText(tween) {
             var roundValue = Math.floor(tween.target.textValue);
-            tween.target.setText(roundValue);
+            tween.target.setText(roundValue.toString());
         }
     }
 };
