@@ -20,7 +20,7 @@ Template.tutorial.events({
         // load the next image if available
         if(TUTORIAL_IMAGE_INDEX < 9) {
             TUTORIAL_IMAGE_INDEX++;
-            var path = "/assets/tutorial/Tutorial-0" + TUTORIAL_IMAGE_INDEX + ".png";
+            var path = "/assets/tutorial/Tutorial-0" + TUTORIAL_IMAGE_INDEX + ".jpg";
             document.getElementById("tutorial-image").src = path;
             document.getElementById("tutorial-step-count").innerHTML = TUTORIAL_IMAGE_INDEX + " of 9";
             document.getElementById("prevButton").style.visibility = 'visible';
