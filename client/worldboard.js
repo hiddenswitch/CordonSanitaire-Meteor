@@ -300,7 +300,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         console.log("checking pzero and updating road colors");
         var patientZeroRoadId = SanitaireMaps.getRoadIdForTilePosition(patientZeroCurrentLocation.x, patientZeroCurrentLocation.y, currentMapInfo); // TODO: get actual road id from this game!!!!!!!
         var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
-        var isPZeroIsolated = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
+        var patientZeroStatus = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
         // color streets according to their state
         var roadStatuses = GraphAnalysis.getRoadStatus(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
         _.each(roadStatuses, function (roadStatus, roadId) {
@@ -308,14 +308,25 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         });
 
         // Update visible patient zero status
-        if (isPZeroIsolated) {
+        if (patientZeroStatus === GraphAnalysis.pzerostatus.ISOLATED) {
             console.log("should end game now, p-zero isolated");
+
+            setTimeout(function () {
+                alert("Congrats, you have isolated Patient Zero!!!");
+            }, 3000);
             //Sanitaire._endGame(gameId);
             Session.set("patient zero isolated", true);
             Session.set("patient zero contained", false);
             Session.set("patient zero loose", false);
         }
+        else if (patientZeroStatus === GraphAnalysis.pzerostatus.CONTAINED) {
+            console.log("Pzero trapped with healthy responders, get them out!!!");
+            Session.set("patient zero isolated", false);
+            Session.set("patient zero contained", true);
+            Session.set("patient zero loose", false);
+        }
         else {
+            // nobody contained...
             Session.set("patient zero isolated", false);
             Session.set("patient zero contained", false);
             Session.set("patient zero loose", true);
@@ -1340,6 +1351,7 @@ Template.worldBoard.onRendered(function () {
         showButtons = function (isBuild, isDemolish, isBoth) {
             var buildButton = document.getElementById("buildButton");
             var demoButton = document.getElementById("destroyButton");
+            var swipeText = document.getElementById("swipeText");
 
             if (isBoth) {
                 buildButton.style.color = 'rgba(0, 0, 0, 1)';
@@ -1369,6 +1381,7 @@ Template.worldBoard.onRendered(function () {
                 buildButtonAvailable = false;
                 demolishButtonAvailable = true;
             }
+            swipeText.style.visibility = 'visible';
         };
 
         /**
@@ -1380,6 +1393,7 @@ Template.worldBoard.onRendered(function () {
 
             var buildButton = document.getElementById("buildButton");
             var demoButton = document.getElementById("destroyButton");
+            document.getElementById("swipeText").style.visibility = 'hidden';
 
             buildButton.style.color = 'rgba(0, 0, 0, 0.2)';
             buildButton.style.borderColor = 'rgba(0, 0, 0, 0.2)';
