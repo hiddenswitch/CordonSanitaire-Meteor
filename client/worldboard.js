@@ -312,7 +312,8 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
             console.log("should end game now, p-zero isolated");
 
             setTimeout(function () {
-                alert("Congrats, you have isolated Patient Zero!!!");
+                //alert("Congrats, you have isolated Patient Zero!!!");
+                Session.set("endGameWinCondition", true);
             }, 3000);
             //Sanitaire._endGame(gameId);
             Session.set("patient zero isolated", true);
@@ -575,6 +576,8 @@ var unstunPlayer = function (playerSprite, localPlayerState) {
 
 Template.worldBoard.onRendered(function () {
     Session.setDefault("patient zero loose", true);
+    Session.setDefault("endGameWinCondition", false);
+
         var renderer = this;
         var routeData = Router.current().data();
         var gameId = routeData.gameId;

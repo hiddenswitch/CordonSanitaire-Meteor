@@ -186,7 +186,7 @@ if (Meteor.isClient) {
             return padding > 0 ? padding : 0;
         },
         showGameConclusion: function () {
-            if (Session.get("patient zero isolated")) {
+            if (Session.get("endGameWinCondition")) {
                 return true;
             }
             var gameId = this.gameId;
