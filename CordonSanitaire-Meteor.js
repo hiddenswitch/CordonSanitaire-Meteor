@@ -390,14 +390,14 @@ if (Meteor.isServer) {
         SyncedCron.add({
             name: "Twilio Cron Job",
             schedule: function (parser) {
-                return parser.recur().on(19,39,59).minute(); // called on the 59th minute...
+                return parser.recur().on(59).minute(); // called on the 59th minute...
             },
             job: function () {
                 var users = findUsersToSMS();
                 var numbers = users.map(function (user) {
                     return user.sms.number;
                 });
-                var message = 'FAKE URGENT. Patient Zero detected with contagion. Response needed! http://cordon.meteorapp.com';
+                var message = 'FAKE URGENT. Patient Zero detected with contagion. Response needed! http://quarantine.club';
                 console.log("sending text message to these numbers", numbers);
                 sendMessageToNumbers(message, numbers);
             }
