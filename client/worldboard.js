@@ -597,9 +597,9 @@ var unstunPlayer = function (playerSprite, localPlayerState) {
 };
 
 Template.worldBoard.onRendered(function () {
-    Session.setDefault("patient zero loose", true);
-    Session.setDefault("endGameWinCondition", false);
-
+    Session.set("patient zero loose", true);
+    Session.set("endGameWinCondition", false);
+    Session.set("isPlayerStunned", false);
         var renderer = this;
         var routeData = Router.current().data();
         var gameId = routeData.gameId;
