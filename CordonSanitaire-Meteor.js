@@ -182,7 +182,7 @@ if (Meteor.isClient) {
         gameBottomPadding: function () {
             // Note: This extends the game div to fill the blank space underneath the canvas...
             // this will probably be filled with background art at some point, but does need to be dynamic to window size
-            var padding = window.innerHeight - 490; // 90px is top padding, and gameboard is 400px tall
+            var padding = window.innerHeight - 470; // 90px is top padding, and gameboard is 400px tall
             return padding > 0 ? padding : 0;
         }
     });

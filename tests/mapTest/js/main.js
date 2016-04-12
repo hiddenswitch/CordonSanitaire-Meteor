@@ -3,17 +3,17 @@
  * © 2015 All Rights Reserved
  **/
 
-var width = window.innerWidth / (window.devicePixelRatio * 2);  // everything double scale
-var height = window.innerHeight / (window.devicePixelRatio * 2);
+var width = 1024;  // everything double scale
+var height = 768;
 
 var game = new Phaser.Game(width, height, Phaser.AUTO, 'gameboard', { preload: preload, create: create, update: update, render: render });
 
 function preload() {
 
-    game.load.tilemap('map', 'assets/tilemaps/csv/cordon_gradient.csv', null, Phaser.Tilemap.CSV);
+    game.load.tilemap('map', 'assets/tilemaps/csv/blank.csv', null, Phaser.Tilemap.CSV);
     game.load.image('barricade', 'assets/sprites/barricade_horiz.png');
-    game.load.image('tiles', 'assets/tilemaps/tiles/Basic_CS_Map.png');
-    game.load.spritesheet('player', 'assets/sprites/cdc_man.png', 16, 16);
+    game.load.image('tiles', 'assets/tilemaps/tiles/black.png');
+    game.load.spritesheet('player', 'assets/sprites/cdc_man_yellow.png', 16, 16);
     game.load.spritesheet('button', 'assets/buttons/button_sprite_sheet.png', 193, 71);
 }
 
@@ -42,7 +42,7 @@ function goFullScreen(){
 function create() {
 
     // let's scale to fullscreen
-    goFullScreen();
+    //goFullScreen();
 
     //  Because we're loading CSV map data we have to specify the tile size here or we can't render it
     map = game.add.tilemap('map', 16, 16);
@@ -67,7 +67,7 @@ function create() {
     map.setTileIndexCallback(11, promptAtIntersection, this);
 
     //  Un-comment this on to see the collision tiles
-    layer.debug = true;
+    //layer.debug = true;
 
     //  Player
     player = game.add.sprite(16, 16, 'player', 1);
@@ -81,7 +81,7 @@ function create() {
 
     player.body.setSize(10, 14, 2, 1);
 
-    game.camera.follow(player);
+    //game.camera.follow(player);
 
     cursors = game.input.keyboard.createCursorKeys();
 
@@ -93,9 +93,9 @@ function create() {
     game.input.onDown.add(beginSwipe, this);
 
     // add button for building quarantines
-    button = game.add.button(width/2 - 90, height - 80, 'button', addQuarantine, this, 2, 1, 0);
+    //button = game.add.button(width/2 - 90, height - 80, 'button', addQuarantine, this, 2, 1, 0);
     //button.scale.setTo(scaleRatio, scaleRatio);
-    button.fixedToCamera = true; 
+    //button.fixedToCamera = true;
 
     console.log(game.world.height);
     

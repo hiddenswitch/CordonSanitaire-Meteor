@@ -12,7 +12,6 @@
 <!--Sign Up-->
 <template name="signup">
     <div id="splash">
-        <!--<img src="/assets/splash/gifs/response_vehicles_loop.gif"/>-->
         <img src="/assets/splash/splash_03.jpg"/>
     </div>
     <div class="textCenter">
@@ -24,11 +23,7 @@
         </div>
 
         <div id="signup_body">
-            <!--<button class="inputButton fbButton" id="fbLogin">Sign in with Facebook</button>-->
-            <!--<br>-->
-            <!--<p class="lilMargin">or</p><br>-->
             <button class="inputButton guestButton" id="guest">ACTIVE OUTBREAK</button>
-            <!--<input class="inputButton guestButton" id="guest" type="button" onClick=""  value="Play as guest">-->
         </div>
     </div>
 </template>
@@ -36,12 +31,9 @@
 <!--Log In-->
 <template name="login">
     {{> loginButtons}}
-    <!--<h2>Log in</h2>-->
-    <!--<input id="username" type="text" placeholder="username">-->
-    <!--<input id="password" type="text" placeholder="password">-->
-    <!--<button id="logIn" onclick="logIn()">Log In</button>-->
 </template>
 
+<!--Main Menu-->
 <template name="mainmenu">
     <div class="textCenter">
         <div class="textCenter vertCenter">
@@ -66,9 +58,6 @@
                     {{/if}}
                 </div>
             {{/if}}
-            <!--<button class="inputButton profileButton" id="profile">My profile</button>-->
-            <!--<button class="inputButton tutButton" id="tutorial">Tutorial</button>-->
-            <!--<button class="inputButton optionsButton" id="options">Options</button>-->
         </div>
     </div>
 </template>
@@ -158,12 +147,12 @@
     <div id="bottom_container">
         <a href="#" id="buildButton" class="leftButton quarantineButton buildButton">BUILD</a>
         <a href="#" id="destroyButton" class="rightButton quarantineButton destroyButton">DEMOLISH</a>
-        <p class="buttonSubtext">or swipe to keep running</p>
+        <p class="buttonSubtext" id="swipeText">or swipe to keep running</p>
     </div>
 
     <!-- Container for Phaser Game -->
     <div id="map-container"
-         style="background:rgb(20,20,20); {{#if isGameZoomedOut}} padding-top: 90px; padding-bottom: {{gameBottomPadding}}px;{{/if}}">
+         style="background:rgb(20,20,20); {{#if isGameZoomedOut}} padding-top: 70px; padding-bottom: {{gameBottomPadding}}px;{{/if}}">
         {{> worldBoard gameId=gameId}}
     </div>
 </template>
@@ -172,9 +161,7 @@
 <template name="conclusion">
     <div class="textCenter">
         <h2 class="gameOverTitle">Game Over</h2>
-        <p class="gameOverMessage">Lorem ipsum dolor sit amet, scelerisque erat elit. Vel mauris et tempus pede
-            praesent, luctus mauris laoreet.</p>
-        <p>{{endGameSynopsis}}</p>
+        <p class="gameOverMessage">{{endGameSynopsis}}</p>
         <div class="finalStats">
             <ul class="finalStatsList">
                 <li><img class="statsIcon" src="/assets/icons/patientIsolated.png">
