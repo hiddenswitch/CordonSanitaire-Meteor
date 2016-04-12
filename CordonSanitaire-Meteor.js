@@ -60,7 +60,7 @@ if (Meteor.isClient) {
             });
         },
         'click button#options': function () {
-            Router.go('options',{userId: Meteor.userId()});
+            Router.go('options', {userId: Meteor.userId()});
         }
     });
 
@@ -137,12 +137,12 @@ if (Meteor.isClient) {
             timerDependency.depend();   // keeps this called every 10ms
             var game = Games.findOne(Router.current().params.gameId);
             var now = new Date();
-            var secondsTilExpire = Sanitaire.MAX_LOBBY_TIME_SECONDS - Math.ceil((now - game.lastPlayerJoinedAt)/1000);
+            var secondsTilExpire = Sanitaire.MAX_LOBBY_TIME_SECONDS - Math.ceil((now - game.lastPlayerJoinedAt) / 1000);
             // color the number red if getting low...
-            if(secondsTilExpire <= 5) {
+            if (secondsTilExpire <= 5) {
                 document.getElementById("lobbyExpireTime").style.color = '#FF0000';
                 document.getElementById("lobbyExpireTime").style.fontWeight = 'bold';
-            }else {
+            } else {
                 document.getElementById("lobbyExpireTime").style.color = '#000000';
                 document.getElementById("lobbyExpireTime").style.fontWeight = 'normal';
             }
@@ -201,6 +201,9 @@ if (Meteor.isClient) {
             // TODO: replace this with the actual number of people contained
             // to be done in Graph Analysis
             return "many";
+        },
+        isMobile: function () {
+            return !Session.get("isPlayerStunned");
         }
         //conclusionText: function () {
         //    var isContained = Session.get("patient zero contained");
@@ -218,7 +221,7 @@ if (Meteor.isClient) {
         //}
     });
 
-    Template.game.events ({
+    Template.game.events({
         'click button#mainmenu': function () {
             // go back to mainmenu
             Router.go('mainmenu');

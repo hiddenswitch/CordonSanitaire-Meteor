@@ -175,9 +175,14 @@
         </div>
     {{else}}
         <div id="bottom_container">
-            <a href="#" id="buildButton" class="leftButton quarantineButton buildButton">BUILD</a>
-            <a href="#" id="destroyButton" class="rightButton quarantineButton destroyButton">DEMOLISH</a>
-            <p class="buttonSubtext" id="swipeText">or swipe to keep running</p>
+            {{#if isMobile}}
+                <a href="#" id="buildButton" class="leftButton quarantineButton buildButton">BUILD</a>
+                <a href="#" id="destroyButton" class="rightButton quarantineButton destroyButton">DEMOLISH</a>
+                <p class="buttonSubtext" id="swipeText">or swipe to keep running</p>
+            {{else}}
+                <p id="stunned">IMMOBILIZED</p>
+                <div id="stunned_sub"><span class="yellow">sit tight, and see if your team can save you.</span></div>
+            {{/if}}
         </div>
     {{/if}}
 

@@ -570,6 +570,7 @@ var isTouchedByPatientZero = function (localPlayerState, distance, localPlayerId
         console.log("touched!");
         localPlayerState.health.isStunned = true;
         localPlayerState.health.timeWhenTouchedByPatientZero = TimeSync.serverTime(new Date());
+        Session.set("isPlayerStunned", true);
 
         return true;
     }
@@ -1385,6 +1386,9 @@ Template.worldBoard.onRendered(function () {
             var demoButton = document.getElementById("destroyButton");
             var swipeText = document.getElementById("swipeText");
 
+            // make sure our buttons are in the dom
+            if(!(buildButton && demoButton)) return;
+
             if (isBoth) {
                 buildButton.style.color = 'rgba(0, 0, 0, 1)';
                 buildButton.style.borderColor = 'rgba(0, 0, 0, 1)';
@@ -1413,7 +1417,7 @@ Template.worldBoard.onRendered(function () {
                 buildButtonAvailable = false;
                 demolishButtonAvailable = true;
             }
-            swipeText.style.visibility = 'visible';
+            if(swipeText) swipeText.style.visibility = 'visible';
         };
 
         /**
@@ -1427,6 +1431,9 @@ Template.worldBoard.onRendered(function () {
             var demoButton = document.getElementById("destroyButton");
             var swipeText = document.getElementById("swipeText");
             if(swipeText) swipeText.style.visibility = 'hidden';
+
+            // make sure our buttons are in the dom
+            if(!(buildButton && demoButton)) return;
 
             buildButton.style.color = 'rgba(0, 0, 0, 0.2)';
             buildButton.style.borderColor = 'rgba(0, 0, 0, 0.2)';
