@@ -1425,7 +1425,8 @@ Template.worldBoard.onRendered(function () {
 
             var buildButton = document.getElementById("buildButton");
             var demoButton = document.getElementById("destroyButton");
-            document.getElementById("swipeText").style.visibility = 'hidden';
+            var swipeText = document.getElementById("swipeText");
+            if(swipeText) swipeText.style.visibility = 'hidden';
 
             buildButton.style.color = 'rgba(0, 0, 0, 0.2)';
             buildButton.style.borderColor = 'rgba(0, 0, 0, 0.2)';
