@@ -149,21 +149,21 @@
         <!-- Display conclusion after the game -->
         <div id="conclusion_container">
             {{#if showPatientZeroIsolated}}
-                <p>
+                <p class="">
                     <span class="">Patient Zero was isolated</span><br><br>
                     and the city is saved!<br><br>
                     Will everyone be this lucky next time?
                 </p>
             {{/if}}
             {{#if showPatientZeroContained}}
-                <p>
+                <p class="">
                     <span class="">Patient Zero was contained</span><br><br>
                     but {{numberOfPeopleContained}} people were also trapped<br><br>
                     Next time, try to isolate the disease...
                 </p>
             {{/if}}
             {{#if showPatientZeroLoose}}
-                <p>
+                <p class="">
                     <span class="">Time ran out with Patient Zero on the loose.</span><br><br>
                     The city is lost.<br><br>
                     There are still other cities, and other outbreaks…
@@ -171,7 +171,7 @@
             {{/if}}
         </div>
         <div class="bottomDiv">
-            <button id="mainmenu" class="inputButton">ANOTHER DAY</button>
+            <button id="mainmenu" class="inputButton">MAIN MENU</button>
         </div>
     {{else}}
         <div id="bottom_container">

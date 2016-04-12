@@ -218,6 +218,13 @@ if (Meteor.isClient) {
         //}
     });
 
+    Template.game.events ({
+        'click button#mainmenu': function () {
+            // go back to mainmenu
+            Router.go('mainmenu');
+        }
+    });
+
     Template.profile.helpers({
         username: function () {
             return Meteor.userId();
