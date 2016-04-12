@@ -165,6 +165,14 @@ if (Meteor.isClient) {
                 "seconds": Math.floor((timeLeft / 1000.0) % (60 * 1000)),
                 "hundredths": Math.floor((timeLeft / 10.0) % 100)
             };
+            // color the number red if getting low...
+            if(result.seconds < 10 && result.seconds%2 === 1) {
+                document.getElementById("countdown").style.color = '#FF0000';
+            }
+            else {
+                document.getElementById("countdown").style.color = '#FFFFFF';
+            }
+
             return result;
         },
         showPatientZeroIsolated: function () {
