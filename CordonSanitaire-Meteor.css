@@ -397,7 +397,7 @@ start of game */
     background-color: #000;
     color: white;
     font-family: 'Rajdhani', sans-serif;
-    font-size: 24px;
+    font-size: 18px;
     line-height: 30px;
     margin-top: 0px;
     margin-bottom: 0px;
@@ -434,7 +434,7 @@ start of game */
 
 .cellNumber {
     font-weight: bold;
-    font-family: 'DIN Condensed';
+    font-family: Rajdhani, SansSerif;
 }
 
 #sms_number {
@@ -575,6 +575,8 @@ start of game */
     animation-duration: 1.2s;
     animation-iteration-count: infinite;
     animation-timing-function: ease-in-out;
+
+    font-weight: 600;
 }
 
 #contact {
@@ -608,7 +610,7 @@ start of game */
     text-shadow: 2px 2px 5px #000000;
     font-size: 8vw;
     color: #ffff00;
-    padding: 35% 10% 25% 10%;
+    padding: 40% 10% 45% 10%;
 }
 
 #splash_body {
@@ -619,11 +621,88 @@ start of game */
     color: #ffffff;
     text-align: left;
     text-shadow: 0px 0px 5px #000000;
-    font-size: 4vw;
-    line-height: 1.3em;
-    font-weight: 400;
+    font-size: 3.5vw;
+    line-height: 1.5em;
+    font-family: Rajdhani, SansSerif;
+    font-weight: 500;
 }
 
 #swipeText {
     visibility: hidden;
+}
+
+#conclusion_container {
+    z-index: 100;
+    position: absolute;
+    background: rgba(0,0,0,.7);
+    padding: 20px;
+    width: 60%;
+    margin-top: 40%;
+    margin-left: 15%;
+    margin-right: 20%;
+    text-align: left;
+    border-radius: 10px;
+    color: white;
+    line-height: 1.5em;
+    font-weight: lighter;
+    font-size: .9em;
+}
+
+.yellow {
+    color: #FFFF00;
+}
+
+.red {
+    color: #FF4444;
+}
+
+.green {
+    color: rgb(94,254,187);
+}
+
+#stunned {
+    font-family: Rajdhani, SansSerif;
+    font-size: 24px;
+    font-weight: bold;
+    color: rgba(255,255,255,.9);
+    text-align: center;
+}
+
+#stunned_sub {
+    width: 140px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: .7em;
+    text-align: center;
+}
+
+.stay-calm {
+    font-family: Rajdhani, SansSerif;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Standard syntax */
+@keyframes splashButtonAnimation {
+    0% {
+        color: white;
+    }
+    50% {
+        color: #ffff00;
+    }
+    100% {
+        color: white;
+    }
+}
+
+.splashButton {
+    -webkit-animation-name: splashButtonAnimation ; /* Chrome, Safari, Opera */
+    -webkit-animation-duration: 1.2s; /* Chrome, Safari, Opera */
+    -webkit-animation-iteration-count: infinite; /* Chrome, Safari, Opera */
+    -webkit-animation-timing-function: ease-in-out;
+    animation-name: splashButtonAnimation ;
+    animation-duration: 1.2s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
 }

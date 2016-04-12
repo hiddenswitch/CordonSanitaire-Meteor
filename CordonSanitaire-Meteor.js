@@ -3,6 +3,16 @@
 
 if (Meteor.isClient) {
 
+    //
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        // Redirect to Mobile Phone message;
+        //window.location = "http://playful.jonathanbobrow.com/prototypes/cordonsans/mobile/"
+    }else {
+        // THIS IS A DESKTOP BROWSER!!!
+        alert("CORDON SANITAIRE happens many times a day, but only to phones. Please visit with your browser on a mobile device.");
+        window.location = "http://playful.media.mit.edu";
+    }
+
     // Prevent scroll
     // Todo: allow player list to scroll in lobby view
     document.addEventListener('touchmove', function (e) {
@@ -60,7 +70,7 @@ if (Meteor.isClient) {
             });
         },
         'click button#options': function () {
-            Router.go('options',{userId: Meteor.userId()});
+            Router.go('options', {userId: Meteor.userId()});
         }
     });
 
@@ -137,12 +147,12 @@ if (Meteor.isClient) {
             timerDependency.depend();   // keeps this called every 10ms
             var game = Games.findOne(Router.current().params.gameId);
             var now = new Date();
-            var secondsTilExpire = Sanitaire.MAX_LOBBY_TIME_SECONDS - Math.ceil((now - game.lastPlayerJoinedAt)/1000);
+            var secondsTilExpire = Sanitaire.MAX_LOBBY_TIME_SECONDS - Math.ceil((now - game.lastPlayerJoinedAt) / 1000);
             // color the number red if getting low...
-            if(secondsTilExpire <= 5) {
+            if (secondsTilExpire <= 5) {
                 document.getElementById("lobbyExpireTime").style.color = '#FF0000';
                 document.getElementById("lobbyExpireTime").style.fontWeight = 'bold';
-            }else {
+            } else {
                 document.getElementById("lobbyExpireTime").style.color = '#000000';
                 document.getElementById("lobbyExpireTime").style.fontWeight = 'normal';
             }
@@ -165,6 +175,14 @@ if (Meteor.isClient) {
                 "seconds": Math.floor((timeLeft / 1000.0) % (60 * 1000)),
                 "hundredths": Math.floor((timeLeft / 10.0) % 100)
             };
+            // color the number red if getting low...
+            if(result.seconds < 10 && result.seconds%2 === 1) {
+                document.getElementById("countdown").style.color = '#FF0000';
+            }
+            else {
+                document.getElementById("countdown").style.color = '#FFFFFF';
+            }
+
             return result;
         },
         showPatientZeroIsolated: function () {
@@ -184,28 +202,44 @@ if (Meteor.isClient) {
             // this will probably be filled with background art at some point, but does need to be dynamic to window size
             var padding = window.innerHeight - 470; // 90px is top padding, and gameboard is 400px tall
             return padding > 0 ? padding : 0;
+        },
+        showGameConclusion: function () {
+            if (Session.get("endGameWinCondition")) {
+                return true;
+            }
+            var gameId = this.gameId;
+            var game = Games.findOne(gameId, {fields: {state: 1}});
+
+            if (!game) {
+                return false;
+            }
+            return game.state === Sanitaire.gameStates.ENDED;
+        },
+        numberOfPeopleContained: function () {
+            // TODO: replace this with the actual number of people contained
+            // to be done in Graph Analysis
+            return "many";
+        },
+        isMobile: function () {
+            return !Session.get("isPlayerStunned");
         }
+        //conclusionText: function () {
+        //    var isContained = Session.get("patient zero contained");
+        //    var isIsolated = Session.get("patient zero isolated");
+        //
+        //    var gameId = this.gameId;
+        //    var game = Games.findOne(gameId, {fields: {state: 1}});
+        //
+        //    if (!game) {
+        //        return "";
+        //    }
+        //    var text = "Patient Zero was isolated\nand the city is saved!\nWill everyone be this lucky next time?";
+        //
+        //    return text;
+        //}
     });
 
-    Template.conclusion.helpers({
-        endGameSynopsis: function () {
-            return -1;
-        },
-        pZeroStatus: function () {
-            return -1;
-        },
-        numQuarantines: function () {
-            return -1;
-        },
-        numBarricades: function () {
-            return -1;
-        },
-        numInjured: function () {
-            return -1;
-        }
-    });
-
-    Template.conclusion.events({
+    Template.game.events({
         'click button#mainmenu': function () {
             // go back to mainmenu
             Router.go('mainmenu');
@@ -217,25 +251,25 @@ if (Meteor.isClient) {
             return Meteor.userId();
         },
         gamesPlayed: function () {
-            return -1;
+            return "COMING SOON!";
         },
         gamesSuccesses: function () {
-            return -1;
+            return "COMING SOON!";
         },
         quarantinesCompleted: function () {
-            return -1;
+            return "COMING SOON!";
         },
         barricadesBuilt: function () {
-            return -1;
+            return "COMING SOON!";
         },
         respondersTrapped: function () {
-            return -1;
+            return "COMING SOON!";
         },
         respondersReleased: function () {
-            return -1;
+            return "COMING SOON!";
         },
         timesInjured: function () {
-            return -1;
+            return "COMING SOON!";
         }
     });
 
@@ -364,6 +398,9 @@ if (Meteor.isServer) {
     };
 
     var findUsersToSMS = function () {
+        // Todo: RETURN HERE UNTIL WE DECIDE WHEN TO TEXT!!@!!
+        return [];
+
         /* do something here */
         // look to see who is signed up to receive a text message now
         var date = new Date();
@@ -377,14 +414,14 @@ if (Meteor.isServer) {
         SyncedCron.add({
             name: "Twilio Cron Job",
             schedule: function (parser) {
-                return parser.recur().on(19,39,59).minute(); // called on the 59th minute...
+                return parser.recur().on(59).minute(); // called on the 59th minute...
             },
             job: function () {
                 var users = findUsersToSMS();
                 var numbers = users.map(function (user) {
                     return user.sms.number;
                 });
-                var message = 'FAKE URGENT. Patient Zero detected with contagion. Response needed! http://cordon.meteorapp.com';
+                var message = 'FAKE URGENT. Patient Zero detected with contagion. Response needed! http://quarantine.club';
                 console.log("sending text message to these numbers", numbers);
                 sendMessageToNumbers(message, numbers);
             }

@@ -312,7 +312,8 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
             console.log("should end game now, p-zero isolated");
 
             setTimeout(function () {
-                alert("Congrats, you have isolated Patient Zero!!!");
+                //alert("Congrats, you have isolated Patient Zero!!!");
+                Session.set("endGameWinCondition", true);
             }, 3000);
             //Sanitaire._endGame(gameId);
             Session.set("patient zero isolated", true);
@@ -540,13 +541,36 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
  * @param localPlayerState {Object}
  * @param distance {Number}
  */
-var isTouchedByPatientZero = function (localPlayerState, distance) {
+var isTouchedByPatientZero = function (localPlayerState, distance, localPlayerId) {
     if (distance <= 5 && !localPlayerState.health.isStunned) {
         //TODO: distance is arbitrary right now
+
+        // Stop building if building
+        // if we are in the middls of building send a message that we stopped building
+        var game = Games.findOne(Router.current().data().gameId);
+        // get latest log entry from local user
+        var myLastBarriersLogEntry = _.find(_.sortBy(game.barriersLog, function (logEntry) {
+                return -logEntry.time;
+            }),
+            function (logEntry) {
+                return logEntry.playerId === localPlayerId;
+            }
+        );
+
+        // if log entry exists and is of type start build or demolish, then send a message to stop
+        if (myLastBarriersLogEntry) {
+            if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD) {
+                Meteor.call('stopConstruction', Router.current().data().gameId, myLastBarriersLogEntry.intersectionId);
+            }
+            else if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
+                Meteor.call('stopDeconstruction', Router.current().data().gameId, myLastBarriersLogEntry.intersectionId);
+            }
+        }
 
         console.log("touched!");
         localPlayerState.health.isStunned = true;
         localPlayerState.health.timeWhenTouchedByPatientZero = TimeSync.serverTime(new Date());
+        Session.set("isPlayerStunned", true);
 
         return true;
     }
@@ -574,6 +598,9 @@ var unstunPlayer = function (playerSprite, localPlayerState) {
 };
 
 Template.worldBoard.onRendered(function () {
+    Session.set("patient zero loose", true);
+    Session.set("endGameWinCondition", false);
+    Session.set("isPlayerStunned", false);
         var renderer = this;
         var routeData = Router.current().data();
         var gameId = routeData.gameId;
@@ -928,7 +955,7 @@ Template.worldBoard.onRendered(function () {
                     var distance = getPatientZeroDistance(patientZeroSprite, sprite);
 
                     // Check if touched by patient zero
-                    var justTouched = isTouchedByPatientZero(localPlayerState, distance);
+                    var justTouched = isTouchedByPatientZero(localPlayerState, distance, localPlayerId);
                     if (justTouched) {
                         console.log("sprite when touched", sprite);
                     }
@@ -1359,6 +1386,9 @@ Template.worldBoard.onRendered(function () {
             var demoButton = document.getElementById("destroyButton");
             var swipeText = document.getElementById("swipeText");
 
+            // make sure our buttons are in the dom
+            if(!(buildButton && demoButton)) return;
+
             if (isBoth) {
                 buildButton.style.color = 'rgba(0, 0, 0, 1)';
                 buildButton.style.borderColor = 'rgba(0, 0, 0, 1)';
@@ -1387,7 +1417,7 @@ Template.worldBoard.onRendered(function () {
                 buildButtonAvailable = false;
                 demolishButtonAvailable = true;
             }
-            swipeText.style.visibility = 'visible';
+            if(swipeText) swipeText.style.visibility = 'visible';
         };
 
         /**
@@ -1399,7 +1429,11 @@ Template.worldBoard.onRendered(function () {
 
             var buildButton = document.getElementById("buildButton");
             var demoButton = document.getElementById("destroyButton");
-            document.getElementById("swipeText").style.visibility = 'hidden';
+            var swipeText = document.getElementById("swipeText");
+            if(swipeText) swipeText.style.visibility = 'hidden';
+
+            // make sure our buttons are in the dom
+            if(!(buildButton && demoButton)) return;
 
             buildButton.style.color = 'rgba(0, 0, 0, 0.2)';
             buildButton.style.borderColor = 'rgba(0, 0, 0, 0.2)';

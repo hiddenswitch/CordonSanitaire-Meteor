@@ -113,10 +113,8 @@ Router.route('/g/:gameId', function () {
             this.render('lobby');
             return;
         case Sanitaire.gameStates.IN_PROGRESS:
-            this.render('game');
-            return;
         case Sanitaire.gameStates.ENDED:
-            this.render('conclusion');
+            this.render('game');
             return;
         case Sanitaire.gameStates.EXPIRED:
             this.render('expired');
