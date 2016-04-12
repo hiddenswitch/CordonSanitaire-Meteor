@@ -434,7 +434,7 @@ start of game */
 
 .cellNumber {
     font-weight: bold;
-    font-family: 'DIN Condensed';
+    font-family: Rajdhani, SansSerif;
 }
 
 #sms_number {
@@ -670,5 +670,12 @@ start of game */
     margin-left: auto;
     margin-right: auto;
     font-size: .7em;
+    text-align: center;
+}
+
+.stay-calm {
+    font-family: Rajdhani, SansSerif;
+    font-size: 24px;
+    font-weight: bold;
     text-align: center;
 }
