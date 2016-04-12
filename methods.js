@@ -38,6 +38,13 @@ Meteor.methods({
             throw new Meteor.Error(403, 'Permission denied.');
         }
 
+        // set localStorage variable for tutorial
+        if(Meteor.isClient) {
+            if (!_.isUndefined(window.localStorage)) {
+                window.localStorage["localHasSeenTutorial"] = true;
+            }
+        }
+
         return Meteor.users.update(this.userId, {
             $set: {
                 hasSeenTutorial: true

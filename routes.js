@@ -39,8 +39,10 @@ Router.route('/mainmenu', function () {
     // (Comment this out if we only want players to access tutorial on their own)
     var user = Meteor.users.findOne(userId);
     var hasSeenTutorial = user.hasSeenTutorial;
+    var localHasSeenTutorial = !_.isUndefined(window.localStorage) && window.localStorage["localHasSeenTutorial"];
+
     console.log(user);
-    if (!hasSeenTutorial) {
+    if (!(hasSeenTutorial || localHasSeenTutorial)) {
         this.redirect('tutorial');
         return;
     }

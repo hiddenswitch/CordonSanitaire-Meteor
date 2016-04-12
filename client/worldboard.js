@@ -3,6 +3,10 @@
  * © 2015 All Rights Reserved
  **/
 
+// Manage if buttons are available
+var buildButtonAvailable = false;
+var demolishButtonAvailable = false;
+
 /**
  * Color the road at a specific id to show quarantine state
  * @param map {Phaser.Map} A phaser map
@@ -37,8 +41,8 @@ var updateRoadTiles = function (map, roadId, mapInfo, tileState) {
 
         if (currentTileColor != newTileColor) {
             // check the other road tiles now that there are more
-            if(!(newTileColor === SanitaireMaps.streetColorTile.NONE
-                && _.indexOf(SanitaireMaps.ROAD_TILES, currentTileColor) != -1)){
+            if (!(newTileColor === SanitaireMaps.streetColorTile.NONE
+                && _.indexOf(SanitaireMaps.ROAD_TILES, currentTileColor) != -1)) {
 
                 // only color tiles that need to be recolored
                 map.fill(newTileColor, tile.x, tile.y, 1, 1);
@@ -154,20 +158,28 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         drawBarricade(map, barricade.state, barricade.intersectionId, currentMapInfo);
 
         var from = _.isUndefined(barricade.progress) ? null : barricade.progress;
-        if (_.isNull(from)
+        if ((_.isNull(from) || barricade.progress === 0)
             && barricade.time != Infinity
             && !_.isUndefined(barricade.time)
             && !_.isUndefined(barricade.progressTime)) {
             // Compute from with time data
             var serverNow = TimeSync.serverTime(new Date());
-            from = inverseLerp(barrier.progressTime, barrier.time, serverNow);
+            from = inverseLerp(barricade.progressTime, barricade.time, serverNow);
         }
         var to = barricade.time == Infinity ? null : (barricade.nextState === Sanitaire.barricadeStates.BUILT ? 1 : 0);
         updateBuildProgressBar(barricade.intersectionId, from, to, barricade.time, buildProgressBars, phaserGame, mapInfo);
 
-        if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
-            || barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION) {
+        if (barricade.state === Sanitaire.barricadeStates.UNDER_CONSTRUCTION ||
+            barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION) {
             showBuildProgressBar(buildProgressBars, barricade.intersectionId);
+        }
+
+        if (barricade.state === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION &&
+            barricade.time > -Infinity && barricade.time < Infinity) {
+            //TODO: look into why this happens twice :( (barricade time is off each time by a few millis)
+            console.log("demolition started @", barricade.intersectionId);
+            //console.log("barricade time: ", barricade.time);
+            recalculatePatientZero();
         }
 
         // Set new timer
@@ -175,6 +187,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
             && barricade.time < Infinity) {
             var transitionToNextState = function () {
                 drawBarricade(map, barricade.nextState, barricade.intersectionId, currentMapInfo);
+
 
                 // get the game
                 var game = Games.findOne(gameId);
@@ -215,6 +228,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                         // hide the display of progress
                         hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
                         recalculatePatientZero();
+                        Meteor.call('stopConstruction', gameId, parseInt(barricade.intersectionId));
                     }
                     else {
                         console.log("build completed @", barricade.intersectionId, "by someone else");
@@ -228,27 +242,18 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
                     if (isLocalPlayerAtBarricade) {
                         console.log("demolition completed @", barricade.intersectionId, "by you");
                         // congrats, you finished demolishing someone's hard work... I guess you put in some work too
-                        var centerTilePosition = SanitaireMaps.getIntersectionTilePositionForId(barricade.intersectionId, currentMapInfo.intersections);
-                        Meteor.call('updatePositionAndVelocity', gameId, {
-                            x: centerTilePosition.x * 16,
-                            y: centerTilePosition.y * 16
-                        }, {
-                            x: 0,
-                            y: 0
-                        }, TimeSync.serverTime(new Date()));
-                        // hide the display of progress
                         hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
-                        recalculatePatientZero();
+                        Meteor.call('stopDeconstruction', gameId, parseInt(barricade.intersectionId));
                     }
                     else {
                         console.log("demolition completed @", barricade.intersectionId, "by someone else");
                         // hide the display of progress
                         hideBuildProgressBar(buildProgressBars, barricade.intersectionId);
-                        recalculatePatientZero();
                     }
                 }
-                else if (barricade.nextState === Sanitaire.barricadeStates.UNDER_CONSTRUCTION
-                    || barricade.nextState === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION) {
+                else if (barricade.nextState === Sanitaire.barricadeStates.UNDER_CONSTRUCTION ||
+                    barricade.nextState === Sanitaire.barricadeStates.UNDER_DECONSTRUCTION) {
+                    console.log("I don't believe we ever get here... but if you see this... somehow we did");
                     showBuildProgressBar(buildProgressBars, barricade.intersectionId);
                 }
             };
@@ -295,7 +300,7 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         console.log("checking pzero and updating road colors");
         var patientZeroRoadId = SanitaireMaps.getRoadIdForTilePosition(patientZeroCurrentLocation.x, patientZeroCurrentLocation.y, currentMapInfo); // TODO: get actual road id from this game!!!!!!!
         var mapGraph = getGraphRepresentationOfMap(currentMapInfo, game);
-        var isPZeroContained = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
+        var isPZeroIsolated = GraphAnalysis.checkPatientZero(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
         // color streets according to their state
         var roadStatuses = GraphAnalysis.getRoadStatus(mapGraph, playerRoadIds, patientZeroRoadId, mapInfo.roads.length);
         _.each(roadStatuses, function (roadStatus, roadId) {
@@ -303,7 +308,9 @@ var updateBarriers = function (barriers, barricadeTimers, map, gameId, playerSpr
         });
 
         // Update visible patient zero status
-        if (isPZeroContained) {
+        if (isPZeroIsolated) {
+            console.log("should end game now, p-zero isolated");
+            //Sanitaire._endGame(gameId);
             Session.set("patient zero isolated", true);
             Session.set("patient zero contained", false);
             Session.set("patient zero loose", false);
@@ -486,7 +493,13 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
 
 
     if (!_.isNull(from)) {
-        buildProgressBars[intersectionId].text.textValue = from * 100;
+        var tv = buildProgressBars[intersectionId].text.textValue;
+        if (from == 0
+            && parseInt(tv) != parseInt(from.toString())) {
+            //debugger;
+            console.log(tv);
+        }
+        buildProgressBars[intersectionId].text.textValue = Math.floor(from * 100).toString();
     }
 
     if (!_.isNull(to)) {
@@ -506,7 +519,7 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
 
         function updateBuildProgressText(tween) {
             var roundValue = Math.floor(tween.target.textValue);
-            tween.target.setText(roundValue);
+            tween.target.setText(roundValue.toString());
         }
     }
 };
@@ -647,7 +660,7 @@ Template.worldBoard.onRendered(function () {
             var filename = Sanitaire.DEFAULT_MAP;
             var mapPath = "/assets/tilemaps/csv/" + filename;
             phaserGame.load.tilemap('map', mapPath, null, Phaser.Tilemap.CSV);
-            phaserGame.load.image('tiles', '/assets/tilemaps/tiles/MembersWeekMap.png');
+            phaserGame.load.image('tiles', '/assets/tilemaps/tiles/MembersWeekFull.png');
             phaserGame.load.image('barricade_horiz', '/assets/sprites/barricade_horiz.png');
             phaserGame.load.spritesheet('player', '/assets/sprites/cdc_man.png', 16, 16);
             phaserGame.load.spritesheet('highlight_local_player', '/assets/sprites/highlight_local_rings_64x64x8.png', 64, 64);
@@ -1139,10 +1152,7 @@ Template.worldBoard.onRendered(function () {
             movesSincePrompt = 0;
             lastIntersectionId = intersectionId;
 
-
-            Session.set("showing build button", shouldShowBuildButton);
-            Session.set("showing destroy button", shouldShowDestroyButton);
-            Session.set("showing build and destroy buttons", shouldShowBothButtons);
+            showButtons(shouldShowBuildButton, shouldShowDestroyButton, shouldShowBothButtons);
 
             // stop our player (stops animation and movement)
             player_direction = '';
@@ -1249,13 +1259,7 @@ Template.worldBoard.onRendered(function () {
                 return;
             }
 
-            Session.set("showing build button", shouldShowBuildButton);
-            Session.set("showing destroy button", shouldShowDestroyButton);
-            Session.set("showing build and destroy buttons", shouldShowBothButtons);
-
-            // if we aren't showing buttons, no need to stop
-            //if(!shouldShowBuildButton)
-            //    return;
+            showButtons(shouldShowBuildButton, shouldShowDestroyButton, shouldShowBothButtons);
 
             // stop our player (stops animation and movement)
             player_direction = '';
@@ -1287,6 +1291,8 @@ Template.worldBoard.onRendered(function () {
          * place build a quarantine on the corner that a player arrives at
          */
         buildBarricade = function () {
+            // don't respond if button isn't activated
+            if (!buildButtonAvailable) return;
 
             // hide buttons
             hideButtons();
@@ -1308,6 +1314,9 @@ Template.worldBoard.onRendered(function () {
          * Send a message to log demolishing a barricade has begun
          */
         demolishBarricade = function () {
+            // don't respond if button isn't activated
+            if (!demolishButtonAvailable) return;
+
             // hide buttons
             hideButtons();
 
@@ -1318,18 +1327,72 @@ Template.worldBoard.onRendered(function () {
             // tell game we are starting to demolish a quarantine
             var intersectionId = SanitaireMaps.getIntersectionIdForTilePosition(lastPromptTile.x, lastPromptTile.y, currentMapInfo);
             Meteor.call('startDeconstruction', gameId, intersectionId, new Date());
+
             // update state of player
             localPlayerState.construction.isBuilding = true;
             localPlayerState.construction.intersectionId = intersectionId;
+
+            // move player to center of intersection
+            var centerTilePosition = SanitaireMaps.getIntersectionTilePositionForId(intersectionId, currentMapInfo.intersections);
+            Meteor.call('updatePositionAndVelocity', gameId, {
+                x: centerTilePosition.x * 16,
+                y: centerTilePosition.y * 16
+            }, {
+                x: 0,
+                y: 0
+            }, TimeSync.serverTime(new Date()));
+        };
+
+        showButtons = function (isBuild, isDemolish, isBoth) {
+            var buildButton = document.getElementById("buildButton");
+            var demoButton = document.getElementById("destroyButton");
+
+            if (isBoth) {
+                buildButton.style.color = 'rgba(0, 0, 0, 1)';
+                buildButton.style.borderColor = 'rgba(0, 0, 0, 1)';
+                buildButton.style.background = 'rgba(253, 238, 74, 0.9)';
+                demoButton.style.color = 'rgba(0, 0, 0, 1)';
+                demoButton.style.borderColor = 'rgba(0, 0, 0, 1)';
+                demoButton.style.background = 'rgba(253, 238, 74, 0.9)';
+                buildButtonAvailable = true;
+                demolishButtonAvailable = true;
+            } else if (isBuild) {
+                buildButton.style.color = 'rgba(0, 0, 0, 1)';
+                buildButton.style.borderColor = 'rgba(0, 0, 0, 1)';
+                buildButton.style.background = 'rgba(253, 238, 74, 0.9)';
+                demoButton.style.color = 'rgba(0, 0, 0, 0.2)';
+                demoButton.style.borderColor = 'rgba(0, 0, 0, 0.2)';
+                demoButton.style.background = 'rgba(164, 182, 200, 0.2)';
+                buildButtonAvailable = true;
+                demolishButtonAvailable = false;
+            } else if (isDemolish) {
+                buildButton.style.color = 'rgba(0, 0, 0, 0.2)';
+                buildButton.style.borderColor = 'rgba(0, 0, 0, 0.2)';
+                buildButton.style.background = 'rgba(164, 182, 200, 0.2)';
+                demoButton.style.color = 'rgba(0, 0, 0, 1)';
+                demoButton.style.borderColor = 'rgba(0, 0, 0, 1)';
+                demoButton.style.background = 'rgba(253, 238, 74, 0.9)';
+                buildButtonAvailable = false;
+                demolishButtonAvailable = true;
+            }
         };
 
         /**
          * Hide buttons for build or demolish from screen
          */
         hideButtons = function () {
-            Session.set("showing build button", false);
-            Session.set("showing destroy button", false);
-            Session.set("showing build and destroy buttons", false);
+            buildButtonAvailable = false;
+            demolishButtonAvailable = false;
+
+            var buildButton = document.getElementById("buildButton");
+            var demoButton = document.getElementById("destroyButton");
+
+            buildButton.style.color = 'rgba(0, 0, 0, 0.2)';
+            buildButton.style.borderColor = 'rgba(0, 0, 0, 0.2)';
+            buildButton.style.background = 'rgba(164, 182, 200, 0.2)';
+            demoButton.style.color = 'rgba(0, 0, 0, 0.2)';
+            demoButton.style.borderColor = 'rgba(0, 0, 0, 0.2)';
+            demoButton.style.background = 'rgba(164, 182, 200, 0.2)';
         };
 
         /**

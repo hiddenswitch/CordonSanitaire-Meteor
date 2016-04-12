@@ -7,20 +7,19 @@
     <meta http-equiv='expires' content='0'>
     <meta http-equiv='pragma' content='no-cache'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
-    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
 </head>
 
 <!--Sign Up-->
 <template name="signup">
+    <div id="splash">
+        <!--<img src="/assets/splash/gifs/response_vehicles_loop.gif"/>-->
+        <img src="/assets/splash/splash_03.jpg"/>
+    </div>
     <div class="textCenter">
         <div id="signup_header">
-            <h1> CORDON SANITAIRE</h1>
-            <p>
-                Cordon Sanitaire is a collaborative game in which players seek to isolate an infectious “patient zero”
-                from
-                the larger population. The game lasts for two minute. In 60 seconds, players must choose either to help
-                form
-                the front line of a quarantine, or remain passive.
+            <h1 class="logotype">CORDON SANITAIRE</h1>
+            <p id="splash_body">
+                As long as there have been cities, there have been plagues. And every plague has been met with the same idea: isolate the healthy from the sick. Every once in a while it works.
             </p>
         </div>
 
@@ -28,7 +27,7 @@
             <!--<button class="inputButton fbButton" id="fbLogin">Sign in with Facebook</button>-->
             <!--<br>-->
             <!--<p class="lilMargin">or</p><br>-->
-            <button class="inputButton guestButton" id="guest">Let's Go!</button>
+            <button class="inputButton guestButton" id="guest">ACTIVE OUTBREAK</button>
             <!--<input class="inputButton guestButton" id="guest" type="button" onClick=""  value="Play as guest">-->
         </div>
     </div>
@@ -47,9 +46,9 @@
     <div class="textCenter">
         <div class="textCenter vertCenter">
             {{#if showPlayButton}}
-                <button class="inputButton playButton" id="play">Play now</button>
-                <button class="inputButton tutButton" id="tutorial">Tutorial</button>
-                <button class="inputButton optionsButton" id="options">Options</button>
+                <button class="inputButton playButton" id="play">PLAY NOW</button>
+                <button class="inputButton tutButton" id="tutorial">TUTORIAL</button>
+                <button class="inputButton optionsButton" id="options">OPTIONS</button>
             {{else}}
                 <div>
                     {{#if showTextSignUp}}
@@ -57,13 +56,13 @@
                         <p class="mainMenuText">No game in progress, add your cell number to be notified of the next
                             outbreak</p>
                         <input type="text" id="sms_number" placeholder="(555)555-1234">
-                        <button class="inputButton" id="submit_sms">text me</button>
-                        <button class="inputButton tutButton" id="tutorial">Tutorial</button>
+                        <button class="inputButton" id="submit_sms">TEXT ME</button>
+                        <button class="inputButton tutButton" id="tutorial">TUTORIAL</button>
                     {{else}}
                         <p class="mainMenuText">No game in progress. You'll be notified at <span
                                 class="cellNumber">{{cellNumber}}</span> when the next outbreak occurs.</p>
-                        <button class="inputButton tutButton" id="tutorial">Tutorial</button>
-                        <button class="inputButton optionsButton" id="options">Options</button>
+                        <button class="inputButton tutButton" id="tutorial">TUTORIAL</button>
+                        <button class="inputButton optionsButton" id="options">OPTIONS</button>
                     {{/if}}
                 </div>
             {{/if}}
@@ -99,10 +98,14 @@
         <h2>RESPONSE TEAM</h2>
         <h4>squad: {{gameId}}</h4>
         <br>
-        <div>
-            <p class="lobbyP"><span id="respondersPresent">{{numberOfPlayersPresent}}</span> responders present</p>
-            <p class="lobbyP">Need <span id="respondersToJoin"><b>{{numberOfPlayersNeeded}}</b></span> more in <span id="lobbyExpireTime">{{secondsTilExpire}} seconds</span></p>
-        </div>
+        {{#if showLobbyCountdown}}
+        {{else}}
+            <div>
+                <p class="lobbyP"><span id="respondersPresent">{{numberOfPlayersPresent}}</span> responders present</p>
+                <p class="lobbyP">Need <span id="respondersToJoin"><b>{{numberOfPlayersNeeded}}</b></span> more in <span
+                        id="lobbyExpireTime">{{secondsTilExpire}} seconds</span></p>
+            </div>
+        {{/if}}
         <br>
         <!-- List of players in lobby-->
         <div id="players">
@@ -153,31 +156,14 @@
     </div>
 
     <div id="bottom_container">
-        {{#if showingDestroyButton}}
-            <a href="#" id="destroyButton" class="centerButton quarantineButton destroyButton">DEMOLISH</a>
-            <p class="buttonSubtext">or swipe to keep running</p>
-        {{/if}}
-        {{#if showingBuildButton}}
-            <a href="#" id="buildButton" class="centerButton quarantineButton buildButton">BUILD</a>
-            <p class="buttonSubtext">or swipe to keep running</p>
-        {{/if}}
-        {{#if showingBuildAndDestroyButtons}}
-            <a href="#" id="buildButton" class="leftButton quarantineButton buildButton">BUILD</a>
-            <a href="#" id="destroyButton" class="rightButton quarantineButton destroyButton">DEMO</a>
-            <p class="buttonSubtext">or swipe to keep running</p>
-        {{/if}}
-        <!--<a href="#" id="mainToggleButton" class="mainButton toggleButton">JOIN</a>-->
-        <!--<a href="#" id="shoutButton" class="mainButton shoutButton" onclick="sendShout()">SHOUT!</a>-->
-        <!--<a href="#" id="helloButton" class="mainButton helloButton" onclick="sendHello()">HELLO!</a>-->
-    </div>
-
-    <!-- container for introduction screen -->
-    <div id="intro_container">
+        <a href="#" id="buildButton" class="leftButton quarantineButton buildButton">BUILD</a>
+        <a href="#" id="destroyButton" class="rightButton quarantineButton destroyButton">DEMOLISH</a>
+        <p class="buttonSubtext">or swipe to keep running</p>
     </div>
 
     <!-- Container for Phaser Game -->
     <div id="map-container"
-         style="background:rgb(40,54,68); {{#if isGameZoomedOut}} padding-top: 90px; padding-bottom: {{gameBottomPadding}}px;{{/if}}">
+         style="background:rgb(20,20,20); {{#if isGameZoomedOut}} padding-top: 90px; padding-bottom: {{gameBottomPadding}}px;{{/if}}">
         {{> worldBoard gameId=gameId}}
     </div>
 </template>
@@ -202,7 +188,7 @@
             </ul>
         </div>
         <div class="bottomDiv">
-            <button id="mainmenu" class="inputButton">Main Menu</button>
+            <button id="mainmenu" class="inputButton">MAIN MENU</button>
         </div>
     </div>
 </template>
@@ -231,28 +217,35 @@
             </ul>
         </div>
         <div class="bottomDiv">
-            <button id="mainmenu" class="inputButton">Main Menu</button>
+            <button id="mainmenu" class="inputButton">MAIN MENU</button>
         </div>
     </div>
 </template>
 
 <template name="expired">
     <div class="textCenter">
-        <p>Not enough responders joined.</p>
-        <button class="inputButton" id="try-again">Try Again</button>
-        <p>or we'll let you know for the next outbreak.</p>
+        <div class="vertCenter">
+            <p class="mainMenuText">Not enough responders joined.</p>
+            <button class="inputButton" id="try-again">TRY AGAIN</button>
+            <br>
+            <br>
+            <p class="mainMenuText">or we'll let you know for the next outbreak.</p>
+        </div>
         <div class="bottomDiv">
-            <button id="mainmenu" class="inputButton">Main Menu</button>
+            <button id="mainmenu" class="inputButton">MAIN MENU</button>
         </div>
     </div>
 </template>
 
 <template name="options">
     <div class="textCenter">
-        <button class="inputButton" id="removeSMS">Remove SMS</button>
-        <button class="inputButton" id="signOut">Sign Out</button>
+        <div class="vertCenter">
+            <button class="inputButton" id="removeSMS">REMOVE SMS</button>
+            <button class="inputButton" id="signOut">DELETE ACCOUNT</button>
+            <a href="mailto:playful@media.mit.edu" class="inputButton" id="contact">CONTACT US</a>
+        </div>
         <div class="bottomDiv">
-            <button id="mainmenu" class="inputButton">Main Menu</button>
+            <button id="mainmenu" class="inputButton">MAIN MENU</button>
         </div>
     </div>
 </template>
