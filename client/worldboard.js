@@ -541,9 +541,31 @@ var updateBuildProgressBar = function (intersectionId, from, to, time, buildProg
  * @param localPlayerState {Object}
  * @param distance {Number}
  */
-var isTouchedByPatientZero = function (localPlayerState, distance) {
+var isTouchedByPatientZero = function (localPlayerState, distance, localPlayerId) {
     if (distance <= 5 && !localPlayerState.health.isStunned) {
         //TODO: distance is arbitrary right now
+
+        // Stop building if building
+        // if we are in the middls of building send a message that we stopped building
+        var game = Games.findOne(Router.current().data().gameId);
+        // get latest log entry from local user
+        var myLastBarriersLogEntry = _.find(_.sortBy(game.barriersLog, function (logEntry) {
+                return -logEntry.time;
+            }),
+            function (logEntry) {
+                return logEntry.playerId === localPlayerId;
+            }
+        );
+
+        // if log entry exists and is of type start build or demolish, then send a message to stop
+        if (myLastBarriersLogEntry) {
+            if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_BUILD) {
+                Meteor.call('stopConstruction', Router.current().data().gameId, myLastBarriersLogEntry.intersectionId);
+            }
+            else if (myLastBarriersLogEntry.type === Sanitaire.barricadeActions.START_DEMOLISH) {
+                Meteor.call('stopDeconstruction', Router.current().data().gameId, myLastBarriersLogEntry.intersectionId);
+            }
+        }
 
         console.log("touched!");
         localPlayerState.health.isStunned = true;
@@ -932,7 +954,7 @@ Template.worldBoard.onRendered(function () {
                     var distance = getPatientZeroDistance(patientZeroSprite, sprite);
 
                     // Check if touched by patient zero
-                    var justTouched = isTouchedByPatientZero(localPlayerState, distance);
+                    var justTouched = isTouchedByPatientZero(localPlayerState, distance, localPlayerId);
                     if (justTouched) {
                         console.log("sprite when touched", sprite);
                     }
