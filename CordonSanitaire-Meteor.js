@@ -3,6 +3,16 @@
 
 if (Meteor.isClient) {
 
+    //
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        // Redirect to Mobile Phone message;
+        //window.location = "http://playful.jonathanbobrow.com/prototypes/cordonsans/mobile/"
+    }else {
+        // THIS IS A DESKTOP BROWSER!!!
+        alert("CORDON SANITAIRE happens many times a day, but only to phones. Please visit with your browser on a mobile device.");
+        window.location = "http://playful.media.mit.edu";
+    }
+
     // Prevent scroll
     // Todo: allow player list to scroll in lobby view
     document.addEventListener('touchmove', function (e) {
@@ -388,6 +398,9 @@ if (Meteor.isServer) {
     };
 
     var findUsersToSMS = function () {
+        // Todo: RETURN HERE UNTIL WE DECIDE WHEN TO TEXT!!@!!
+        return [];
+
         /* do something here */
         // look to see who is signed up to receive a text message now
         var date = new Date();
