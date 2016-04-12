@@ -8,31 +8,6 @@
     font-family: 'Open Sans', sans-serif;
 }
 
-h1 {
-    /*font-weight: lighter;*/
-    /*font-size: 2em;*/
-}
-
-h2 {
-    /*font-weight: lighter;*/
-    /*font-size: 1em;*/
-}
-
-h3 {
-}
-
-p {
-}
-
-ol {
-}
-
-ul {
-}
-
-li {
-}
-
 body {
     background-color: #ffffff;
 }
@@ -161,7 +136,6 @@ start of game */
     margin: 5%;
     height: 50px;
     line-height: 50px;
-    background: rgba(0, 0, 0, 1);
     color: white;
     font-family: sans-serif;
     font-size: 2.3em;
@@ -293,19 +267,19 @@ start of game */
 #p0_loose {
     /*display: none;*/
     z-index: 100;
-    width: 200px;
+    width: 160px;
 }
 
 #p0_contained {
     /*display: none;*/
     z-index: 100;
-    width: 200px;
+    width: 160px;
 }
 
 #p0_isolated {
     /*display: none;*/
     z-index: 100;
-    width: 200px;
+    width: 160px;
 }
 
 #end_game {
@@ -368,7 +342,6 @@ start of game */
     bottom: 40px;
     width: 40%;
     margin: 0 5% 0 55%;
-
 }
 
 .buttonSubtext {
@@ -622,7 +595,15 @@ start of game */
     height: 100%;
 }
 
-.logotype{
+#logotype {
+    width:280px;
+    position: fixed;
+    top: 80px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.logotype {
     font-family: 'Rajdhani', sans-serif;
     text-shadow: 2px 2px 5px #000000;
     font-size: 8vw;
@@ -635,9 +616,14 @@ start of game */
     color: #ffffff;
     margin-left: auto;
     margin-right: auto;
+    color: #ffffff;
     text-align: left;
     text-shadow: 0px 0px 5px #000000;
     font-size: 4vw;
     line-height: 1.3em;
     font-weight: 400;
+}
+
+#swipeText {
+    visibility: hidden;
 }
