@@ -397,7 +397,7 @@ start of game */
     background-color: #000;
     color: white;
     font-family: 'Rajdhani', sans-serif;
-    font-size: 24px;
+    font-size: 18px;
     line-height: 30px;
     margin-top: 0px;
     margin-bottom: 0px;
@@ -608,7 +608,7 @@ start of game */
     text-shadow: 2px 2px 5px #000000;
     font-size: 8vw;
     color: #ffff00;
-    padding: 35% 10% 25% 10%;
+    padding: 40% 10% 45% 10%;
 }
 
 #splash_body {
@@ -619,9 +619,10 @@ start of game */
     color: #ffffff;
     text-align: left;
     text-shadow: 0px 0px 5px #000000;
-    font-size: 4vw;
-    line-height: 1.3em;
-    font-weight: 400;
+    font-size: 3.5vw;
+    line-height: 1.5em;
+    font-family: Rajdhani, SansSerif;
+    font-weight: 500;
 }
 
 #swipeText {
@@ -678,4 +679,28 @@ start of game */
     font-size: 24px;
     font-weight: bold;
     text-align: center;
+}
+
+/* Standard syntax */
+@keyframes splashButtonAnimation {
+    0% {
+        color: white;
+    }
+    50% {
+        color: #ffff00;
+    }
+    100% {
+        color: white;
+    }
+}
+
+.splashButton {
+    -webkit-animation-name: splashButtonAnimation ; /* Chrome, Safari, Opera */
+    -webkit-animation-duration: 1.2s; /* Chrome, Safari, Opera */
+    -webkit-animation-iteration-count: infinite; /* Chrome, Safari, Opera */
+    -webkit-animation-timing-function: ease-in-out;
+    animation-name: splashButtonAnimation ;
+    animation-duration: 1.2s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
 }
