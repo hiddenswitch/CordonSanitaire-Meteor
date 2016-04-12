@@ -18,7 +18,8 @@
         <div id="signup_header">
             <h1 class="logotype">CORDON SANITAIRE</h1>
             <p id="splash_body">
-                As long as there have been cities, there have been plagues. And every plague has been met with the same idea: isolate the healthy from the sick. Every once in a while it works.
+                As long as there have been cities, there have been plagues. And every plague has been met with the same
+                idea: isolate the healthy from the sick. Every once in a while, it works.
             </p>
         </div>
 
@@ -144,39 +145,47 @@
         {{/if}}
     </div>
 
-    <div id="bottom_container">
-        <a href="#" id="buildButton" class="leftButton quarantineButton buildButton">BUILD</a>
-        <a href="#" id="destroyButton" class="rightButton quarantineButton destroyButton">DEMOLISH</a>
-        <p class="buttonSubtext" id="swipeText">or swipe to keep running</p>
-    </div>
+    {{#if showGameConclusion}}
+        <!-- Display conclusion after the game -->
+        <div id="conclusion_container">
+            {{#if showPatientZeroIsolated}}
+                <p>
+                    <span class="">Patient Zero was isolated</span><br><br>
+                    and the city is saved!<br><br>
+                    Will everyone be this lucky next time?
+                </p>
+            {{/if}}
+            {{#if showPatientZeroContained}}
+                <p>
+                    <span class="">Patient Zero was contained</span><br><br>
+                    but {{numberOfPeopleContained}} people were also trapped<br><br>
+                    Next time, try to isolate the disease...
+                </p>
+            {{/if}}
+            {{#if showPatientZeroLoose}}
+                <p>
+                    <span class="">Time ran out with Patient Zero on the loose.</span><br><br>
+                    The city is lost.<br><br>
+                    There are still other cities, and other outbreaks…
+                </p>
+            {{/if}}
+        </div>
+        <div class="bottomDiv">
+            <button id="mainmenu" class="inputButton">ANOTHER DAY</button>
+        </div>
+    {{else}}
+        <div id="bottom_container">
+            <a href="#" id="buildButton" class="leftButton quarantineButton buildButton">BUILD</a>
+            <a href="#" id="destroyButton" class="rightButton quarantineButton destroyButton">DEMOLISH</a>
+            <p class="buttonSubtext" id="swipeText">or swipe to keep running</p>
+        </div>
+    {{/if}}
+
 
     <!-- Container for Phaser Game -->
     <div id="map-container"
          style="background:rgb(20,20,20); {{#if isGameZoomedOut}} padding-top: 70px; padding-bottom: {{gameBottomPadding}}px;{{/if}}">
         {{> worldBoard gameId=gameId}}
-    </div>
-</template>
-
-<!-- Display conclusion after the game -->
-<template name="conclusion">
-    <div class="textCenter">
-        <h2 class="gameOverTitle">Game Over</h2>
-        <p class="gameOverMessage">{{endGameSynopsis}}</p>
-        <div class="finalStats">
-            <ul class="finalStatsList">
-                <li><img class="statsIcon" src="/assets/icons/patientIsolated.png">
-                    <p class="statsDesc">Patient Zero {{pZeroStatus}}</p></li>
-                <li><img class="statsIcon" src="/assets/icons/quarantineCreated.png">
-                    <p class="statsDesc">{{numQuarantines}} quarantine zones built</p></li>
-                <li><img class="statsIcon" src="/assets/icons/barricadeBuilt.png">
-                    <p class="statsDesc">{{numBarricades}} barricades built</p></li>
-                <li><img class="statsIcon" src="/assets/icons/respondentInjured.png">
-                    <p class="statsDesc">{{numInjured}}respondents injured</p></li>
-            </ul>
-        </div>
-        <div class="bottomDiv">
-            <button id="mainmenu" class="inputButton">MAIN MENU</button>
-        </div>
     </div>
 </template>
 

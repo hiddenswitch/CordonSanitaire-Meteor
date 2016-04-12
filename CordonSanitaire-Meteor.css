@@ -627,3 +627,32 @@ start of game */
 #swipeText {
     visibility: hidden;
 }
+
+#conclusion_container {
+    z-index: 100;
+    position: absolute;
+    background: rgba(0,0,0,.7);
+    padding: 20px;
+    width: 60%;
+    margin-top: 40%;
+    margin-left: 15%;
+    margin-right: 20%;
+    text-align: left;
+    border-radius: 10px;
+    color: white;
+    line-height: 1.5em;
+    font-weight: lighter;
+    font-size: .9em;
+}
+
+.yellow {
+    color: #FFFF00;
+}
+
+.red {
+    color: #FF4444;
+}
+
+.green {
+    color: #00FF66;
+}

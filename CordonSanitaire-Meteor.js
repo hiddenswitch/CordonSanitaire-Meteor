@@ -184,32 +184,38 @@ if (Meteor.isClient) {
             // this will probably be filled with background art at some point, but does need to be dynamic to window size
             var padding = window.innerHeight - 470; // 90px is top padding, and gameboard is 400px tall
             return padding > 0 ? padding : 0;
-        }
-    });
+        },
+        showGameConclusion: function () {
+            if (Session.get("patient zero isolated")) {
+                return true;
+            }
+            var gameId = this.gameId;
+            var game = Games.findOne(gameId, {fields: {state: 1}});
 
-    Template.conclusion.helpers({
-        endGameSynopsis: function () {
-            return -1;
+            if (!game) {
+                return false;
+            }
+            return game.state === Sanitaire.gameStates.ENDED;
         },
-        pZeroStatus: function () {
-            return -1;
-        },
-        numQuarantines: function () {
-            return -1;
-        },
-        numBarricades: function () {
-            return -1;
-        },
-        numInjured: function () {
-            return -1;
+        numberOfPeopleContained: function () {
+            // TODO: replace this with the actual number of people contained
+            // to be done in Graph Analysis
+            return "many";
         }
-    });
-
-    Template.conclusion.events({
-        'click button#mainmenu': function () {
-            // go back to mainmenu
-            Router.go('mainmenu');
-        }
+        //conclusionText: function () {
+        //    var isContained = Session.get("patient zero contained");
+        //    var isIsolated = Session.get("patient zero isolated");
+        //
+        //    var gameId = this.gameId;
+        //    var game = Games.findOne(gameId, {fields: {state: 1}});
+        //
+        //    if (!game) {
+        //        return "";
+        //    }
+        //    var text = "Patient Zero was isolated\nand the city is saved!\nWill everyone be this lucky next time?";
+        //
+        //    return text;
+        //}
     });
 
     Template.profile.helpers({
@@ -217,25 +223,25 @@ if (Meteor.isClient) {
             return Meteor.userId();
         },
         gamesPlayed: function () {
-            return -1;
+            return "COMING SOON!";
         },
         gamesSuccesses: function () {
-            return -1;
+            return "COMING SOON!";
         },
         quarantinesCompleted: function () {
-            return -1;
+            return "COMING SOON!";
         },
         barricadesBuilt: function () {
-            return -1;
+            return "COMING SOON!";
         },
         respondersTrapped: function () {
-            return -1;
+            return "COMING SOON!";
         },
         respondersReleased: function () {
-            return -1;
+            return "COMING SOON!";
         },
         timesInjured: function () {
-            return -1;
+            return "COMING SOON!";
         }
     });
 
