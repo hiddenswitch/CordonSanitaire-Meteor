@@ -91,6 +91,45 @@ Router.route('/profile/:userId', function () {
  * be reactive to the game states.
  */
 Router.route('/g/:gameId', function () {
+
+    /**
+     * A prompt to capture a users cell number if they were in a lobby that expired (don't want to miss the opportunity to capture players)
+     * @param hasSeenPrompt
+     */
+    function promptForUserCell(hasSeenPrompt) {
+        var promptMessage;
+        if (!hasSeenPrompt) {
+            promptMessage = "Looks like you missed the current outbreak. Enter a valid cell number and you will be notified for the next outbreak.";
+        } else {
+            promptMessage = "Invalid number. Please, enter a valid cell number and you will be notified for the next outbreak.";
+        }
+
+        var cellNumber = prompt(promptMessage, "555-555-1234");
+        if (cellNumber && cellNumber !== "") {
+            //store cellNumber
+
+            Meteor.call('addSMSNumber', cellNumber, function (error, info) {
+                if (error) {
+                    //console.log("let's ask again politely", error); // Catch the
+                    promptForUserCell(true);
+                    console.log(cellNumber, "is not a recognized cell number");
+                }
+                else {
+                    if (!info) {
+                        // if number entered was null
+                        console.log("please enter a cell number");
+                    }
+                    else {
+                        // SUCCESS, let the user know we'll text them!
+                        var alertMessage = "You will be notified at " + info + " for the next outbreak.";
+                        alert(alertMessage );
+                        console.log("show that we'll text this number as a receipt", info);
+                    }
+                }
+            });
+        }
+    }
+
     var userId = Meteor.userId();
 
     var isLoggedIn = !!userId;
@@ -117,7 +156,14 @@ Router.route('/g/:gameId', function () {
             this.render('game');
             return;
         case Sanitaire.gameStates.EXPIRED:
-            this.render('expired');
+            // prompt to capture cell # if not yet captured
+            var user = Meteor.users.findOne(userId);
+            if(!user.sms) {
+                promptForUserCell();
+            }else {
+                alert("Not enough responders joined. Try again or you will be notified for the next outbreak.")
+            }
+            this.render('mainmenu');
             return;
         default:
             this.render('loading');
