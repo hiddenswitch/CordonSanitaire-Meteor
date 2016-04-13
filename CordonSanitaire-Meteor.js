@@ -88,7 +88,16 @@ if (Meteor.isClient) {
             }
             else {
                 var date = new Date();
-                return _.indexOf(Sanitaire.TIME_RESTRICTED_ENTRY, date.getMinutes()) != -1;
+                var hours = date.getHours();
+                var minutes = date.getMinutes();
+                if(hours === 14 && minutes >= 30) {
+                    return true;
+                }
+                else if ((hours === 16 && minutes >= 45) || (hours === 17 && minutes <= 15)) {
+                    return true;
+                }
+                else return false;
+                //return _.indexOf(Sanitaire.TIME_RESTRICTED_ENTRY, date.getMinutes()) != -1;
             }
         },
         showTextSignUp: function () {
@@ -398,14 +407,10 @@ if (Meteor.isServer) {
     };
 
     var findUsersToSMS = function () {
-        // Todo: RETURN HERE UNTIL WE DECIDE WHEN TO TEXT!!@!!
-        return [];
-
-        /* do something here */
         // look to see who is signed up to receive a text message now
         var date = new Date();
         var currentHour = (date.getHours() + 1) % 24;   // this is related to the 59th minute... i.e. text those signed up for the next hour
-        var users = Meteor.users.find({"sms.hourToText": currentHour}).fetch()
+        var users = Meteor.users.find({$exists: {"sms.number": true}}).fetch();
 
         return users;
     };
@@ -414,7 +419,8 @@ if (Meteor.isServer) {
         SyncedCron.add({
             name: "Twilio Cron Job",
             schedule: function (parser) {
-                return parser.recur().on(59).minute(); // called on the 59th minute...
+                return parser.text("at 2:30pm EST also at 4:45pm EST");
+                //return parser.recur().on(59).minute(); // called on the 59th minute...
             },
             job: function () {
                 var users = findUsersToSMS();
