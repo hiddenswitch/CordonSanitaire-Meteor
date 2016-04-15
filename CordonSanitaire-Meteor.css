@@ -712,3 +712,7 @@ start of game */
     right: 20px;
     bottom: 20px;
 }
+
+#map-container{
+    background:rgb(33,33,33);
+}
