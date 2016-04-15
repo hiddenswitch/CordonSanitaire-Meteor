@@ -10,7 +10,7 @@ if (Meteor.isClient) {
     }else {
         // THIS IS A DESKTOP BROWSER!!!
         alert("CORDON SANITAIRE happens many times a day, but only to phones. Please visit with your browser on a mobile device.");
-        window.location = "http://playful.media.mit.edu";
+        window.location = "http://playful.media.mit.edu/projects/cordonsanitaire/";
     }
 
     // Prevent scroll
