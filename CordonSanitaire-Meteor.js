@@ -426,22 +426,22 @@ if (Meteor.isServer) {
     };
 
     Cron.jobs = function () {
-        SyncedCron.add({
-            name: "Twilio Cron Job",
-            schedule: function (parser) {
-                return parser.text("at 2:30pm EST also at 4:45pm EST");
-                //return parser.recur().on(59).minute(); // called on the 59th minute...
-            },
-            job: function () {
-                var users = findUsersToSMS();
-                var numbers = users.map(function (user) {
-                    return user.sms.number;
-                });
-                var message = 'FAKE URGENT. Patient Zero detected with contagion. Response needed! http://quarantine.club';
-                console.log("sending text message to these numbers", numbers);
-                sendMessageToNumbers(message, numbers);
-            }
-        });
+        //SyncedCron.add({
+        //    name: "Twilio Cron Job",
+        //    schedule: function (parser) {
+        //        return parser.text("at 2:30pm EST also at 4:45pm EST");
+        //        //return parser.recur().on(59).minute(); // called on the 59th minute...
+        //    },
+        //    job: function () {
+        //        var users = findUsersToSMS();
+        //        var numbers = users.map(function (user) {
+        //            return user.sms.number;
+        //        });
+        //        var message = 'FAKE URGENT. Patient Zero detected with contagion. Response needed! http://quarantine.club';
+        //        console.log("sending text message to these numbers", numbers);
+        //        sendMessageToNumbers(message, numbers);
+        //    }
+        //});
 
         // clean up the empty games
         SyncedCron.add({
