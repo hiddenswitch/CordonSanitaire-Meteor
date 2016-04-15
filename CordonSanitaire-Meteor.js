@@ -100,10 +100,8 @@ if (Meteor.isClient) {
                 var date = new Date();
                 var hours = date.getHours();
                 var minutes = date.getMinutes();
-                if(hours === 14 && minutes >= 30) {
-                    return true;
-                }
-                else if ((hours === 16 && minutes >= 45) || (hours === 17 && minutes <= 15)) {
+                // Let people play at 4pm EST til 4:30pm EST
+                if(hours === 16 && minutes <= 30) {
                     return true;
                 }
                 else return false;
