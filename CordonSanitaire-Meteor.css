@@ -706,3 +706,9 @@ start of game */
     animation-iteration-count: infinite;
     animation-timing-function: ease-in-out;
 }
+
+#localPlayButton {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+}

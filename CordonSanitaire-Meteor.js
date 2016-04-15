@@ -71,7 +71,17 @@ if (Meteor.isClient) {
         },
         'click button#options': function () {
             Router.go('options', {userId: Meteor.userId()});
+        },
+        'click #localPlayButton': function () {
+            // find a game to join
+            Meteor.call('matchMakeAndJoin', function (e, info) {
+                var gameId = info.gameId;
+                var playerId = info.playerId;
+                // load lobby to wait for start of game
+                Router.go('game', {gameId: gameId}, {query: {playerId: playerId}});
+            });
         }
+
     });
 
     // let's keep the time til next game up to date by attaching an interval
