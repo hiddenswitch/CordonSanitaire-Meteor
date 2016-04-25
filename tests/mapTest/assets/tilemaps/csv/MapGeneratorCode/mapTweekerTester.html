@@ -17,8 +17,8 @@
     <script type="text/javascript" src="dat.gui.js"></script>
     <div id="globalVariables">
         <script>
-            var width = 10;
-            var height = 10;
+            var numCols = 10;
+            var numRows = 10;
             var blockWidth = 5;
             var blockHeight = 5;
             var mapName;
@@ -203,7 +203,7 @@
                 return block;
             };
 
-            var BlocksMaker = function(rowSize, colSize){
+            var BlockTypesMaker = function(rowSize, colSize){
                 // up, right, down, left
                 Blocks.SOLID = blockMaker(rowSize,colSize,false, false, false, false);
 
@@ -463,12 +463,12 @@
             };
 
             /*
-                Generates a random row*col map
+                Generates a random numRows*numCols map
              */
-            var mapGenerate = function(row, col){
+            var mapGenerate = function(numRows, numCols){
                 var mapEmpty = true;
                 while (mapEmpty){
-                    var map = mapDecode(mapDescriptionGenerate(row, col));
+                    var map = mapDecode(mapDescriptionGenerate(numRows, numCols));
                     if ((map.length === Blocks.SOLID.length)&&(map[0].length === Blocks.SOLID.length)){ // for the 5x5 map that will always be empty
                         break;
                     }
@@ -516,9 +516,16 @@
                         var y2 = point2[0];
 
                         var center = findBlockCenter(map, y1, x1);
+                        if (center===undefined){
+                            console.log("point1", y1, x1, center);
+                        }
                         x1 = center[1];
                         y1 = center[0];
                         center = findBlockCenter(map, y2, x2);
+                        if (center===undefined){
+                            console.log("point2",y2, x2, center);
+                        }
+
                         x2 = center[1];
                         y2 = center[0];
 
@@ -554,13 +561,13 @@
 
                         for (var i = x_start; i<x_end+1; i++){
                             if (map[y_hold][i] === 1){
-                                map[y_hold][i] = 0;
+                                map[y_hold][i] = 5;
                             }
                         }
 
                         for (var j = y_start; j<y_end+1; j++){
                             if (map[j][x_hold] === 1){
-                                map[j][x_hold] = 0;
+                                map[j][x_hold] = 5;
                             }
                         }
                     }
@@ -603,11 +610,7 @@
                         }
                     }
                 }
-
-
                 return [];
-
-
             }
 
         </script>
@@ -705,6 +708,7 @@
                 height, width integer
              */
             var mapUpdate = function(height, width){
+//                var mapHeight =
                 var map = mapGenerate(height,width);
                 currentMap = map;
                 displayMap(map);
@@ -713,8 +717,8 @@
             var mapTweeker = function() {
                 this.mapNameToSave = "newMap";
                 this.mapNameToLoad = "test12";
-                this.width = width;
-                this.height = height;
+                this.numCols = numCols;
+                this.numRows = numRows;
                 this.blockWidth = blockWidth;
                 this.blockHeight = blockHeight;
                 this.density = 0;
@@ -744,10 +748,10 @@
 
                     blockHeight = Math.round(this.blockHeight);
                     blockWidth = Math.round(this.blockWidth);
-                    BlocksMaker(blockHeight,blockWidth);
-                    height = Math.round(this.height);
-                    width = Math.round(this.width);
-                    mapUpdate(height,width);
+                    BlockTypesMaker(blockHeight,blockWidth);
+                    numRows = Math.round(this.numRows);
+                    numCols = Math.round(this.numCols);
+                    mapUpdate(numRows,numCols);
                 };
                 this.load = function(){
                     mapName = this.mapNameToLoad;
@@ -832,8 +836,9 @@
 
             var f1 = gui.addFolder("tweek");
             f1.add(mapTweekerUI, 'mapNameToSave');
-            f1.add(mapTweekerUI, 'width', 1, 20);
-            f1.add(mapTweekerUI, 'height', 1, 20);
+            f1.add(mapTweekerUI, 'numRows', 1, 20);
+            f1.add(mapTweekerUI, 'numCols', 1, 20);
+
             f1.add(mapTweekerUI, 'blockWidth', 1, 20);
             f1.add(mapTweekerUI, 'blockHeight', 1, 20);
             f1.add(mapTweekerUI, 'density', -10, 10);
@@ -847,8 +852,8 @@
             f2.add(mapTweekerUI, 'load');
             f2.closed = false;
 
-            BlocksMaker(blockHeight,blockWidth);
-            mapUpdate(height, width);
+            BlockTypesMaker(blockHeight,blockWidth);
+            mapUpdate(numRows, numCols);
 
         };
     </script>
