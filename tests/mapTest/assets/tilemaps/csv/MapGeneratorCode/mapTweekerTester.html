@@ -36,6 +36,7 @@
             var density = 1;
 
             var cellSize = 10;
+            var currentMapSafetyCopy;
 
         </script>
     </div>
@@ -170,7 +171,7 @@
 //                        ]
 //
 //            };
-            var prettyPrintBlock = function(block){
+            var prettyPrint = function(block){
                 var print = '';
                 for (var i = 0; i<block.length; i++){
                     for (var j = 0; j<block[0].length; j++){
@@ -667,83 +668,85 @@
                 displays the map as a canvas element inside #mapboard
             */
             var displayMap = function(map){
-                $("#mapboard").html("");
-                var width = map[0].length;         // width in pixels
-                var height = map.length;
 
-                // Create canvas
-                var canvas = document.createElement('canvas');
-                var context = canvas.getContext('2d');
-                context.webkitImageSmoothingEnabled = false;
-                context.mozImageSmoothingEnabled = false;
-                context.imageSmoothingEnabled = false; /// future
-                var imgData = context.createImageData(width, height);
-
-                canvas.height = height;
-                canvas.width = width;
-
-                for (var x = 0; x < imgData.width; x++)  {
-                    for (var y = 0; y < imgData.height; y++)  {
-
-                        // Index of the pixel in the array
-                        var idx = (x + y * width) * 4;
-
-                        // If you want to know the values of the pixel
-//                                var r = canvasData.data[idx + 0];
-//                                var g = canvasData.data[idx + 1];
-//                                var b = canvasData.data[idx + 2];
-//                                var a = canvasData.data[idx + 3];
-                        var r;
-                        var g;
-                        var b;
-                        if (map[y][x] === 1){ // building
-//                                    r = 43
-//                                    g = 104;
-//                                    b = 118;
-                            r = 169;
-                            g = 169;
-                            b = 169;
-                        } else if (map[y][x] === 0){ // road
-//                                    r = 169;
-//                                    g = 169;
-//                                    b = 169;
-                            r = 0;
-                            g = 0;
-                            b = 0;
-                        } else if (map[y][x] === 2){ //intersection
-                            r = 50;
-                            g = 50;
-                            b = 50;
-                        } else {
-                            r = 255;
-                            g = 255;
-                            b = 255;
-                        }
-
-                        // If you want to update the values of the pixel
-                        imgData.data[idx + 0] = r; // Red channel
-                        imgData.data[idx + 1] = g; // Green channel
-                        imgData.data[idx + 2] = b; // Blue channel
-                        imgData.data[idx + 3] = 255; // Alpha channel
-                    }
-                }
-
-                // put data to context at (0, 0)
-                context.putImageData(imgData, 0, 0);
-
-                $("#mapboard").html(canvas);
-                $("#mapboard canvas").css({
-                    "image-rendering": "optimizeSpeed",             /*// Older versions of FF*/
-                    "image-rendering": "-moz-crisp-edges",          /*// FF 6.0+*/
-                    "image-rendering": "-webkit-optimize-contrast", /*// Webkit (non standard naming)*/
-                    "image-rendering": "-o-crisp-edges",            /*// OS X & Windows Opera (12.02+)*/
-                    "image-rendering": "crisp-edges",               /*// Possible future browsers.*/
-                    "image-rendering": "pixelated",
-                    "-ms-interpolation-mode": "nearest-neighbor"   /*// IE (non standard naming)*/
-                }).css({
-                    width: width*10 + "px",
-                    height: "auto"
-                });
+                ////old implementation using canvas
+//                $("#mapboard").html("");
+//                var width = map[0].length;         // width in pixels
+//                var height = map.length;
+//
+//                // Create canvas
+//                var canvas = document.createElement('canvas');
+//                var context = canvas.getContext('2d');
+//                context.webkitImageSmoothingEnabled = false;
+//                context.mozImageSmoothingEnabled = false;
+//                context.imageSmoothingEnabled = false; /// future
+//                var imgData = context.createImageData(width, height);
+//
+//                canvas.height = height;
+//                canvas.width = width;
+//
+//                for (var x = 0; x < imgData.width; x++)  {
+//                    for (var y = 0; y < imgData.height; y++)  {
+//
+//                        // Index of the pixel in the array
+//                        var idx = (x + y * width) * 4;
+//
+//                        // If you want to know the values of the pixel
+////                                var r = canvasData.data[idx + 0];
+////                                var g = canvasData.data[idx + 1];
+////                                var b = canvasData.data[idx + 2];
+////                                var a = canvasData.data[idx + 3];
+//                        var r;
+//                        var g;
+//                        var b;
+//                        if (map[y][x] === 1){ // building
+////                                    r = 43
+////                                    g = 104;
+////                                    b = 118;
+//                            r = 169;
+//                            g = 169;
+//                            b = 169;
+//                        } else if (map[y][x] === 0){ // road
+////                                    r = 169;
+////                                    g = 169;
+////                                    b = 169;
+//                            r = 0;
+//                            g = 0;
+//                            b = 0;
+//                        } else if (map[y][x] === 2){ //intersection
+//                            r = 50;
+//                            g = 50;
+//                            b = 50;
+//                        } else {
+//                            r = 255;
+//                            g = 255;
+//                            b = 255;
+//                        }
+//
+//                        // If you want to update the values of the pixel
+//                        imgData.data[idx + 0] = r; // Red channel
+//                        imgData.data[idx + 1] = g; // Green channel
+//                        imgData.data[idx + 2] = b; // Blue channel
+//                        imgData.data[idx + 3] = 255; // Alpha channel
+//                    }
+//                }
+//
+//                // put data to context at (0, 0)
+//                context.putImageData(imgData, 0, 0);
+//
+//                $("#mapboard").html(canvas);
+//                $("#mapboard canvas").css({
+//                    "image-rendering": "optimizeSpeed",             /*// Older versions of FF*/
+//                    "image-rendering": "-moz-crisp-edges",          /*// FF 6.0+*/
+//                    "image-rendering": "-webkit-optimize-contrast", /*// Webkit (non standard naming)*/
+//                    "image-rendering": "-o-crisp-edges",            /*// OS X & Windows Opera (12.02+)*/
+//                    "image-rendering": "crisp-edges",               /*// Possible future browsers.*/
+//                    "image-rendering": "pixelated",
+//                    "-ms-interpolation-mode": "nearest-neighbor"   /*// IE (non standard naming)*/
+//                }).css({
+//                    width: width*10 + "px",
+//                    height: "auto"
+//                });
 
 
                 $("#mapboard").html("");
@@ -777,12 +780,172 @@
             
         </script>
     </div>
+    <div id="manualMapEdit">
+        <script type="text/javascript">
+            $(function(){
+
+
+                var editingAdd = false;
+                var editingRemove = false;
+
+
+                var dragging = false;
+
+                $("#reset").prop("disabled",true);
+
+                $("#add").click(function(){
+                    editingAdd = true;
+                    editingRemove = false;
+                    $("#add").prop("disabled",true);
+                    $("#remove").prop("disabled",false);
+                    $("#reset").prop("disabled",false);
+                });
+                $("#remove").click(function(){
+                    editingAdd = false;
+                    editingRemove = true;
+                    $("#add").prop("disabled",false);
+                    $("#remove").prop("disabled",true);
+                    $("#reset").prop("disabled",false);
+                });
+
+                $("#reset").click(function(){
+                    editingAdd = false;
+                    editingRemove = false;
+                    $("#add").prop("disabled",false);
+                    $("#remove").prop("disabled",false);
+                    $("#reset").prop("disabled",true);
+                    currentMap = $.extend(true, [], currentMapSafetyCopy);
+                    displayMap(currentMap);
+                });
+
+                $("#done").click(function(){
+                    editingAdd = false;
+                    editingRemove = false;
+                    $("#add").prop("disabled",false);
+                    $("#remove").prop("disabled",false);
+                    $("#reset").prop("disabled",true);
+                    currentMapSafetyCopy = $.extend(true, [], currentMap);
+                });
+
+                $("body").on("mousedown","#mapContainer", function(evt){
+                    evt.preventDefault();
+                    if (editingAdd || editingRemove){
+                        dragging = true;
+                    }
+                });
+
+                $("body").on("mouseup","#mapContainer", function(evt){
+                    evt.preventDefault();
+                    dragging = false;
+                });
+
+                $("body").on("mousemove",".cell", function(evt) {
+                    evt.preventDefault();
+
+                    var row = $(this).data("row");
+                    var col = $(this).data("col");
+                    if (dragging) {
+                        if (editingAdd) {
+                            $(this).removeClass();
+                            $(this).addClass("cell").addClass("black");
+                            currentMap[row][col] = 0;
+                            var newIntersections = checkIntersectionOfSurroundings(currentMap, row, col);
+                            if (newIntersections[0]){ // own
+                                $(this).removeClass();
+                                $(this).addClass("cell").addClass("black2");
+                                currentMap[row][col] = 9;
+                            }
+                            if (newIntersections[1]){ //up
+                                $("[data-row='"+(row-1)+"'][data-col='"+col+"']").removeClass();
+                                $("[data-row='"+(row-1)+"'][data-col='"+col+"']").addClass("cell").addClass("black2");
+                                currentMap[row-1][col] = 9;
+                            }
+                            if (newIntersections[2]){ //down
+                                $("[data-row='"+(row+1)+"'][data-col='"+col+"']").removeClass();
+                                $("[data-row='"+(row+1)+"'][data-col='"+col+"']").addClass("cell").addClass("black2");
+                                currentMap[row+1][col] = 9;
+                            }
+                            if (newIntersections[3]){ //left
+                                $("[data-row='"+row+"'][data-col='"+(col-1)+"']").removeClass();
+                                $("[data-row='"+row+"'][data-col='"+(col-1)+"']").addClass("cell").addClass("black2");
+                                currentMap[row][col-1] = 9;
+                            }
+                            if (newIntersections[4]){ //right
+                                $("[data-row='"+row+"'][data-col='"+(col+1)+"']").removeClass();
+                                $("[data-row='"+row+"'][data-col='"+(col+1)+"']").addClass("cell").addClass("black2");
+                                currentMap[row][col+1] = 9;
+                            }
+                        } else if (editingRemove) {
+                            $(this).removeClass();
+                            $(this).addClass("cell").addClass("grey");
+                            currentMap[row][col] = 1;
+                            var newIntersections = checkIntersectionOfSurroundings(currentMap, row, col);
+                            // if intersections need to be removed
+                            if (!newIntersections[1]){ //up
+                                $("[data-row='"+(row-1)+"'][data-col='"+col+"']").removeClass();
+
+                                if (TileType.PASSABLE.has(currentMap[row-1][col])){
+                                    currentMap[row-1][col] = 0;
+                                    $("[data-row='"+(row-1)+"'][data-col='"+col+"']").addClass("cell").addClass("black");
+                                } else {
+                                    currentMap[row-1][col] = 1;
+                                    $("[data-row='"+(row-1)+"'][data-col='"+col+"']").addClass("cell").addClass("grey");
+                                }
+                            }
+                            if (!newIntersections[2]){ //down
+                                $("[data-row='"+(row+1)+"'][data-col='"+col+"']").removeClass();
+
+                                if (TileType.PASSABLE.has(currentMap[row+1][col])){
+                                    currentMap[row+1][col] = 0;
+                                    $("[data-row='"+(row+1)+"'][data-col='"+col+"']").addClass("cell").addClass("black");
+                                } else {
+                                    currentMap[row+1][col] = 1;
+                                    $("[data-row='"+(row+1)+"'][data-col='"+col+"']").addClass("cell").addClass("grey");
+                                }
+                            }
+                            if (!newIntersections[3]){ //left
+                                $("[data-row='"+row+"'][data-col='"+(col-1)+"']").removeClass();
+
+                                if (TileType.PASSABLE.has(currentMap[row][col-1])){
+                                    currentMap[row][col-1] = 0;
+                                    $("[data-row='"+row+"'][data-col='"+(col-1)+"']").addClass("cell").addClass("black");
+                                } else {
+                                    currentMap[row][col-1] = 1;
+                                    $("[data-row='"+row+"'][data-col='"+(col-1)+"']").addClass("cell").addClass("grey");
+                                }
+                            }
+                            if (!newIntersections[4]){ //right
+                                $("[data-row='"+row+"'][data-col='"+(col+1)+"']").removeClass();
+
+                                if (TileType.PASSABLE.has(currentMap[row][col+1])){
+                                    currentMap[row][col+1] = 0;
+                                    $("[data-row='"+row+"'][data-col='"+(col+1)+"']").addClass("cell").addClass("black");
+                                } else {
+                                    currentMap[row][col+1] = 1;
+                                    $("[data-row='"+row+"'][data-col='"+(col+1)+"']").addClass("cell").addClass("grey");
+                                }
+                            }
+                        }
+                    }
+
+                });
+            });
+
+
+
+
+
+
+
+
+        </script>
+    </div>
     <div id="dat.gui">
         <script type="text/javascript">
             /*
                 height, width integer
              */
-            var mapUpdate = function(height, width){
+            var createNewMap = function(height, width){
 //                var mapHeight =
                 var map = mapGenerate(height,width);
                 currentMap = map;

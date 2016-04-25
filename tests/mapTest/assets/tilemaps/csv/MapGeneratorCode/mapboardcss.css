@@ -19,8 +19,11 @@ canvas {
 .white{
     background-color: whitesmoke;
 }
-.black{
+.black {
     background-color: black;
+}
+.black2{
+    background-color: darkslategrey;
 }
 .grey{
     background-color: darkgrey;
