@@ -787,17 +787,21 @@
                     return "<div class='"+color+" cell' data-row='"+row+"' data-col='"+col+"' style='height:"+cellSize+"px;width:"+cellSize+"px;'></div>";
 
                 }
-                var mapDrawing = "<div class='mapContainer'>";
+                var mapDrawing = "<div id='mapContainer'>";
                 for (var j=0; j<width; j++){
                     mapDrawing = mapDrawing.concat("<div class='col'>");
                     for (var i=0; i<height; i++){
                         mapDrawing = mapDrawing.concat("<div class='row'>");
-                        if(map[i][j] === 5){
-                            mapDrawing = mapDrawing.concat(makeCell("white",j,i));
-                        } else if (TileType.PASSABLE.has(map[i][j])){
-                            mapDrawing = mapDrawing.concat(makeCell("black",j,i));
+                        if (TileType.PASSABLE.has(map[i][j])){
+                            if(map[i][j] === 5){ //debugging
+                                mapDrawing = mapDrawing.concat(makeCell("white",i,j));
+                            } else if (map[i][j] === 9){ // intersection
+                                mapDrawing = mapDrawing.concat(makeCell("black2",i,j));
+                            } else {
+                                mapDrawing = mapDrawing.concat(makeCell("black",i,j));
+                            }
                         } else {
-                            mapDrawing = mapDrawing.concat(makeCell("grey",j,i));
+                            mapDrawing = mapDrawing.concat(makeCell("grey",i,j));
                         }
                         mapDrawing = mapDrawing.concat("</div>");
                     }
