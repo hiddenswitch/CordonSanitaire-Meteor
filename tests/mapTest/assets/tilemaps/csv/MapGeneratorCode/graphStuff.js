@@ -9,7 +9,6 @@ var TileType = {
 }
 
 var bfs = function (map, source, seen, tileType) {
-    //console.log(seen.size);
     var component = []; // an array of all nodes from current. Node: [y,x]
     if (!seen.has(source)) {
         var nextLevel = new Set([source]);
@@ -21,8 +20,6 @@ var bfs = function (map, source, seen, tileType) {
         var thisLevel = nextLevel;
         nextLevel = new Set();
         thisLevel.forEach(function (v) {
-            //console.log(seen.size);
-            //console.log(seen);
 
             if (!seen.has(v)) {
                 seen.add(v);
@@ -31,7 +28,6 @@ var bfs = function (map, source, seen, tileType) {
                 v = [parseInt(v[0]),parseInt(v[1])];
                 component.push(v);
                 if ((v[0]>0) && tileType.has(map[v[0]-1][v[1]])){//up
-                    //console.log(map[v[0]-1][v[1]]);
                     var u = [v[0]-1, v[1]];
                     u = u.join();
                     if (!seen.has(u)) {
@@ -52,16 +48,14 @@ var bfs = function (map, source, seen, tileType) {
                         next.push(u);
                     }
                 }
-                if ((v[1]<map.length-1) && tileType.has(map[v[0]][v[1]+1])){//right
+                if ((v[1]<map[0].length-1) && tileType.has(map[v[0]][v[1]+1])){//right
                     var u = [v[0],v[1]+1];
                     u = u.join();
                     if (!seen.has(u)) {
                         next.push(u);
                     }
                 }
-                //console.log(next);
                 next.forEach(function (u) {
-                    //console.log(u);
                     nextLevel.add(u);
                 });
             }
@@ -78,6 +72,7 @@ var findComponents = function(map, tileType){
             if (tileType.has(map[i][j])){
                 var source = [i,j];
                 source = source.join();
+
                 var component = bfs(map, source, seen, tileType);
                 if (component.length>0){
                     components.push(component);
