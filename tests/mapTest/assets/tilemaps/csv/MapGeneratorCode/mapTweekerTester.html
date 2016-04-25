@@ -454,6 +454,21 @@
                     }
                 }
                 return map
+            };
+
+            var emptyMapDescriptionGenerate = function(mapRows, mapCols) {
+                var map = [];
+                for (var row = 0; row < mapRows; row++) {
+                    map.push([])
+                    for (var col = 0; col < mapCols; col++) {
+                        map[row].push("SOLID");
+                    }
+                }
+                return map;
+            };
+
+            var emptyMapGenerate = function(numRows, numCols){
+                return mapDecode(emptyMapDescriptionGenerate(numRows, numCols));
             }
 
             /*
@@ -1044,11 +1059,19 @@
                         currentMap = parsedMap;
                         // display parsed map
                         displayMap(parsedMap);
+                        currentMapSafetyCopy  = $.extend(true, [], currentMap);
                     });
 
 
 
                 };
+
+                this.loadEmptyMap = function(){
+                    currentMap = emptyMapGenerate(numRows, numCols);
+                    displayMap(currentMap);
+                    currentMapSafetyCopy  = $.extend(true, [], currentMap);
+
+                }
                 this.save = function(){
                     var csvContent = "data:text/csv;charset=utf-8,";
                     currentMap.forEach(function(infoArray, index){
@@ -1129,6 +1152,8 @@
             var f2 = gui.addFolder("load");
             f2.add(mapTweekerUI, 'mapNameToLoad');
             f2.add(mapTweekerUI, 'load');
+            f2.add(mapTweekerUI, 'loadEmptyMap');
+
             f2.closed = false;
 
             BlockTypesMaker(blockHeight,blockWidth);
