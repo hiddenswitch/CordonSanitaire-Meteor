@@ -3,7 +3,7 @@
  */
 
 var TileType = {
-    PASSABLE: new Set([0,2, 5]),
+    PASSABLE: new Set([0, 2, 5, 9]),
     NOT_PASSABLE: new Set([1])
 
 }

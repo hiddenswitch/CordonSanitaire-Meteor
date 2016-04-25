@@ -481,6 +481,7 @@
                     }
                 }
                 combineDisconnected(map);
+                markIntersections(map);
                 return map;
             }
 
@@ -561,13 +562,13 @@
 
                         for (var i = x_start; i<x_end+1; i++){
                             if (map[y_hold][i] === 1){
-                                map[y_hold][i] = 5;
+                                map[y_hold][i] = 0; // use 5 for debugging
                             }
                         }
 
                         for (var j = y_start; j<y_end+1; j++){
                             if (map[j][x_hold] === 1){
-                                map[j][x_hold] = 5;
+                                map[j][x_hold] = 0; // use 5 for debugging
                             }
                         }
                     }
@@ -611,6 +612,38 @@
                     }
                 }
                 return [];
+            }
+
+            // mutates
+            var markIntersections = function(map){
+                var tileType = TileType.PASSABLE;
+                for (var i = 0; i< map.length; i++){ // i is y is row
+                    for (var j = 0; j<map[0].length; j++){ // j is x is col
+                        if (tileType.has(map[i][j])){
+                            if ((i>0) && tileType.has(map[i-1][j])){//up
+                                if ((j>0) && tileType.has(map[i][j-1])){//left
+                                    map[i][j] = 9;
+                                    continue;
+                                }
+                                if ((j<map[0].length-1) && tileType.has(map[i][j+1])){//right
+                                    map[i][j] = 9;
+                                    continue;
+                                }
+                            }
+                            if ((i<map.length-1) && tileType.has(map[i+1][j])){//down
+                                if ((j>0) && tileType.has(map[i][j-1])){//left
+                                    map[i][j] = 9;
+                                    continue;
+                                }
+                                if ((j<map[0].length-1) && tileType.has(map[i][j+1])){//right
+                                    map[i][j] = 9;
+                                    continue;
+                                }
+                            }
+                            
+                        }
+                    }
+                }
             }
 
         </script>
@@ -839,10 +872,12 @@
             f1.add(mapTweekerUI, 'numRows', 1, 20);
             f1.add(mapTweekerUI, 'numCols', 1, 20);
 
-            f1.add(mapTweekerUI, 'blockWidth', 1, 20);
             f1.add(mapTweekerUI, 'blockHeight', 1, 20);
+            f1.add(mapTweekerUI, 'blockWidth', 1, 20);
+
             f1.add(mapTweekerUI, 'density', -10, 10);
             f1.add(mapTweekerUI, 'deadends');
+
             f1.add(mapTweekerUI, 'update');
             f1.add(mapTweekerUI, 'save');
             f1.closed = false;
