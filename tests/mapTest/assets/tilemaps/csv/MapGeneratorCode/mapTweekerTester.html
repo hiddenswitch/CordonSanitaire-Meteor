@@ -19,6 +19,8 @@
         <script>
             var width = 10;
             var height = 10;
+            var blockWidth = 5;
+            var blockHeight = 5;
             var mapName;
             var currentMap;
             var density = 1;
@@ -45,114 +47,179 @@
             /*
             5x5 tiles
             */
-            var Blocks = {
-                SOLID :
-                        [
-                            [1, 1, 1, 1, 1],
-                            [1, 1, 1, 1, 1],
-                            [1, 1, 1, 1, 1],
-                            [1, 1, 1, 1, 1],
-                            [1, 1, 1, 1, 1]
-                        ],
+            var Blocks = {};
+//            var Blocks = {
+//                SOLID :
+//                        [
+//                            [1, 1, 1, 1, 1],
+//                            [1, 1, 1, 1, 1],
+//                            [1, 1, 1, 1, 1],
+//                            [1, 1, 1, 1, 1],
+//                            [1, 1, 1, 1, 1]
+//                        ],
+//
+//                VERTICAL :
+//                        [
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 1, 1]
+//                        ],
+//
+//                HORIZONTAL :
+//                        [
+//                            [1, 1, 1, 1, 1],
+//                            [1, 1, 1, 1, 1],
+//                            [0, 0, 0, 0, 0],
+//                            [1, 1, 1, 1, 1],
+//                            [1, 1, 1, 1, 1]
+//                        ],
+//
+//                PLUS :
+//                        [
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 1, 1],
+//                            [0, 0, 0, 0, 0],
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 1, 1]
+//                        ],
+//
+//                T_LEFT :
+//                        [
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 1, 1],
+//                            [0, 0, 0, 1, 1],
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 1, 1]
+//                        ],
+//
+//                T_RIGHT :
+//                        [
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 0, 0],
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 1, 1]
+//                        ],
+//
+//                T_UP :
+//                        [
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 1, 1],
+//                            [0, 0, 0, 0, 0],
+//                            [1, 1, 1, 1, 1],
+//                            [1, 1, 1, 1, 1]
+//                        ],
+//
+//                T_DOWN :
+//                        [
+//                            [1, 1, 1, 1, 1],
+//                            [1, 1, 1, 1, 1],
+//                            [0, 0, 0, 0, 0],
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 1, 1]
+//                        ],
+//
+//                UP_LEFT :
+//                        [
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 1, 1],
+//                            [0, 0, 0, 1, 1],
+//                            [1, 1, 1, 1, 1],
+//                            [1, 1, 1, 1, 1]
+//                        ],
+//
+//                UP_RIGHT :
+//                        [
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 0, 0],
+//                            [1, 1, 1, 1, 1],
+//                            [1, 1, 1, 1, 1]
+//                        ],
+//
+//                DOWN_RIGHT :
+//                        [
+//                            [1, 1, 1, 1, 1],
+//                            [1, 1, 1, 1, 1],
+//                            [1, 1, 0, 0, 0],
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 1, 1]
+//                        ],
+//
+//                DOWN_LEFT :
+//                        [
+//                            [1, 1, 1, 1, 1],
+//                            [1, 1, 1, 1, 1],
+//                            [0, 0, 0, 1, 1],
+//                            [1, 1, 0, 1, 1],
+//                            [1, 1, 0, 1, 1]
+//                        ]
+//
+//            };
+            var prettyPrintBlock = function(block){
+                var print = '';
+                for (var i = 0; i<block.length; i++){
+                    for (var j = 0; j<block[0].length; j++){
+                        print = print.concat(block[i][j]);
+                    }
+                    print = print.concat("\n");
+                }
+                console.log(print);
+            };
 
-                VERTICAL :
-                        [
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 1, 1]
-                        ],
+            var blockMaker = function (rowSize, colSize, up, right, down, left){
+                var block = [];
+                for (var i=0; i<rowSize; i++){
+                    block.push([]);
+                    for (var j = 0; j<colSize; j++){
+                        block[i].push(1);
+                    }
+                }
+                var rowNum = Math.floor((rowSize-1)/2);
+                var colNum = Math.floor((colSize-1)/2);
 
-                HORIZONTAL :
-                        [
-                            [1, 1, 1, 1, 1],
-                            [1, 1, 1, 1, 1],
-                            [0, 0, 0, 0, 0],
-                            [1, 1, 1, 1, 1],
-                            [1, 1, 1, 1, 1]
-                        ],
+                if (up){
+                    for (var i = 0; i<rowNum+1; i++){
+                        block[i][colNum] = 0;
+                    }
+                }
+                if (down){
+                    for (var i = rowNum; i<rowSize; i++){
+                        block[i][colNum] = 0;
+                    }
+                }
+                if (left){
+                    for (var i = 0; i<colNum+1; i++){
+                        block[rowNum][i] = 0;
+                    }
+                }
+                if (right){
+                    for (var i = colNum; i<colSize; i++){
+                        block[rowNum][i] = 0;
+                    }
+                }
+                return block;
+            };
 
-                PLUS :
-                        [
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 1, 1],
-                            [0, 0, 0, 0, 0],
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 1, 1]
-                        ],
+            var BlocksMaker = function(rowSize, colSize){
+                // up, right, down, left
+                Blocks.SOLID = blockMaker(rowSize,colSize,false, false, false, false);
 
-                T_LEFT :
-                        [
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 1, 1],
-                            [0, 0, 0, 1, 1],
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 1, 1]
-                        ],
+                Blocks.VERTICAL = blockMaker(rowSize,colSize,true, false, true, false);
+                Blocks.HORIZONTAL = blockMaker(rowSize,colSize,false, true, false, true);
 
-                T_RIGHT :
-                        [
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 0, 0],
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 1, 1]
-                        ],
+                Blocks.T_UP = blockMaker(rowSize,colSize,true, true, false, true);
+                Blocks.T_RIGHT = blockMaker(rowSize,colSize,true, true, true, false);
+                Blocks.T_DOWN = blockMaker(rowSize,colSize,false, true, true, true);
+                Blocks.T_LEFT = blockMaker(rowSize,colSize,true, false, true, true);
 
-                T_UP :
-                        [
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 1, 1],
-                            [0, 0, 0, 0, 0],
-                            [1, 1, 1, 1, 1],
-                            [1, 1, 1, 1, 1]
-                        ],
-
-                T_DOWN :
-                        [
-                            [1, 1, 1, 1, 1],
-                            [1, 1, 1, 1, 1],
-                            [0, 0, 0, 0, 0],
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 1, 1]
-                        ],
-
-                UP_LEFT :
-                        [
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 1, 1],
-                            [0, 0, 0, 1, 1],
-                            [1, 1, 1, 1, 1],
-                            [1, 1, 1, 1, 1]
-                        ],
-
-                UP_RIGHT :
-                        [
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 0, 0],
-                            [1, 1, 1, 1, 1],
-                            [1, 1, 1, 1, 1]
-                        ],
-
-                DOWN_RIGHT :
-                        [
-                            [1, 1, 1, 1, 1],
-                            [1, 1, 1, 1, 1],
-                            [1, 1, 0, 0, 0],
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 1, 1]
-                        ],
-
-                DOWN_LEFT :
-                        [
-                            [1, 1, 1, 1, 1],
-                            [1, 1, 1, 1, 1],
-                            [0, 0, 0, 1, 1],
-                            [1, 1, 0, 1, 1],
-                            [1, 1, 0, 1, 1]
-                        ]
+                Blocks.UP_LEFT = blockMaker(rowSize,colSize,true, false, false, true);
+                Blocks.UP_RIGHT = blockMaker(rowSize,colSize,true, true, false, false);
+                Blocks.DOWN_LEFT = blockMaker(rowSize,colSize,false, false, true, true);
+                Blocks.DOWN_RIGHT = blockMaker(rowSize,colSize,false, true, true, false);
+                Blocks.PLUS = blockMaker(rowSize,colSize,true, true, true, true);
 
             };
 
@@ -382,7 +449,7 @@
             var mapDecode = function(mapDescription){
                 var data = [];
                 for (var rowNum = 0; rowNum<mapDescription.length; rowNum++){
-                    for (var blockRowNum = 0; blockRowNum<5; blockRowNum++){
+                    for (var blockRowNum = 0; blockRowNum<blockHeight; blockRowNum++){
                         var rowData = [];
                         for (var colNum = 0; colNum<mapDescription[rowNum].length; colNum++){
                             var description = mapDescription[rowNum][colNum];
@@ -508,11 +575,12 @@
                 if (col>map[0].length-1 || col<0){
                     return [];
                 }
-                var blockLen = Blocks.SOLID.length;
-                var row_start = row - Math.floor((blockLen-1)/2);
-                var col_start = col - Math.floor((blockLen-1)/2);
-                var row_end = row + Math.ceil((blockLen-1)/2);
-                var col_end = col + Math.ceil((blockLen-1)/2);
+                var blockHeight = Blocks.SOLID.length;
+                var blockWidth = Blocks.SOLID[0].length;
+                var row_start = row - Math.floor((blockHeight-1)/2);
+                var col_start = col - Math.floor((blockWidth-1)/2);
+                var row_end = row + Math.ceil((blockHeight-1)/2);
+                var col_end = col + Math.ceil((blockWidth-1)/2);
                 if (row_start<0){
                     row_start = 0;
                 }
@@ -527,8 +595,8 @@
                 }
                 for (var i = row_start; i<row_end+1; i++){
                     for (var j = col_start; j<col_end+1; j++){
-                        if ((i%blockLen)=== Math.floor((blockLen-1)/2) &&
-                                (j%blockLen)=== Math.floor((blockLen-1)/2)){
+                        if ((i%blockHeight)=== Math.floor((blockHeight-1)/2) &&
+                                (j%blockHeight)=== Math.floor((blockWidth-1)/2)){
                             if (map[i][j] === 0){
                                 return [i,j]
                             }
@@ -647,6 +715,8 @@
                 this.mapNameToLoad = "test12";
                 this.width = width;
                 this.height = height;
+                this.blockWidth = blockWidth;
+                this.blockHeight = blockHeight;
                 this.density = 0;
                 this.deadends = false;
                 this.update = function(){
@@ -671,7 +741,13 @@
                     PathToRight.NO.VERTICAL = 2/density;
                     PathDown.NO.SOLID = 5/density;
                     PathToRight.NO.SOLID = 5/density;
-                    mapUpdate(Math.round(this.height),Math.round(this.width));
+
+                    blockHeight = Math.round(this.blockHeight);
+                    blockWidth = Math.round(this.blockWidth);
+                    BlocksMaker(blockHeight,blockWidth);
+                    height = Math.round(this.height);
+                    width = Math.round(this.width);
+                    mapUpdate(height,width);
                 };
                 this.load = function(){
                     mapName = this.mapNameToLoad;
@@ -758,6 +834,8 @@
             f1.add(mapTweekerUI, 'mapNameToSave');
             f1.add(mapTweekerUI, 'width', 1, 20);
             f1.add(mapTweekerUI, 'height', 1, 20);
+            f1.add(mapTweekerUI, 'blockWidth', 1, 20);
+            f1.add(mapTweekerUI, 'blockHeight', 1, 20);
             f1.add(mapTweekerUI, 'density', -10, 10);
             f1.add(mapTweekerUI, 'deadends');
             f1.add(mapTweekerUI, 'update');
@@ -769,6 +847,7 @@
             f2.add(mapTweekerUI, 'load');
             f2.closed = false;
 
+            BlocksMaker(blockHeight,blockWidth);
             mapUpdate(height, width);
 
         };
