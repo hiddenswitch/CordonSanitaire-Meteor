@@ -1024,7 +1024,8 @@
                     cellSize = this.cellSize;
                     numRows = Math.round(this.numRows);
                     numCols = Math.round(this.numCols);
-                    mapUpdate(numRows,numCols);
+                    createNewMap(numRows,numCols);
+                    currentMapSafetyCopy  = $.extend(true, [], currentMap);
                 };
                 this.load = function(){
                     mapName = this.mapNameToLoad;
@@ -1131,7 +1132,8 @@
             f2.closed = false;
 
             BlockTypesMaker(blockHeight,blockWidth);
-            mapUpdate(numRows, numCols);
+            createNewMap(numRows, numCols);
+            currentMapSafetyCopy  =$.extend(true, [], currentMap);
 
         };
     </script>
