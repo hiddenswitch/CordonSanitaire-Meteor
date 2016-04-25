@@ -627,33 +627,62 @@
                 return [];
             }
 
+            // i = row; j = col
+            var checkIntersection = function(map, i, j){
+                var tileType = TileType.PASSABLE;
+                if (tileType.has(map[i][j])){
+                    if ((i>0) && tileType.has(map[i-1][j])){//up
+                        if ((j>0) && tileType.has(map[i][j-1])){//left
+                            return true;
+                        }
+                        if ((j<map[0].length-1) && tileType.has(map[i][j+1])){//right
+                            return true;
+                        }
+                    }
+                    if ((i<map.length-1) && tileType.has(map[i+1][j])){//down
+                        if ((j>0) && tileType.has(map[i][j-1])){//left
+                            return true;
+                        }
+                        if ((j<map[0].length-1) && tileType.has(map[i][j+1])){//right
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+            
+            var checkIntersectionOfSurroundings = function(map, i, j){
+                var tileType = TileType.PASSABLE;
+                var own;
+                var up;
+                var down;
+                var left;
+                var right;
+                if (tileType.has(map[i][j])){//own
+                    own = checkIntersection(map, i, j);
+                }
+                if ((i>0) && tileType.has(map[i-1][j])){//up
+                    up = checkIntersection(map, i-1, j);
+                }
+                if ((i<map.length-1) && tileType.has(map[i+1][j])){//down
+                    down = checkIntersection(map, i+1, j);
+                }
+                if ((j>0) && tileType.has(map[i][j-1])){//left
+                    left = checkIntersection(map, i, j-1);
+                }
+                if ((j<map[0].length-1) && tileType.has(map[i][j+1])){//right
+                    right = checkIntersection(map, i, j+1);
+                }
+                return [own, up, down, left, right];
+            };
+
             // mutates
             var markIntersections = function(map){
-                var tileType = TileType.PASSABLE;
+
                 for (var i = 0; i< map.length; i++){ // i is y is row
                     for (var j = 0; j<map[0].length; j++){ // j is x is col
-                        if (tileType.has(map[i][j])){
-                            if ((i>0) && tileType.has(map[i-1][j])){//up
-                                if ((j>0) && tileType.has(map[i][j-1])){//left
-                                    map[i][j] = 9;
-                                    continue;
-                                }
-                                if ((j<map[0].length-1) && tileType.has(map[i][j+1])){//right
-                                    map[i][j] = 9;
-                                    continue;
-                                }
-                            }
-                            if ((i<map.length-1) && tileType.has(map[i+1][j])){//down
-                                if ((j>0) && tileType.has(map[i][j-1])){//left
-                                    map[i][j] = 9;
-                                    continue;
-                                }
-                                if ((j<map[0].length-1) && tileType.has(map[i][j+1])){//right
-                                    map[i][j] = 9;
-                                    continue;
-                                }
-                            }
-                            
+                        if(checkIntersection(map, i, j)){
+                            map[i][j] = 9;
                         }
                     }
                 }
