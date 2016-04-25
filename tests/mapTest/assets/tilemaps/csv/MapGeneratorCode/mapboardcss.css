@@ -11,3 +11,17 @@ canvas {
     image-rendering: crisp-edges;               /*// Possible future browsers.*/
     -ms-interpolation-mode: nearest-neighbor;   /*// IE (non standard naming)*/
 }
+
+.col{
+    display: inline-block;
+}
+
+.white{
+    background-color: whitesmoke;
+}
+.black{
+    background-color: black;
+}
+.grey{
+    background-color: darkgrey;
+}

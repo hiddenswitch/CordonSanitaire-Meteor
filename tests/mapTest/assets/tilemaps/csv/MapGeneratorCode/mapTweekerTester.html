@@ -25,6 +25,8 @@
             var currentMap;
             var density = 1;
 
+            var cellSize = 10;
+
         </script>
     </div>
     <script type="text/javascript" src="graphStuff.js"></script>
@@ -732,7 +734,37 @@
                     width: width*10 + "px",
                     height: "auto"
                 });
+
+
+                $("#mapboard").html("");
+                var width = map[0].length;         // width in pixels
+                var height = map.length;
+
+
+                var makeCell = function(color, row, col){
+                    return "<div class='"+color+" cell' data-row='"+row+"' data-col='"+col+"' style='height:"+cellSize+"px;width:"+cellSize+"px;'></div>";
+
+                }
+                var mapDrawing = "<div class='mapContainer'>";
+                for (var j=0; j<width; j++){
+                    mapDrawing = mapDrawing.concat("<div class='col'>");
+                    for (var i=0; i<height; i++){
+                        mapDrawing = mapDrawing.concat("<div class='row'>");
+                        if(map[i][j] === 5){
+                            mapDrawing = mapDrawing.concat(makeCell("white",j,i));
+                        } else if (TileType.PASSABLE.has(map[i][j])){
+                            mapDrawing = mapDrawing.concat(makeCell("black",j,i));
+                        } else {
+                            mapDrawing = mapDrawing.concat(makeCell("grey",j,i));
+                        }
+                        mapDrawing = mapDrawing.concat("</div>");
+                    }
+                    mapDrawing = mapDrawing.concat("</div>");
+                }
+                mapDrawing = mapDrawing.concat("</div>");
+                $("#mapboard").html(mapDrawing);
             }
+            
         </script>
     </div>
     <div id="dat.gui">
@@ -750,6 +782,7 @@
             var mapTweeker = function() {
                 this.mapNameToSave = "newMap";
                 this.mapNameToLoad = "test12";
+                this.cellSize = cellSize;
                 this.numCols = numCols;
                 this.numRows = numRows;
                 this.blockWidth = blockWidth;
@@ -782,6 +815,7 @@
                     blockHeight = Math.round(this.blockHeight);
                     blockWidth = Math.round(this.blockWidth);
                     BlockTypesMaker(blockHeight,blockWidth);
+                    cellSize = this.cellSize;
                     numRows = Math.round(this.numRows);
                     numCols = Math.round(this.numCols);
                     mapUpdate(numRows,numCols);
@@ -869,6 +903,9 @@
 
             var f1 = gui.addFolder("tweek");
             f1.add(mapTweekerUI, 'mapNameToSave');
+
+            f1.add(mapTweekerUI, 'cellSize', 1, 20);
+
             f1.add(mapTweekerUI, 'numRows', 1, 20);
             f1.add(mapTweekerUI, 'numCols', 1, 20);
 
