@@ -1,6 +1,11 @@
 #mapboard{
-    height: 1000px;
-    width: 1000px;
+    /*height: 1000px;*/
+    /*width: 1000px;*/
+    margin: 0;
+    padding: 0;
+    border: 0;
+    height: 100%;
+    width: 100%;
 }
 
 canvas {
@@ -14,6 +19,16 @@ canvas {
 
 .col{
     display: inline-block;
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
+.row{
+    display: block;
+    border: 1px solid darkgray;
+    margin: 0;
+    padding: 0;
 }
 
 .white{
