@@ -1,7 +1,7 @@
 /**
  * Created by Shinjini on 4/4/2016.
  */
-var ROAD = -1;
+var STRAIGHT_ROAD = -111;
 var INTERSECTION1 = {
     "PLUS" : -210,
     "T_LEFT" : -30,
@@ -14,16 +14,32 @@ var INTERSECTION1 = {
     "DOWN_LEFT" : -15,
 };
 
-var INTERSECTION = -2;
-var DEBUGGING = -3;
+var INTERSECTION2 = { // should never have -1
+    "-210": "PLUS",
+    "-30": "T_LEFT",
+    "-42": "T_RIGHT",
+    "-70": "T_UP",
+    "-105": "T_DOWN",
+    "-10": "UP_LEFT",
+    "-14": "UP_RIGHT",
+    "-21": "DOWN_RIGHT",
+    "-15": "DOWN_LEFT",
+};
 
-var IMPASSABLE = -8;
+var INTERSECTION = -222;
+var DEBUGGING = -333;
+
+var IMPASSABLE = -888;
 
 var TileType = {
-    PASSABLE: new Set([ROAD, DEBUGGING, INTERSECTION]),
+    PASSABLE: new Set([STRAIGHT_ROAD, DEBUGGING]),
 
     NOT_PASSABLE: new Set([IMPASSABLE])
 
+};
+
+for (var key in INTERSECTION2){
+    TileType.PASSABLE.add(parseInt(key));
 }
 
 var bfs = function (map, source, seen, tileType) {

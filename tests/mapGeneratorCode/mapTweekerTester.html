@@ -203,22 +203,22 @@
 
                 if (up){
                     for (var i = 0; i<rowNum+1; i++){
-                        block[i][colNum] = ROAD;
+                        block[i][colNum] = STRAIGHT_ROAD;
                     }
                 }
                 if (down){
                     for (var i = rowNum; i<rowSize; i++){
-                        block[i][colNum] = ROAD;
+                        block[i][colNum] = STRAIGHT_ROAD;
                     }
                 }
                 if (left){
                     for (var i = 0; i<colNum+1; i++){
-                        block[rowNum][i] = ROAD;
+                        block[rowNum][i] = STRAIGHT_ROAD;
                     }
                 }
                 if (right){
                     for (var i = colNum; i<colSize; i++){
-                        block[rowNum][i] = ROAD;
+                        block[rowNum][i] = STRAIGHT_ROAD;
                     }
                 }
                 return block;
@@ -510,7 +510,7 @@
                     }
                     for (var i = 0; i<map.length; i++){
                         for (var j = 0; j<map[0].length; j++){
-                            if (map[i][j] === ROAD){
+                            if (map[i][j] === STRAIGHT_ROAD){
                                 mapEmpty = false;
                             }
                         }
@@ -598,13 +598,13 @@
 
                         for (var i = x_start; i<x_end+1; i++){
                             if (map[y_hold][i] === IMPASSABLE){
-                                map[y_hold][i] = ROAD; // use 5 for debugging
+                                map[y_hold][i] = STRAIGHT_ROAD; // use 5 for debugging
                             }
                         }
 
                         for (var j = y_start; j<y_end+1; j++){
                             if (map[j][x_hold] === IMPASSABLE){
-                                map[j][x_hold] = ROAD; // use 5 for debugging
+                                map[j][x_hold] = STRAIGHT_ROAD; // use 5 for debugging
                             }
                         }
                     }
@@ -641,7 +641,7 @@
                     for (var j = col_start; j<col_end+1; j++){
                         if ((i%blockHeight)=== Math.floor((blockHeight-1)/2) &&
                                 (j%blockWidth)=== Math.floor((blockWidth-1)/2)){ //if i and j are in the middle of the block
-                            if (map[i][j] === ROAD){
+                            if (map[i][j] === STRAIGHT_ROAD){
                                 return [i,j]
                             }
                         }
@@ -650,70 +650,72 @@
                 return [];
             }
 
+//            // i = row; j = col
+//            var checkIntersection = function(map, i, j){
+//                var up    = 2
+//                var down  = 3
+//                var left  = 5
+//                var right = 7
+//
+//                var tileType = TileType.PASSABLE;
+//                var ID = -1;
+//                if (tileType.has(map[i][j])){
+//                    if ((i>0) && tileType.has(map[i-1][j])){//up
+//                        if ((j>0) && tileType.has(map[i][j-1])){//left
+//                            return true;
+//                        }
+//                        if ((j<map[0].length-1) && tileType.has(map[i][j+1])){//right
+//                            return true;
+//                        }
+//                    }
+//                    if ((i<map.length-1) && tileType.has(map[i+1][j])){//down
+//                        if ((j>0) && tileType.has(map[i][j-1])){//left
+//                            return true;
+//                        }
+//                        if ((j<map[0].length-1) && tileType.has(map[i][j+1])){//right
+//                            return true;
+//                        }
+//                    }
+//                }
+//                return false;
+//            }
+
             // i = row; j = col
             var checkIntersection = function(map, i, j){
-                // up    = 2 
-                // down  = 3
-                // left  = 5
-                // right = 7
-
-                /*
-                "PLUS" = 210
-                "T_LEFT" = 30
-                "T_RIGHT" = 42
-                "T_UP" = 70
-                "T_DOWN" = 105
-                "UP_LEFT" = 10
-                "UP_RIGHT" = 14
-                "DOWN_RIGHT" = 21
-                "DOWN_LEFT" = 15
-                */
+                var up    = 2;
+                var down  = 3;
+                var left  = 5;
+                var right = 7;
 
                 var tileType = TileType.PASSABLE;
+                var ID = -1;
                 if (tileType.has(map[i][j])){
-                    if ((i>0) && tileType.has(map[i-1][j])){//up
-                        if ((j>0) && tileType.has(map[i][j-1])){//left
-                            return true;
-                        }
-                        if ((j<map[0].length-1) && tileType.has(map[i][j+1])){//right
-                            return true;
-                        }
+                    if ((i>0) && tileType.has(map[i-1][j])) {//up
+                        ID *= up;
+                    }
+                    if ((j>0) && tileType.has(map[i][j-1])){//left
+                        ID *= left;
+                    }
+                    if ((j<map[0].length-1) && tileType.has(map[i][j+1])){//right
+                        ID *= right;
                     }
                     if ((i<map.length-1) && tileType.has(map[i+1][j])){//down
-                        if ((j>0) && tileType.has(map[i][j-1])){//left
-                            return true;
-                        }
-                        if ((j<map[0].length-1) && tileType.has(map[i][j+1])){//right
-                            return true;
-                        }
+                        ID *= down;
                     }
                 }
-                return false;
+                if ((ID != -1) && (ID in INTERSECTION2)){
+                    return [true, ID]  // ID is new map value
+                }
+                return [false, map[i][j]]; // just return the old value
             }
-            
+
             var checkIntersectionOfSurroundings = function(map, i, j){
-                var tileType = TileType.PASSABLE;
-                var own;
-                var up;
-                var down;
-                var left;
-                var right;
-                
-                if (tileType.has(map[i][j])){//own
-                    own = checkIntersection(map, i, j);
-                }
-                if ((i>0) && tileType.has(map[i-1][j])){//up
-                    up = checkIntersection(map, i-1, j);
-                }
-                if ((i<map.length-1) && tileType.has(map[i+1][j])){//down
-                    down = checkIntersection(map, i+1, j);
-                }
-                if ((j>0) && tileType.has(map[i][j-1])){//left
-                    left = checkIntersection(map, i, j-1);
-                }
-                if ((j<map[0].length-1) && tileType.has(map[i][j+1])){//right
-                    right = checkIntersection(map, i, j+1);
-                }
+                var own = checkIntersection(map, i, j);
+                var up = checkIntersection(map, i-1, j);
+                var down = checkIntersection(map, i+1, j);
+                var left = checkIntersection(map, i, j-1);
+                var right = checkIntersection(map, i, j+1);
+
                 return [own, up, down, left, right];
             };
 
@@ -722,8 +724,9 @@
 
                 for (var i = 0; i< map.length; i++){ // i is y is row
                     for (var j = 0; j<map[0].length; j++){ // j is x is col
-                        if(checkIntersection(map, i, j)){
-                            map[i][j] = INTERSECTION;
+                        var [isIntersection, intersectionID] = checkIntersection(map, i, j);
+                        if(isIntersection){
+                            map[i][j] = intersectionID;
                         }
                     }
                 }
@@ -756,7 +759,7 @@
                         if (TileType.PASSABLE.has(map[i][j])){
                             if(map[i][j] === 5){ //debugging
                                 mapDrawing = mapDrawing.concat(makeCell("white",i,j));
-                            } else if (map[i][j] === INTERSECTION){ // intersection
+                            } else if (map[i][j] in INTERSECTION2){ // intersection
                                 mapDrawing = mapDrawing.concat(makeCell("black2",i,j));
                             } else {
                                 mapDrawing = mapDrawing.concat(makeCell("black",i,j));
@@ -857,32 +860,32 @@
                         if (editingAdd) {
                             $(this).removeClass();
                             $(this).addClass("cell").addClass("black");
-                            currentMap[row][col] = ROAD;
+                            currentMap[row][col] = STRAIGHT_ROAD;
                             var newIntersections = checkIntersectionOfSurroundings(currentMap, row, col);
-                            if (newIntersections[0]){ // own
+                            if (newIntersections[0][0]){ // own
                                 $(this).removeClass();
                                 $(this).addClass("cell").addClass("black2");
-                                currentMap[row][col] = INTERSECTION;
+                                currentMap[row][col] = newIntersections[0][1];
                             }
-                            if (newIntersections[1]){ //up
+                            if (newIntersections[1][0]){ //up
                                 $("[data-row='"+(row-1)+"'][data-col='"+col+"']").removeClass();
                                 $("[data-row='"+(row-1)+"'][data-col='"+col+"']").addClass("cell").addClass("black2");
-                                currentMap[row-1][col] = INTERSECTION;
+                                currentMap[row-1][col] = newIntersections[1][1];
                             }
-                            if (newIntersections[2]){ //down
+                            if (newIntersections[2][0]){ //down
                                 $("[data-row='"+(row+1)+"'][data-col='"+col+"']").removeClass();
                                 $("[data-row='"+(row+1)+"'][data-col='"+col+"']").addClass("cell").addClass("black2");
-                                currentMap[row+1][col] = INTERSECTION;
+                                currentMap[row+1][col] = newIntersections[2][1];
                             }
-                            if (newIntersections[3]){ //left
+                            if (newIntersections[3][0]){ //left
                                 $("[data-row='"+row+"'][data-col='"+(col-1)+"']").removeClass();
                                 $("[data-row='"+row+"'][data-col='"+(col-1)+"']").addClass("cell").addClass("black2");
-                                currentMap[row][col-1] = INTERSECTION;
+                                currentMap[row][col-1] = newIntersections[3][1];
                             }
-                            if (newIntersections[4]){ //right
+                            if (newIntersections[4][0]){ //right
                                 $("[data-row='"+row+"'][data-col='"+(col+1)+"']").removeClass();
                                 $("[data-row='"+row+"'][data-col='"+(col+1)+"']").addClass("cell").addClass("black2");
-                                currentMap[row][col+1] = INTERSECTION;
+                                currentMap[row][col+1] = newIntersections[4][1];
                             }
                         } else if (editingRemove) {
                             $(this).removeClass();
@@ -890,44 +893,44 @@
                             currentMap[row][col] = IMPASSABLE;
                             var newIntersections = checkIntersectionOfSurroundings(currentMap, row, col);
                             // if intersections need to be removed
-                            if (!newIntersections[1]){ //up
+                            if (!newIntersections[1][0]){ //up
                                 $("[data-row='"+(row-1)+"'][data-col='"+col+"']").removeClass();
 
                                 if (TileType.PASSABLE.has(currentMap[row-1][col])){
-                                    currentMap[row-1][col] = ROAD;
+                                    currentMap[row-1][col] = STRAIGHT_ROAD;
                                     $("[data-row='"+(row-1)+"'][data-col='"+col+"']").addClass("cell").addClass("black");
                                 } else {
                                     currentMap[row-1][col] = IMPASSABLE;
                                     $("[data-row='"+(row-1)+"'][data-col='"+col+"']").addClass("cell").addClass("grey");
                                 }
                             }
-                            if (!newIntersections[2]){ //down
+                            if (!newIntersections[2][0]){ //down
                                 $("[data-row='"+(row+1)+"'][data-col='"+col+"']").removeClass();
 
                                 if (TileType.PASSABLE.has(currentMap[row+1][col])){
-                                    currentMap[row+1][col] = ROAD;
+                                    currentMap[row+1][col] = STRAIGHT_ROAD;
                                     $("[data-row='"+(row+1)+"'][data-col='"+col+"']").addClass("cell").addClass("black");
                                 } else {
                                     currentMap[row+1][col] = IMPASSABLE;
                                     $("[data-row='"+(row+1)+"'][data-col='"+col+"']").addClass("cell").addClass("grey");
                                 }
                             }
-                            if (!newIntersections[3]){ //left
+                            if (!newIntersections[3][0]){ //left
                                 $("[data-row='"+row+"'][data-col='"+(col-1)+"']").removeClass();
 
                                 if (TileType.PASSABLE.has(currentMap[row][col-1])){
-                                    currentMap[row][col-1] = ROAD;
+                                    currentMap[row][col-1] = STRAIGHT_ROAD;
                                     $("[data-row='"+row+"'][data-col='"+(col-1)+"']").addClass("cell").addClass("black");
                                 } else {
                                     currentMap[row][col-1] = IMPASSABLE;
                                     $("[data-row='"+row+"'][data-col='"+(col-1)+"']").addClass("cell").addClass("grey");
                                 }
                             }
-                            if (!newIntersections[4]){ //right
+                            if (!newIntersections[4][0]){ //right
                                 $("[data-row='"+row+"'][data-col='"+(col+1)+"']").removeClass();
 
                                 if (TileType.PASSABLE.has(currentMap[row][col+1])){
-                                    currentMap[row][col+1] = ROAD;
+                                    currentMap[row][col+1] = STRAIGHT_ROAD;
                                     $("[data-row='"+row+"'][data-col='"+(col+1)+"']").addClass("cell").addClass("black");
                                 } else {
                                     currentMap[row][col+1] = IMPASSABLE;
