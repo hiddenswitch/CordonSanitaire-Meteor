@@ -203,22 +203,22 @@
 
                 if (up){
                     for (var i = 0; i<rowNum+1; i++){
-                        block[i][colNum] = PASSABLE;
+                        block[i][colNum] = ROAD;
                     }
                 }
                 if (down){
                     for (var i = rowNum; i<rowSize; i++){
-                        block[i][colNum] = PASSABLE;
+                        block[i][colNum] = ROAD;
                     }
                 }
                 if (left){
                     for (var i = 0; i<colNum+1; i++){
-                        block[rowNum][i] = PASSABLE;
+                        block[rowNum][i] = ROAD;
                     }
                 }
                 if (right){
                     for (var i = colNum; i<colSize; i++){
-                        block[rowNum][i] = PASSABLE;
+                        block[rowNum][i] = ROAD;
                     }
                 }
                 return block;
@@ -510,7 +510,7 @@
                     }
                     for (var i = 0; i<map.length; i++){
                         for (var j = 0; j<map[0].length; j++){
-                            if (map[i][j] === PASSABLE){
+                            if (map[i][j] === ROAD){
                                 mapEmpty = false;
                             }
                         }
@@ -598,13 +598,13 @@
 
                         for (var i = x_start; i<x_end+1; i++){
                             if (map[y_hold][i] === IMPASSABLE){
-                                map[y_hold][i] = PASSABLE; // use 5 for debugging
+                                map[y_hold][i] = ROAD; // use 5 for debugging
                             }
                         }
 
                         for (var j = y_start; j<y_end+1; j++){
                             if (map[j][x_hold] === IMPASSABLE){
-                                map[j][x_hold] = PASSABLE; // use 5 for debugging
+                                map[j][x_hold] = ROAD; // use 5 for debugging
                             }
                         }
                     }
@@ -641,7 +641,7 @@
                     for (var j = col_start; j<col_end+1; j++){
                         if ((i%blockHeight)=== Math.floor((blockHeight-1)/2) &&
                                 (j%blockWidth)=== Math.floor((blockWidth-1)/2)){ //if i and j are in the middle of the block
-                            if (map[i][j] === 0){
+                            if (map[i][j] === ROAD){
                                 return [i,j]
                             }
                         }
@@ -652,6 +652,23 @@
 
             // i = row; j = col
             var checkIntersection = function(map, i, j){
+                // up    = 2 
+                // down  = 3
+                // left  = 5
+                // right = 7
+
+                /*
+                "PLUS" = 210
+                "T_LEFT" = 30
+                "T_RIGHT" = 42
+                "T_UP" = 70
+                "T_DOWN" = 105
+                "UP_LEFT" = 10
+                "UP_RIGHT" = 14
+                "DOWN_RIGHT" = 21
+                "DOWN_LEFT" = 15
+                */
+
                 var tileType = TileType.PASSABLE;
                 if (tileType.has(map[i][j])){
                     if ((i>0) && tileType.has(map[i-1][j])){//up
@@ -681,6 +698,7 @@
                 var down;
                 var left;
                 var right;
+                
                 if (tileType.has(map[i][j])){//own
                     own = checkIntersection(map, i, j);
                 }
@@ -720,86 +738,6 @@
                 displays the map as a canvas element inside #mapboard
             */
             var displayMap = function(map){
-
-                ////old implementation using canvas
-//                $("#mapboard").html("");
-//                var width = map[0].length;         // width in pixels
-//                var height = map.length;
-//
-//                // Create canvas
-//                var canvas = document.createElement('canvas');
-//                var context = canvas.getContext('2d');
-//                context.webkitImageSmoothingEnabled = false;
-//                context.mozImageSmoothingEnabled = false;
-//                context.imageSmoothingEnabled = false; /// future
-//                var imgData = context.createImageData(width, height);
-//
-//                canvas.height = height;
-//                canvas.width = width;
-//
-//                for (var x = 0; x < imgData.width; x++)  {
-//                    for (var y = 0; y < imgData.height; y++)  {
-//
-//                        // Index of the pixel in the array
-//                        var idx = (x + y * width) * 4;
-//
-//                        // If you want to know the values of the pixel
-////                                var r = canvasData.data[idx + 0];
-////                                var g = canvasData.data[idx + 1];
-////                                var b = canvasData.data[idx + 2];
-////                                var a = canvasData.data[idx + 3];
-//                        var r;
-//                        var g;
-//                        var b;
-//                        if (map[y][x] === 1){ // building
-////                                    r = 43
-////                                    g = 104;
-////                                    b = 118;
-//                            r = 169;
-//                            g = 169;
-//                            b = 169;
-//                        } else if (map[y][x] === 0){ // road
-////                                    r = 169;
-////                                    g = 169;
-////                                    b = 169;
-//                            r = 0;
-//                            g = 0;
-//                            b = 0;
-//                        } else if (map[y][x] === 2){ //intersection
-//                            r = 50;
-//                            g = 50;
-//                            b = 50;
-//                        } else {
-//                            r = 255;
-//                            g = 255;
-//                            b = 255;
-//                        }
-//
-//                        // If you want to update the values of the pixel
-//                        imgData.data[idx + 0] = r; // Red channel
-//                        imgData.data[idx + 1] = g; // Green channel
-//                        imgData.data[idx + 2] = b; // Blue channel
-//                        imgData.data[idx + 3] = 255; // Alpha channel
-//                    }
-//                }
-//
-//                // put data to context at (0, 0)
-//                context.putImageData(imgData, 0, 0);
-//
-//                $("#mapboard").html(canvas);
-//                $("#mapboard canvas").css({
-//                    "image-rendering": "optimizeSpeed",             /*// Older versions of FF*/
-//                    "image-rendering": "-moz-crisp-edges",          /*// FF 6.0+*/
-//                    "image-rendering": "-webkit-optimize-contrast", /*// Webkit (non standard naming)*/
-//                    "image-rendering": "-o-crisp-edges",            /*// OS X & Windows Opera (12.02+)*/
-//                    "image-rendering": "crisp-edges",               /*// Possible future browsers.*/
-//                    "image-rendering": "pixelated",
-//                    "-ms-interpolation-mode": "nearest-neighbor"   /*// IE (non standard naming)*/
-//                }).css({
-//                    width: width*10 + "px",
-//                    height: "auto"
-//                });
-
 
                 $("#mapboard").html("");
                 var width = map[0].length;         // width in pixels
@@ -919,7 +857,7 @@
                         if (editingAdd) {
                             $(this).removeClass();
                             $(this).addClass("cell").addClass("black");
-                            currentMap[row][col] = PASSABLE;
+                            currentMap[row][col] = ROAD;
                             var newIntersections = checkIntersectionOfSurroundings(currentMap, row, col);
                             if (newIntersections[0]){ // own
                                 $(this).removeClass();
@@ -956,7 +894,7 @@
                                 $("[data-row='"+(row-1)+"'][data-col='"+col+"']").removeClass();
 
                                 if (TileType.PASSABLE.has(currentMap[row-1][col])){
-                                    currentMap[row-1][col] = PASSABLE;
+                                    currentMap[row-1][col] = ROAD;
                                     $("[data-row='"+(row-1)+"'][data-col='"+col+"']").addClass("cell").addClass("black");
                                 } else {
                                     currentMap[row-1][col] = IMPASSABLE;
@@ -967,7 +905,7 @@
                                 $("[data-row='"+(row+1)+"'][data-col='"+col+"']").removeClass();
 
                                 if (TileType.PASSABLE.has(currentMap[row+1][col])){
-                                    currentMap[row+1][col] = PASSABLE;
+                                    currentMap[row+1][col] = ROAD;
                                     $("[data-row='"+(row+1)+"'][data-col='"+col+"']").addClass("cell").addClass("black");
                                 } else {
                                     currentMap[row+1][col] = IMPASSABLE;
@@ -978,7 +916,7 @@
                                 $("[data-row='"+row+"'][data-col='"+(col-1)+"']").removeClass();
 
                                 if (TileType.PASSABLE.has(currentMap[row][col-1])){
-                                    currentMap[row][col-1] = PASSABLE;
+                                    currentMap[row][col-1] = ROAD;
                                     $("[data-row='"+row+"'][data-col='"+(col-1)+"']").addClass("cell").addClass("black");
                                 } else {
                                     currentMap[row][col-1] = IMPASSABLE;
@@ -989,7 +927,7 @@
                                 $("[data-row='"+row+"'][data-col='"+(col+1)+"']").removeClass();
 
                                 if (TileType.PASSABLE.has(currentMap[row][col+1])){
-                                    currentMap[row][col+1] = PASSABLE;
+                                    currentMap[row][col+1] = ROAD;
                                     $("[data-row='"+row+"'][data-col='"+(col+1)+"']").addClass("cell").addClass("black");
                                 } else {
                                     currentMap[row][col+1] = IMPASSABLE;

@@ -1,14 +1,26 @@
 /**
  * Created by Shinjini on 4/4/2016.
  */
-var PASSABLE = -1;
+var ROAD = -1;
+var INTERSECTION1 = {
+    "PLUS" : -210,
+    "T_LEFT" : -30,
+    "T_RIGHT" : -42,
+    "T_UP" : -70,
+    "T_DOWN" : -105,
+    "UP_LEFT" : -10,
+    "UP_RIGHT" : -14,
+    "DOWN_RIGHT" : -21,
+    "DOWN_LEFT" : -15,
+};
+
 var INTERSECTION = -2;
 var DEBUGGING = -3;
 
 var IMPASSABLE = -8;
 
 var TileType = {
-    PASSABLE: new Set([PASSABLE, 2, DEBUGGING, INTERSECTION]),
+    PASSABLE: new Set([ROAD, DEBUGGING, INTERSECTION]),
 
     NOT_PASSABLE: new Set([IMPASSABLE])
 
