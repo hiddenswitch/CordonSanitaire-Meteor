@@ -1,11 +1,9 @@
 #mapboard{
-    /*height: 1000px;*/
-    /*width: 1000px;*/
     margin: 0;
     padding: 0;
     border: 0;
-    height: 100%;
-    width: 100%;
+    max-height: 100%;
+    max-width: 100%;
 }
 
 canvas {
@@ -42,4 +40,21 @@ canvas {
 }
 .grey{
     background-color: darkgrey;
+}
+
+.black:hover, .black2:hover{
+    background-color: midnightblue;
+}
+
+.grey:hover{
+    background-color: slategrey;
+}
+
+#cell-row-col{
+    display: none;
+    background: white;
+}
+
+#edit-button{
+    display: none;
 }

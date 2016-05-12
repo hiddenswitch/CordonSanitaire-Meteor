@@ -12,14 +12,18 @@
 <!--</form>-->
 <div id="edit">
     <div>Edit the map below (changes are automatically saved)
+        <div id="edit-buttons-show-hide">
+            <button id="start-edit">Start Editing</button>
+        </div>
         <div id="edit-button">
-            <button id="remove">Remove Roads</button>
             <button id="add">Add Roads</button>
+            <button id="remove">Remove Roads</button>
             <button id="reset">Reset</button>
             <button id="done">Done</button>
         </div>
     </div>
 </div>
+<div id="cell-row-col"></div>
 <div id="mapboard"></div>
 <div id="scripts">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
@@ -182,12 +186,16 @@
                 console.log(print);
             };
 
+
+
             var blockMaker = function (rowSize, colSize, up, right, down, left){
+
+
                 var block = [];
                 for (var i=0; i<rowSize; i++){
                     block.push([]);
                     for (var j = 0; j<colSize; j++){
-                        block[i].push(1);
+                        block[i].push(IMPASSABLE);
                     }
                 }
                 var rowNum = Math.floor((rowSize-1)/2);
@@ -195,22 +203,22 @@
 
                 if (up){
                     for (var i = 0; i<rowNum+1; i++){
-                        block[i][colNum] = 0;
+                        block[i][colNum] = PASSABLE;
                     }
                 }
                 if (down){
                     for (var i = rowNum; i<rowSize; i++){
-                        block[i][colNum] = 0;
+                        block[i][colNum] = PASSABLE;
                     }
                 }
                 if (left){
                     for (var i = 0; i<colNum+1; i++){
-                        block[rowNum][i] = 0;
+                        block[rowNum][i] = PASSABLE;
                     }
                 }
                 if (right){
                     for (var i = colNum; i<colSize; i++){
-                        block[rowNum][i] = 0;
+                        block[rowNum][i] = PASSABLE;
                     }
                 }
                 return block;
@@ -502,7 +510,7 @@
                     }
                     for (var i = 0; i<map.length; i++){
                         for (var j = 0; j<map[0].length; j++){
-                            if (map[i][j] === 0){
+                            if (map[i][j] === PASSABLE){
                                 mapEmpty = false;
                             }
                         }
@@ -589,14 +597,14 @@
 
 
                         for (var i = x_start; i<x_end+1; i++){
-                            if (map[y_hold][i] === 1){
-                                map[y_hold][i] = 0; // use 5 for debugging
+                            if (map[y_hold][i] === IMPASSABLE){
+                                map[y_hold][i] = PASSABLE; // use 5 for debugging
                             }
                         }
 
                         for (var j = y_start; j<y_end+1; j++){
-                            if (map[j][x_hold] === 1){
-                                map[j][x_hold] = 0; // use 5 for debugging
+                            if (map[j][x_hold] === IMPASSABLE){
+                                map[j][x_hold] = PASSABLE; // use 5 for debugging
                             }
                         }
                     }
@@ -632,7 +640,7 @@
                 for (var i = row_start; i<row_end+1; i++){
                     for (var j = col_start; j<col_end+1; j++){
                         if ((i%blockHeight)=== Math.floor((blockHeight-1)/2) &&
-                                (j%blockHeight)=== Math.floor((blockWidth-1)/2)){
+                                (j%blockWidth)=== Math.floor((blockWidth-1)/2)){ //if i and j are in the middle of the block
                             if (map[i][j] === 0){
                                 return [i,j]
                             }
@@ -697,7 +705,7 @@
                 for (var i = 0; i< map.length; i++){ // i is y is row
                     for (var j = 0; j<map[0].length; j++){ // j is x is col
                         if(checkIntersection(map, i, j)){
-                            map[i][j] = 9;
+                            map[i][j] = INTERSECTION;
                         }
                     }
                 }
@@ -810,7 +818,7 @@
                         if (TileType.PASSABLE.has(map[i][j])){
                             if(map[i][j] === 5){ //debugging
                                 mapDrawing = mapDrawing.concat(makeCell("white",i,j));
-                            } else if (map[i][j] === 9){ // intersection
+                            } else if (map[i][j] === INTERSECTION){ // intersection
                                 mapDrawing = mapDrawing.concat(makeCell("black2",i,j));
                             } else {
                                 mapDrawing = mapDrawing.concat(makeCell("black",i,j));
@@ -831,7 +839,14 @@
     <div id="manualMapEdit">
         <script type="text/javascript">
             $(function(){
-
+                $('#start-edit').click(function(){
+                    $('#edit-buttons-show-hide').css({
+                        display: 'none'
+                    });
+                    $('#edit-button').css({
+                        display: 'block'
+                    });
+                })
 
                 var editingAdd = false;
                 var editingRemove = false;
@@ -873,6 +888,14 @@
                     $("#remove").prop("disabled",false);
                     $("#reset").prop("disabled",true);
                     currentMapSafetyCopy = $.extend(true, [], currentMap);
+
+                    // hide away edit options
+                    $('#edit-buttons-show-hide').css({
+                        display: 'block'
+                    });
+                    $('#edit-button').css({
+                        display: 'none'
+                    });
                 });
 
                 $("body").on("mousedown","#mapContainer", function(evt){
@@ -887,7 +910,7 @@
                     dragging = false;
                 });
 
-                $("body").on("mousemove",".cell", function(evt) {
+                $("body").on("mousemove ",".cell", function(evt) {
                     evt.preventDefault();
 
                     var row = $(this).data("row");
@@ -896,47 +919,47 @@
                         if (editingAdd) {
                             $(this).removeClass();
                             $(this).addClass("cell").addClass("black");
-                            currentMap[row][col] = 0;
+                            currentMap[row][col] = PASSABLE;
                             var newIntersections = checkIntersectionOfSurroundings(currentMap, row, col);
                             if (newIntersections[0]){ // own
                                 $(this).removeClass();
                                 $(this).addClass("cell").addClass("black2");
-                                currentMap[row][col] = 9;
+                                currentMap[row][col] = INTERSECTION;
                             }
                             if (newIntersections[1]){ //up
                                 $("[data-row='"+(row-1)+"'][data-col='"+col+"']").removeClass();
                                 $("[data-row='"+(row-1)+"'][data-col='"+col+"']").addClass("cell").addClass("black2");
-                                currentMap[row-1][col] = 9;
+                                currentMap[row-1][col] = INTERSECTION;
                             }
                             if (newIntersections[2]){ //down
                                 $("[data-row='"+(row+1)+"'][data-col='"+col+"']").removeClass();
                                 $("[data-row='"+(row+1)+"'][data-col='"+col+"']").addClass("cell").addClass("black2");
-                                currentMap[row+1][col] = 9;
+                                currentMap[row+1][col] = INTERSECTION;
                             }
                             if (newIntersections[3]){ //left
                                 $("[data-row='"+row+"'][data-col='"+(col-1)+"']").removeClass();
                                 $("[data-row='"+row+"'][data-col='"+(col-1)+"']").addClass("cell").addClass("black2");
-                                currentMap[row][col-1] = 9;
+                                currentMap[row][col-1] = INTERSECTION;
                             }
                             if (newIntersections[4]){ //right
                                 $("[data-row='"+row+"'][data-col='"+(col+1)+"']").removeClass();
                                 $("[data-row='"+row+"'][data-col='"+(col+1)+"']").addClass("cell").addClass("black2");
-                                currentMap[row][col+1] = 9;
+                                currentMap[row][col+1] = INTERSECTION;
                             }
                         } else if (editingRemove) {
                             $(this).removeClass();
                             $(this).addClass("cell").addClass("grey");
-                            currentMap[row][col] = 1;
+                            currentMap[row][col] = IMPASSABLE;
                             var newIntersections = checkIntersectionOfSurroundings(currentMap, row, col);
                             // if intersections need to be removed
                             if (!newIntersections[1]){ //up
                                 $("[data-row='"+(row-1)+"'][data-col='"+col+"']").removeClass();
 
                                 if (TileType.PASSABLE.has(currentMap[row-1][col])){
-                                    currentMap[row-1][col] = 0;
+                                    currentMap[row-1][col] = PASSABLE;
                                     $("[data-row='"+(row-1)+"'][data-col='"+col+"']").addClass("cell").addClass("black");
                                 } else {
-                                    currentMap[row-1][col] = 1;
+                                    currentMap[row-1][col] = IMPASSABLE;
                                     $("[data-row='"+(row-1)+"'][data-col='"+col+"']").addClass("cell").addClass("grey");
                                 }
                             }
@@ -944,10 +967,10 @@
                                 $("[data-row='"+(row+1)+"'][data-col='"+col+"']").removeClass();
 
                                 if (TileType.PASSABLE.has(currentMap[row+1][col])){
-                                    currentMap[row+1][col] = 0;
+                                    currentMap[row+1][col] = PASSABLE;
                                     $("[data-row='"+(row+1)+"'][data-col='"+col+"']").addClass("cell").addClass("black");
                                 } else {
-                                    currentMap[row+1][col] = 1;
+                                    currentMap[row+1][col] = IMPASSABLE;
                                     $("[data-row='"+(row+1)+"'][data-col='"+col+"']").addClass("cell").addClass("grey");
                                 }
                             }
@@ -955,10 +978,10 @@
                                 $("[data-row='"+row+"'][data-col='"+(col-1)+"']").removeClass();
 
                                 if (TileType.PASSABLE.has(currentMap[row][col-1])){
-                                    currentMap[row][col-1] = 0;
+                                    currentMap[row][col-1] = PASSABLE;
                                     $("[data-row='"+row+"'][data-col='"+(col-1)+"']").addClass("cell").addClass("black");
                                 } else {
-                                    currentMap[row][col-1] = 1;
+                                    currentMap[row][col-1] = IMPASSABLE;
                                     $("[data-row='"+row+"'][data-col='"+(col-1)+"']").addClass("cell").addClass("grey");
                                 }
                             }
@@ -966,10 +989,10 @@
                                 $("[data-row='"+row+"'][data-col='"+(col+1)+"']").removeClass();
 
                                 if (TileType.PASSABLE.has(currentMap[row][col+1])){
-                                    currentMap[row][col+1] = 0;
+                                    currentMap[row][col+1] = PASSABLE;
                                     $("[data-row='"+row+"'][data-col='"+(col+1)+"']").addClass("cell").addClass("black");
                                 } else {
-                                    currentMap[row][col+1] = 1;
+                                    currentMap[row][col+1] = IMPASSABLE;
                                     $("[data-row='"+row+"'][data-col='"+(col+1)+"']").addClass("cell").addClass("grey");
                                 }
                             }
@@ -1004,12 +1027,17 @@
                 this.mapNameToSave = "newMap";
                 this.mapNameToLoad = "test12";
                 this.cellSize = cellSize;
+
                 this.numCols = numCols;
                 this.numRows = numRows;
                 this.blockWidth = blockWidth;
                 this.blockHeight = blockHeight;
                 this.density = 0;
                 this.deadends = false;
+                this.resizeCurrent = function(){
+                    cellSize = this.cellSize;
+                    displayMap(currentMap);
+                };
                 this.update = function(){
                     density = this.density;
                     if (density === 0){
@@ -1134,7 +1162,7 @@
             var f1 = gui.addFolder("tweek");
             f1.add(mapTweekerUI, 'mapNameToSave');
 
-            f1.add(mapTweekerUI, 'cellSize', 1, 20);
+
 
             f1.add(mapTweekerUI, 'numRows', 1, 20);
             f1.add(mapTweekerUI, 'numCols', 1, 20);
@@ -1147,20 +1175,50 @@
 
             f1.add(mapTweekerUI, 'update');
             f1.add(mapTweekerUI, 'save');
-            f1.closed = false;
+
+
+            var f3 = gui.addFolder("resize");
+            f3.add(mapTweekerUI, 'cellSize', 1, 20);
+            f3.add(mapTweekerUI, 'resizeCurrent');
 
             var f2 = gui.addFolder("load");
             f2.add(mapTweekerUI, 'mapNameToLoad');
             f2.add(mapTweekerUI, 'load');
             f2.add(mapTweekerUI, 'loadEmptyMap');
 
+            f1.closed = false;
             f2.closed = false;
+            f3.closed = false;
 
             BlockTypesMaker(blockHeight,blockWidth);
             createNewMap(numRows, numCols);
             currentMapSafetyCopy  =$.extend(true, [], currentMap);
 
         };
+    </script>
+</div>
+<div id="show-row-col">
+    <script>
+        $(function(){
+            $('body').on('mouseenter', '.cell', function(event){
+                var row = $(this).data("row");
+                var col = $(this).data("col");
+                var x= $(this).position().left;
+                var y= $(this).position().top;
+                $("#cell-row-col").html("("+row+","+col+")");
+                $("#cell-row-col").css({
+                    display: 'block',
+                    position: 'absolute',
+                    top: y-20,
+                    left: x+20
+                })
+            });
+            $('body').on('mouseleave', '#mapContainer', function(event){
+                $("#cell-row-col").css({
+                    display: 'none',
+                })
+            });
+        });
     </script>
 </div>
 </body>

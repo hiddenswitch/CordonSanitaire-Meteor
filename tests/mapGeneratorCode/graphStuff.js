@@ -1,10 +1,16 @@
 /**
  * Created by Shinjini on 4/4/2016.
  */
+var PASSABLE = -1;
+var INTERSECTION = -2;
+var DEBUGGING = -3;
+
+var IMPASSABLE = -8;
 
 var TileType = {
-    PASSABLE: new Set([0, 2, 5, 9]),
-    NOT_PASSABLE: new Set([1])
+    PASSABLE: new Set([PASSABLE, 2, DEBUGGING, INTERSECTION]),
+
+    NOT_PASSABLE: new Set([IMPASSABLE])
 
 }
 
