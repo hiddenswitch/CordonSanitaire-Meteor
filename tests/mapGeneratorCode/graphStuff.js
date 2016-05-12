@@ -1,7 +1,11 @@
 /**
  * Created by Shinjini on 4/4/2016.
  */
-var STRAIGHT_ROAD = -111;
+var HOR_ROAD = -111;
+var VER_ROAD = -112;
+var UNKNOWN_ROAD = -113;
+var STRAIGHT_ROADS = new Set([HOR_ROAD, VER_ROAD]);
+
 var INTERSECTION1 = {
     "PLUS" : -210,
     "T_LEFT" : -30,
@@ -14,7 +18,7 @@ var INTERSECTION1 = {
     "DOWN_LEFT" : -15,
 };
 
-var INTERSECTION2 = { // should never have -1
+var INTERSECTIONS = { // should never have -1
     "-210": "PLUS",
     "-30": "T_LEFT",
     "-42": "T_RIGHT",
@@ -26,19 +30,18 @@ var INTERSECTION2 = { // should never have -1
     "-15": "DOWN_LEFT",
 };
 
-var INTERSECTION = -222;
 var DEBUGGING = -333;
 
 var IMPASSABLE = -888;
 
 var TileType = {
-    PASSABLE: new Set([STRAIGHT_ROAD, DEBUGGING]),
+    PASSABLE: new Set([HOR_ROAD, VER_ROAD, UNKNOWN_ROAD, DEBUGGING]),
 
     NOT_PASSABLE: new Set([IMPASSABLE])
 
 };
 
-for (var key in INTERSECTION2){
+for (var key in INTERSECTIONS){
     TileType.PASSABLE.add(parseInt(key));
 }
 
