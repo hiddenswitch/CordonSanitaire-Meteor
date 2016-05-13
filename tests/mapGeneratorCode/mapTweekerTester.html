@@ -192,7 +192,11 @@
                 var print = '';
                 for (var i = 0; i<block.length; i++){
                     for (var j = 0; j<block[0].length; j++){
-                        print = print.concat(block[i][j]);
+                        var next = block[i][j].toString();
+                        while (next.length<4){
+                            next = next.concat(" ");
+                        }
+                        print = print.concat(next);
                     }
                     print = print.concat("\n");
                 }
