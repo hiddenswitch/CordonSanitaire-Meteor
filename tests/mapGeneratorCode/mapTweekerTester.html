@@ -695,6 +695,7 @@
 //            }
 
             // i = row; j = col
+
             var checkIntersection = function(map, i, j){
                 var up    = 2;
                 var down  = 3;
@@ -721,6 +722,38 @@
                     return [true, ID]  // ID is new map value
                 }
                 return [false, map[i][j]]; // just return the old value
+            };
+
+            // mutates
+            var defineTileDirection = function(map, i, j){ // to be preceeded/followed by checking for intersections
+                                                            // ie, (i,j) should not be an intersection
+                var tileType = TileType.PASSABLE;
+
+                // in case the tile direction is undefined
+                // horizontals will stay horizontal and verticals will stay vertical
+                // however, incorrect labels will be fixed
+                if (ROADS.has(map[i][j])){
+                    map[i][j] = HOR_ROAD; // initially define it as horizontal
+
+                    // if it has a vertical component, define it as vertical
+                    if ((i>0) && tileType.has(map[i-1][j])) {//up
+                        map[i][j] = VER_ROAD;
+                    }
+                    if ((i<map.length-1) && tileType.has(map[i+1][j])){//down
+                        map[i][j] = VER_ROAD;
+                    }
+                }
+            };
+
+            // removes unknown roads 
+            // mutates
+            var defineTileDirectionOfSurroundings = function(map, i, j){
+                defineTileDirection(map, i, j);
+                defineTileDirection(map, i-1, j);
+                defineTileDirection(map, i+1, j);
+                defineTileDirection(map, i, j-1);
+                defineTileDirection(map, i, j+1);
+
             }
 
             var checkIntersectionOfSurroundings = function(map, i, j){
@@ -875,6 +908,19 @@
                             $(this).removeClass();
                             $(this).addClass("cell").addClass("black");
                             currentMap[row][col] = UNKNOWN_ROAD;
+                            // When a new road is drawn, at first we can't tell if it is horizontal or vertical
+                            // We initially mark it as horizontal and then
+                            // we check the surroundings to figure it out
+                            // figure out = if a tile is unlabelled, see its surroundings to see which one it should be
+                            //              if it is a intersection, that will be fixed later
+                            //              we also look at the surrounding tiles to make sure to correct it if it was
+                            //              previously mislabelled (the initial horizontal labelling)
+                            // Note that unless a tile is stranded (in which case it is okay for it to be a horizontal tile)
+                            // it will always have another tile next to it. If that is a new tile, the check will fix it; otherwise
+                            // there will not be an issue to begin with
+                            //
+
+                            defineTileDirectionOfSurroundings(currentMap, row, col);
                             var newIntersections = checkIntersectionOfSurroundings(currentMap, row, col);
                             if (newIntersections[0][0]){ // own
                                 $(this).removeClass();
@@ -905,6 +951,7 @@
                             $(this).removeClass();
                             $(this).addClass("cell").addClass("grey");
                             currentMap[row][col] = IMPASSABLE;
+
                             var newIntersections = checkIntersectionOfSurroundings(currentMap, row, col);
                             // if intersections need to be removed
                             if (!newIntersections[1][0]){ //up
@@ -951,6 +998,7 @@
                                     $("[data-row='"+row+"'][data-col='"+(col+1)+"']").addClass("cell").addClass("grey");
                                 }
                             }
+                            defineTileDirectionOfSurroundings(currentMap, row, col);
                         }
                     }
 

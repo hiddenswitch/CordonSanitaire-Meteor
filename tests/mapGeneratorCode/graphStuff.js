@@ -5,6 +5,7 @@ var HOR_ROAD = -111;
 var VER_ROAD = -112;
 var UNKNOWN_ROAD = -113;
 var STRAIGHT_ROADS = new Set([HOR_ROAD, VER_ROAD]);
+var ROADS = new Set([HOR_ROAD, VER_ROAD, UNKNOWN_ROAD]);
 
 var INTERSECTION1 = {
     "PLUS" : -210,
