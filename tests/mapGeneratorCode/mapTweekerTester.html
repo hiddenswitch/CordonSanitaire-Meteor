@@ -668,38 +668,8 @@
                 return [];
             }
 
-//            // i = row; j = col
-//            var checkIntersection = function(map, i, j){
-//                var up    = 2
-//                var down  = 3
-//                var left  = 5
-//                var right = 7
-//
-//                var tileType = TileType.PASSABLE;
-//                var ID = -1;
-//                if (tileType.has(map[i][j])){
-//                    if ((i>0) && tileType.has(map[i-1][j])){//up
-//                        if ((j>0) && tileType.has(map[i][j-1])){//left
-//                            return true;
-//                        }
-//                        if ((j<map[0].length-1) && tileType.has(map[i][j+1])){//right
-//                            return true;
-//                        }
-//                    }
-//                    if ((i<map.length-1) && tileType.has(map[i+1][j])){//down
-//                        if ((j>0) && tileType.has(map[i][j-1])){//left
-//                            return true;
-//                        }
-//                        if ((j<map[0].length-1) && tileType.has(map[i][j+1])){//right
-//                            return true;
-//                        }
-//                    }
-//                }
-//                return false;
-//            }
 
             // i = row; j = col
-
             var checkIntersection = function(map, i, j){
                 var up    = 2;
                 var down  = 3;
@@ -728,9 +698,25 @@
                 return [false, map[i][j]]; // just return the old value
             };
 
+
+
+
+
+            var checkIntersectionOfSurroundings = function(map, i, j){
+                var own = checkIntersection(map, i, j);
+                var up = checkIntersection(map, i-1, j);
+                var down = checkIntersection(map, i+1, j);
+                var left = checkIntersection(map, i, j-1);
+                var right = checkIntersection(map, i, j+1);
+
+                return [own, up, down, left, right];
+            };
+
+
+
             // mutates
             var defineTileDirection = function(map, i, j){ // to be preceeded/followed by checking for intersections
-                                                            // ie, (i,j) should not be an intersection
+                // ie, (i,j) should not be an intersection
                 var tileType = TileType.PASSABLE;
 
                 // in case the tile direction is undefined
@@ -749,7 +735,7 @@
                 }
             };
 
-            // removes unknown roads 
+            // removes unknown roads
             // mutates
             var defineTileDirectionOfSurroundings = function(map, i, j){
                 defineTileDirection(map, i, j);
@@ -758,16 +744,94 @@
                 defineTileDirection(map, i, j-1);
                 defineTileDirection(map, i, j+1);
 
+            };
+
+            // mutates
+            // these are the tiles that the player stops at
+            var markOrRemoveIntersectionStopTiles = function(map, i, j, mark, updateMap){
+                if (map[i][j] in INTERSECTIONS){ // it is an intersection
+                    if ((i>0) && ROADS.has(map[i-1][j])) {//up
+                        if (mark){
+                            if(updateMap) {
+                                $("[data-row='" + (i - 1) + "'][data-col='" + (j) + "']").removeClass().addClass("cell").addClass("verStop");
+                            }
+                            map[i-1][j] = VER_STOP;
+                        } else {
+                            if(updateMap) {
+                                $("[data-row='" + (i - 1) + "'][data-col='" + (j) + "']").removeClass().addClass("cell").addClass("black");
+                            }
+                            map[i-1][j] = VER_ROAD;
+                        }
+
+                    }
+                    if ((j>0) && ROADS.has(map[i][j-1])){//left
+                        if (mark){
+                            if(updateMap) {
+                                $("[data-row='" + (i) + "'][data-col='" + (j - 1) + "']").removeClass().addClass("cell").addClass("horStop");
+                            }
+                            map[i][j-1] = HOR_STOP;
+                        } else{
+                            if(updateMap) {
+                                $("[data-row='" + (i) + "'][data-col='" + (j - 1) + "']").removeClass().addClass("cell").addClass("black");
+                            }
+                            map[i][j-1] = HOR_ROAD;
+                        }
+
+                    }
+                    if ((j<map[0].length-1) && ROADS.has(map[i][j+1])){//right
+                        if (mark){
+                            if(updateMap) {
+                                $("[data-row='" + (i) + "'][data-col='" + (j + 1) + "']").removeClass().addClass("cell").addClass("horStop");
+                            }
+                            map[i][j+1] = HOR_STOP;
+                        } else {
+                            if(updateMap) {
+                                $("[data-row='" + (i) + "'][data-col='" + (j + 1) + "']").removeClass().addClass("cell").addClass("black");
+                            }
+                            map[i][j+1] = HOR_ROAD;
+                        }
+
+                    }
+                    if ((i<map.length-1) && ROADS.has(map[i+1][j])){//down
+                        if (mark){
+                            if(updateMap) {
+                                $("[data-row='" + (i + 1) + "'][data-col='" + (j) + "']").removeClass().addClass("cell").addClass("verStop");
+                            }
+                            map[i+1][j] = VER_STOP;
+
+                        } else {
+                            if(updateMap) {
+                                $("[data-row='" + (i + 1) + "'][data-col='" + (j) + "']").removeClass().addClass("cell").addClass("black");
+                            }
+                            map[i+1][j] = VER_ROAD;
+
+                        }
+                    }
+                }
+            };
+
+            // mutates
+            var removeIntersection = function(map, i, j){
+
             }
 
-            var checkIntersectionOfSurroundings = function(map, i, j){
-                var own = checkIntersection(map, i, j);
-                var up = checkIntersection(map, i-1, j);
-                var down = checkIntersection(map, i+1, j);
-                var left = checkIntersection(map, i, j-1);
-                var right = checkIntersection(map, i, j+1);
+            var checkStop = function(map, i, j) {
+                if (TileType.PASSABLE.has(map[i][j])){
+                    if ((i>0) && (map[i-1][j] in INTERSECTIONS )) {//up
+                        return true;
+                    }
+                    if ((j>0) && (map[i][j-1] in INTERSECTIONS )){//left
+                        return true;
+                    }
+                    if ((j<map[0].length-1) &&  (map[i][j+1] in INTERSECTIONS)){//right
+                        return true;
+                    }
+                    if ((i<map.length-1) &&  (map[i+1][j] in INTERSECTIONS)){//down
+                        return true;
+                    }
+                }
+                return false
 
-                return [own, up, down, left, right];
             };
 
             // mutates
@@ -778,11 +842,11 @@
                         var [isIntersection, intersectionID] = checkIntersection(map, i, j);
                         if(isIntersection){
                             map[i][j] = intersectionID;
+                            markOrRemoveIntersectionStopTiles(map, i, j, true, false);
                         }
                     }
                 }
-            }
-
+            };
         </script>
     </div>
 
@@ -808,10 +872,17 @@
                     for (var i=0; i<height; i++){
                         mapDrawing = mapDrawing.concat("<div class='row'>");
                         if (TileType.PASSABLE.has(map[i][j])){
-                            if(map[i][j] === 5){ //debugging
+                            if(map[i][j] === DEBUGGING){ //debugging
                                 mapDrawing = mapDrawing.concat(makeCell("white",i,j));
-                            } else if (map[i][j] in INTERSECTIONS){ // intersection
-                                mapDrawing = mapDrawing.concat(makeCell("black2",i,j));
+                            } else if (map[i][j] in INTERSECTIONS) { // intersection
+                                mapDrawing = mapDrawing.concat(makeCell("intersection", i, j));
+                            } else if (STOPS.has(map[i][j])){ // stop
+                                if (map[i][j] === HOR_STOP){
+                                    mapDrawing = mapDrawing.concat(makeCell("horStop",i,j));
+                                } else {
+                                    mapDrawing = mapDrawing.concat(makeCell("verStop",i,j));
+                                }
+
                             } else {
                                 mapDrawing = mapDrawing.concat(makeCell("black",i,j));
                             }
@@ -928,79 +999,63 @@
                             var newIntersections = checkIntersectionOfSurroundings(currentMap, row, col);
                             if (newIntersections[0][0]){ // own
                                 $(this).removeClass();
-                                $(this).addClass("cell").addClass("black2");
+                                $(this).addClass("cell").addClass("intersection");
                                 currentMap[row][col] = newIntersections[0][1];
+                                markOrRemoveIntersectionStopTiles(currentMap, row, col, true, true);
                             }
                             if (newIntersections[1][0]){ //up
                                 $("[data-row='"+(row-1)+"'][data-col='"+col+"']").removeClass();
-                                $("[data-row='"+(row-1)+"'][data-col='"+col+"']").addClass("cell").addClass("black2");
+                                $("[data-row='"+(row-1)+"'][data-col='"+col+"']").addClass("cell").addClass("intersection");
                                 currentMap[row-1][col] = newIntersections[1][1];
+                                markOrRemoveIntersectionStopTiles(currentMap, row-1, col, true, true);
                             }
                             if (newIntersections[2][0]){ //down
                                 $("[data-row='"+(row+1)+"'][data-col='"+col+"']").removeClass();
-                                $("[data-row='"+(row+1)+"'][data-col='"+col+"']").addClass("cell").addClass("black2");
+                                $("[data-row='"+(row+1)+"'][data-col='"+col+"']").addClass("cell").addClass("intersection");
                                 currentMap[row+1][col] = newIntersections[2][1];
+                                markOrRemoveIntersectionStopTiles(currentMap, row+1, col, true, true);
                             }
                             if (newIntersections[3][0]){ //left
                                 $("[data-row='"+row+"'][data-col='"+(col-1)+"']").removeClass();
-                                $("[data-row='"+row+"'][data-col='"+(col-1)+"']").addClass("cell").addClass("black2");
+                                $("[data-row='"+row+"'][data-col='"+(col-1)+"']").addClass("cell").addClass("intersection");
                                 currentMap[row][col-1] = newIntersections[3][1];
+                                markOrRemoveIntersectionStopTiles(currentMap, row, col-1, true, true);
                             }
                             if (newIntersections[4][0]){ //right
                                 $("[data-row='"+row+"'][data-col='"+(col+1)+"']").removeClass();
-                                $("[data-row='"+row+"'][data-col='"+(col+1)+"']").addClass("cell").addClass("black2");
+                                $("[data-row='"+row+"'][data-col='"+(col+1)+"']").addClass("cell").addClass("intersection");
                                 currentMap[row][col+1] = newIntersections[4][1];
+                                markOrRemoveIntersectionStopTiles(currentMap, row, col+1, true, true);
                             }
                         } else if (editingRemove) {
                             $(this).removeClass();
                             $(this).addClass("cell").addClass("grey");
-                            currentMap[row][col] = IMPASSABLE;
+                            if (currentMap[row][col] in INTERSECTIONS){
+                                markOrRemoveIntersectionStopTiles(currentMap, row, col, false, true);
+                            }
+                            currentMap[row][col] = IMPASSABLE; // get rid of current road
 
                             var newIntersections = checkIntersectionOfSurroundings(currentMap, row, col);
                             // if intersections need to be removed
-                            if (!newIntersections[1][0]){ //up
-                                $("[data-row='"+(row-1)+"'][data-col='"+col+"']").removeClass();
-
-                                if (TileType.PASSABLE.has(currentMap[row-1][col])){
-                                    currentMap[row-1][col] = UNKNOWN_ROAD;
-                                    $("[data-row='"+(row-1)+"'][data-col='"+col+"']").addClass("cell").addClass("black");
-                                } else {
-                                    currentMap[row-1][col] = IMPASSABLE;
-                                    $("[data-row='"+(row-1)+"'][data-col='"+col+"']").addClass("cell").addClass("grey");
-                                }
+                            if ((currentMap[row-1][col] in INTERSECTIONS) && !newIntersections[1][0]){ //up
+                                $("[data-row='"+(row-1)+"'][data-col='"+col+"']").removeClass().addClass("cell").addClass("black");
+                                markOrRemoveIntersectionStopTiles(currentMap, row-1, col, false, true);
+                                currentMap[row-1][col] = UNKNOWN_ROAD;
                             }
-                            if (!newIntersections[2][0]){ //down
-                                $("[data-row='"+(row+1)+"'][data-col='"+col+"']").removeClass();
-
-                                if (TileType.PASSABLE.has(currentMap[row+1][col])){
-                                    currentMap[row+1][col] = UNKNOWN_ROAD;
-                                    $("[data-row='"+(row+1)+"'][data-col='"+col+"']").addClass("cell").addClass("black");
-                                } else {
-                                    currentMap[row+1][col] = IMPASSABLE;
-                                    $("[data-row='"+(row+1)+"'][data-col='"+col+"']").addClass("cell").addClass("grey");
-                                }
+                            if ((currentMap[row+1][col] in INTERSECTIONS) && !newIntersections[2][0]){ //down
+                                $("[data-row='"+(row+1)+"'][data-col='"+col+"']").removeClass().addClass("cell").addClass("black");
+                                markOrRemoveIntersectionStopTiles(currentMap, row+1, col, false, true);
+                                currentMap[row+1][col] = UNKNOWN_ROAD;
                             }
-                            if (!newIntersections[3][0]){ //left
-                                $("[data-row='"+row+"'][data-col='"+(col-1)+"']").removeClass();
-
-                                if (TileType.PASSABLE.has(currentMap[row][col-1])){
-                                    currentMap[row][col-1] = UNKNOWN_ROAD;
-                                    $("[data-row='"+row+"'][data-col='"+(col-1)+"']").addClass("cell").addClass("black");
-                                } else {
-                                    currentMap[row][col-1] = IMPASSABLE;
-                                    $("[data-row='"+row+"'][data-col='"+(col-1)+"']").addClass("cell").addClass("grey");
-                                }
+                            if ((currentMap[row][col-1] in INTERSECTIONS) && !newIntersections[3][0]){ //left
+                                $("[data-row='"+row+"'][data-col='"+(col-1)+"']").removeClass().addClass("cell").addClass("black");
+                                markOrRemoveIntersectionStopTiles(currentMap, row, col-1, false, true);
+                                currentMap[row][col-1] = UNKNOWN_ROAD;
                             }
-                            if (!newIntersections[4][0]){ //right
-                                $("[data-row='"+row+"'][data-col='"+(col+1)+"']").removeClass();
-
-                                if (TileType.PASSABLE.has(currentMap[row][col+1])){
-                                    currentMap[row][col+1] = UNKNOWN_ROAD;
-                                    $("[data-row='"+row+"'][data-col='"+(col+1)+"']").addClass("cell").addClass("black");
-                                } else {
-                                    currentMap[row][col+1] = IMPASSABLE;
-                                    $("[data-row='"+row+"'][data-col='"+(col+1)+"']").addClass("cell").addClass("grey");
-                                }
+                            if ((currentMap[row][col+1] in INTERSECTIONS) && !newIntersections[4][0]){ //right
+                                $("[data-row='"+row+"'][data-col='"+(col+1)+"']").removeClass().addClass("cell").addClass("black");
+                                markOrRemoveIntersectionStopTiles(currentMap, row, col+1, false, true);
+                                currentMap[row][col+1] = UNKNOWN_ROAD;
                             }
                             defineTileDirectionOfSurroundings(currentMap, row, col);
                         }

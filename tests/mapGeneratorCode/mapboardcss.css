@@ -35,11 +35,19 @@ canvas {
 .black {
     background-color: black;
 }
-.black2{
+.intersection{
     background-color: darkslategrey;
 }
 .grey{
     background-color: darkgrey;
+}
+
+.horStop{
+    background-color: yellow;
+}
+
+.verStop{
+    background-color: orange;
 }
 
 .black:hover, .black2:hover{
