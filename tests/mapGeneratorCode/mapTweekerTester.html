@@ -671,6 +671,10 @@
 
             // i = row; j = col
             var checkIntersection = function(map, i, j){
+                if (!map[i] || !map[i][j]){
+                    return [false, IMPASSABLE];
+                }
+
                 var up    = 2;
                 var down  = 3;
                 var left  = 5;
@@ -678,6 +682,7 @@
 
                 var tileType = TileType.PASSABLE;
                 var ID = -1;
+
                 if (tileType.has(map[i][j])){
                     if ((i>0) && tileType.has(map[i-1][j])) {//up
                         ID *= up;
@@ -693,7 +698,7 @@
                     }
                 }
                 if ((ID != -1) && (ID in INTERSECTIONS)){
-                    return [true, ID]  // ID is new map value
+                    return [true, ID];  // ID is new map value
                 }
                 return [false, map[i][j]]; // just return the old value
             };
@@ -716,7 +721,12 @@
 
             // mutates
             var defineTileDirection = function(map, i, j){ // to be preceeded/followed by checking for intersections
-                // ie, (i,j) should not be an intersection
+                                                            // ie, (i,j) should not be an intersection
+
+                if (!map[i] || !map[i][j]){
+                    return;
+                }
+
                 var tileType = TileType.PASSABLE;
 
                 // in case the tile direction is undefined
@@ -749,6 +759,10 @@
             // mutates
             // these are the tiles that the player stops at
             var markOrRemoveIntersectionStopTiles = function(map, i, j, mark, updateMap){
+                if (!map[i] || !map[i][j]){
+                    return;
+                }
+
                 if (map[i][j] in INTERSECTIONS){ // it is an intersection
                     if ((i>0) && ROADS.has(map[i-1][j])) {//up
                         if (mark){
@@ -808,30 +822,6 @@
                         }
                     }
                 }
-            };
-
-            // mutates
-            var removeIntersection = function(map, i, j){
-
-            }
-
-            var checkStop = function(map, i, j) {
-                if (TileType.PASSABLE.has(map[i][j])){
-                    if ((i>0) && (map[i-1][j] in INTERSECTIONS )) {//up
-                        return true;
-                    }
-                    if ((j>0) && (map[i][j-1] in INTERSECTIONS )){//left
-                        return true;
-                    }
-                    if ((j<map[0].length-1) &&  (map[i][j+1] in INTERSECTIONS)){//right
-                        return true;
-                    }
-                    if ((i<map.length-1) &&  (map[i+1][j] in INTERSECTIONS)){//down
-                        return true;
-                    }
-                }
-                return false
-
             };
 
             // mutates
@@ -1037,22 +1027,22 @@
 
                             var newIntersections = checkIntersectionOfSurroundings(currentMap, row, col);
                             // if intersections need to be removed
-                            if ((currentMap[row-1][col] in INTERSECTIONS) && !newIntersections[1][0]){ //up
+                            if (!newIntersections[1][0] && currentMap[row-1] && (currentMap[row-1][col] in INTERSECTIONS)){ //up
                                 $("[data-row='"+(row-1)+"'][data-col='"+col+"']").removeClass().addClass("cell").addClass("black");
                                 markOrRemoveIntersectionStopTiles(currentMap, row-1, col, false, true);
                                 currentMap[row-1][col] = UNKNOWN_ROAD;
                             }
-                            if ((currentMap[row+1][col] in INTERSECTIONS) && !newIntersections[2][0]){ //down
+                            if (!newIntersections[2][0] && currentMap[row+1][col] && (currentMap[row+1][col] in INTERSECTIONS)){ //down
                                 $("[data-row='"+(row+1)+"'][data-col='"+col+"']").removeClass().addClass("cell").addClass("black");
                                 markOrRemoveIntersectionStopTiles(currentMap, row+1, col, false, true);
                                 currentMap[row+1][col] = UNKNOWN_ROAD;
                             }
-                            if ((currentMap[row][col-1] in INTERSECTIONS) && !newIntersections[3][0]){ //left
+                            if (!newIntersections[3][0] && (currentMap[row][col-1] in INTERSECTIONS)){ //left
                                 $("[data-row='"+row+"'][data-col='"+(col-1)+"']").removeClass().addClass("cell").addClass("black");
                                 markOrRemoveIntersectionStopTiles(currentMap, row, col-1, false, true);
                                 currentMap[row][col-1] = UNKNOWN_ROAD;
                             }
-                            if ((currentMap[row][col+1] in INTERSECTIONS) && !newIntersections[4][0]){ //right
+                            if (!newIntersections[4][0] && (currentMap[row][col+1] in INTERSECTIONS)){ //right
                                 $("[data-row='"+row+"'][data-col='"+(col+1)+"']").removeClass().addClass("cell").addClass("black");
                                 markOrRemoveIntersectionStopTiles(currentMap, row, col+1, false, true);
                                 currentMap[row][col+1] = UNKNOWN_ROAD;
@@ -1104,15 +1094,17 @@
                 this.IMPASSABLE = IMPASSABLE;
                 this.VERTICAL = VER_ROAD;
                 this.HORIZONTAL = HOR_ROAD;
+                this.HOR_STOP = HOR_STOP;
+                this.VER_STOP = VER_STOP;
                 this.PLUS = INTERSECTION1["PLUS"];
-                this["T_LEFT"] = INTERSECTION1["T_LEFT"];
-                this["T_RIGHT"] = INTERSECTION1["T_RIGHT"];
-                this["T_UP"] = INTERSECTION1["T_UP"];
-                this["T_DOWN"] = INTERSECTION1["T_DOWN"];
-                this["UP_LEFT"] = INTERSECTION1["UP_LEFT"];
-                this["UP_RIGHT"] = INTERSECTION1["UP_RIGHT"];
-                this["DOWN_RIGHT"] = INTERSECTION1["DOWN_RIGHT"];
-                this["DOWN_LEFT"] = INTERSECTION1["DOWN_LEFT"];
+                this.T_LEFT = INTERSECTION1["T_LEFT"];
+                this.T_RIGHT = INTERSECTION1["T_RIGHT"];
+                this.T_UP = INTERSECTION1["T_UP"];
+                this.T_DOWN = INTERSECTION1["T_DOWN"];
+                this.UP_LEFT = INTERSECTION1["UP_LEFT"];
+                this.UP_RIGHT = INTERSECTION1["UP_RIGHT"];
+                this.DOWN_RIGHT = INTERSECTION1["DOWN_RIGHT"];
+                this.DOWN_LEFT = INTERSECTION1["DOWN_LEFT"];
                 this.mappingUpdate = function(){
                     console.log('moop');
                 };
@@ -1260,6 +1252,8 @@
             f4.add(mapTweekerUI, "IMPASSABLE");
             f4.add(mapTweekerUI, "VERTICAL");
             f4.add(mapTweekerUI, "HORIZONTAL");
+            f4.add(mapTweekerUI, "VER_STOP");
+            f4.add(mapTweekerUI, "HOR_STOP");
             f4.add(mapTweekerUI, "PLUS");
             f4.add(mapTweekerUI, "T_LEFT");
             f4.add(mapTweekerUI, "T_RIGHT");
