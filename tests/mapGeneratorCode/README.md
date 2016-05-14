@@ -116,7 +116,7 @@ To get a new map into the game:
 ```
 
 2. Under `Settings>singleplayer.json` (or which ever setting you want to play under), insert the name of the map
-corresponding to "map" (using an editor)
+corresponding to `"map"` (using an editor)
 ```
 {
   "public": {
