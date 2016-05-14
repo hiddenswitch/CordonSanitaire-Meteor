@@ -2,14 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Title</title>
+  <title>CS Map Tweeker Tester</title>
   <link rel="stylesheet" type="text/css" href="mapboardcss.css">
 </head>
 <body>
-<!--<form action="" method="GET">-->
-<!--<input type="text" name="map">-->
-<!--<input type="submit">-->
-<!--</form>-->
 <div id="edit">
     <div>Edit the map below (changes are automatically saved)
         <div id="edit-buttons-show-hide">
@@ -27,7 +23,6 @@
 <div id="mapboard"></div>
 <div id="scripts">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
-    <script src="phaser.js"></script>
     <script type="text/javascript" src="dat.gui.js"></script>
     <div id="globalVariables">
         <script>
@@ -54,20 +49,8 @@
              * Created by Shinjini on 3/14/2016.
              */
 
-
-            //        SanitaireMaps.PATHABLE_TILES = [8, 9, 10, 11, 12, 15, 17, 18, 33, 37, 38, 39];
-            //
-            //        SanitaireMaps.CROSSWALK_TILES = [8, 9, 10, 11];
-            //
-            //        0 = road
-            //        1 = building
-            //        2 = intersection
-
-
-            /*
-            5x5 tiles
-            */
             var Blocks = {};
+            // Types:
 //            "SOLID"
 //            "VERTICAL"
 //            "HORIZONTAL"
@@ -191,6 +174,11 @@
 //                        ]
 //
 //            };
+
+            /**
+             * Prints maps or blocks in a row*col manner
+             * @param Array of arrays
+             */
             var prettyPrint = function(block){
                 var print = '';
                 for (var i = 0; i<block.length; i++){
@@ -208,9 +196,18 @@
 
 
 
+            /**
+             * Makes the blocks (described above)
+             * @param rowSize {Number} number of tiles in a row
+             * @param colSize {Number} number of tiles in a col
+             * @param up {Boolean} whether there is a road up from the center of the block
+             * @param right {Boolean}
+             * @param down {Boolean}
+             * @param left {Boolean}
+             *
+             * @returns block {Array of arrays} is a rowSize*colSize block described
+             */
             var blockMaker = function (rowSize, colSize, up, right, down, left){
-
-
                 var block = [];
                 for (var i=0; i<rowSize; i++){
                     block.push([]);
@@ -244,6 +241,14 @@
                 return block;
             };
 
+
+            /**
+             * Makes the all the different blocks (described above)
+             * Mutates the global Blocks object
+             * @param rowSize {Number} number of tiles in a row
+             * @param colSize {Number} number of tiles in a col
+             *
+             */
             var BlockTypesMaker = function(rowSize, colSize){
                 // up, right, down, left
                 Blocks.SOLID = blockMaker(rowSize,colSize,false, false, false, false);
@@ -264,7 +269,11 @@
 
             };
 
-            // weights do no have to add to 1, the will be normalized in all cases
+            /**
+             * Describes allowed tiles to the right, and their probability weights
+             // weights do no have to add to 1, they will be normalized in all cases
+             *
+             */
             var PathToRight = {
                 YES: {
                     "SOLID":0,
@@ -283,8 +292,13 @@
                     "UP_RIGHT":1,
                     "DOWN_RIGHT":1
                 }
-            }
+            };
 
+            /**
+             * Describes allowed tiles to down, and their probability weights
+             // weights do no have to add to 1, they will be normalized in all cases
+             *
+             */
             var PathDown = {
                 YES: {
                     "SOLID":0,
@@ -303,8 +317,12 @@
                     "DOWN_RIGHT":1,
                     "DOWN_LEFT":1
                 }
-            }
+            };
 
+            /**
+             * Describes, for each tile type, allowed tiles to the right and down
+             *
+             */
             var BlockSuccessors = {
                 "SOLID": {
                     right: PathToRight.NO,
@@ -356,7 +374,7 @@
                 }
             };
 
-            /*
+            /**
              Generates a conceptual map based on descriptions of crossings.
              For example,
 
@@ -369,17 +387,23 @@
                 11111 11111 11111
 
              would be:
-                [["UP_RIGHT", "HORIZONTAL", "UP_LEFT"]
+                [["UP_RIGHT", "HORIZONTAL", "UP_LEFT"]]
+
+             // Here 1 = not passable, 0 = passable
+             *
+             * @param mapRows {Number} Number of rows of blocks in the map
+             * @param mapCol {Number} Number of cols of blocks in a map
+             // eg, 50x50 tile map has 10x10 5-tile-blocks
+             *
+             * @returns map an Array of Arrays of map descriptions, as described above
              */
             var mapDescriptionGenerate = function(mapRows, mapCols){
-                // 50x50 is 10x10 blocks
-
                 // If at (row, col) = (0, 0), pretend that up and left are SOLID
                 // If row = 0, pretend up is SOLID
                 // If col = 0, pretend left is SOLID
                 var map = [];
                 for (var row = 0; row < mapRows; row++){
-                    map.push([])
+                    map.push([]);
                     var up; // these are strings eg, "SOLID"
                     var left;
                     for (var col = 0; col< mapCols; col++){
@@ -484,6 +508,16 @@
                 return map
             };
 
+            /**
+             * Similar to mapGenerate, it generates a map description with no roads
+             * to be used in the map drawing tool to create custom maps
+             *
+             * @param mapRows {Number} Number of rows of blocks in the map
+             * @param mapCol {Number} Number of cols of blocks in a map
+             // eg, 50x50 tile map has 10x10 5-tile-blocks
+             *
+             * @returns map an Array of Arrays of map descriptions, as described in mapGenerate
+             */
             var emptyMapDescriptionGenerate = function(mapRows, mapCols) {
                 var map = [];
                 for (var row = 0; row < mapRows; row++) {
@@ -495,12 +529,23 @@
                 return map;
             };
 
+            /**
+             * Generates an actual map (in this case with no roads)
+             * @param mapRows {Number} Number of rows of blocks in the map
+             * @param mapCol {Number} Number of cols of blocks in a map
+             // eg, 50x50 tile map has 10x10 5-tile-blocks
+             *
+             * @returns map an Array of Arrays of map tile numbers
+             */
             var emptyMapGenerate = function(numRows, numCols){
                 return mapDecode(emptyMapDescriptionGenerate(numRows, numCols));
-            }
+            };
 
-            /*
-                Decodes a mapdescription to produce an array of 0-1 which represents the map
+            /**
+             * Generates an actual map based on a map description
+             * @param mapDescription Description of a map as described in mapDescriptionGenerate
+             *
+             * @returns map an Array of Arrays of map tile numbers
              */
             var mapDecode = function(mapDescription){
                 var data = [];
@@ -518,8 +563,8 @@
                 return data;
             };
 
-            /*
-                Generates a random numRows*numCols map
+            /**
+             * Generates a random numRows*numCols map
              */
             var mapGenerate = function(numRows, numCols){
                 var mapEmpty = true;
@@ -545,6 +590,8 @@
             /** http://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
              * Randomize array element order in-place.
              * Using Durstenfeld shuffle algorithm.
+             *
+             * Used in combineDisconnected
              */
             function shuffleArray(array) {
                 for (var i = array.length - 1; i > 0; i--) {
@@ -556,7 +603,11 @@
                 return array;
             }
 
-            // mutates
+            /**
+             * Combines disconnected components in a map
+             * // mutates
+             * @param map
+             */
             var combineDisconnected = function(map){
                 var components = findComponents(map, TileType.PASSABLE);
                 if (components.length>1){
@@ -633,7 +684,18 @@
 
             };
 
-            // only to be used on unpadded graphs
+            /**
+             *  ****Only to be used on unpadded graphs***
+             *  Given a map and a cell (row, col), finds the center of
+             *  the block the cell is in, if that block is not a SOLID
+             *
+             *  Assumes that the map uses the same blocks size as saved
+             *  in the Blocks object
+             * @param map
+             * @param row
+             * @param col
+             * @returns [row col] of the center if found; [] otherwise
+             */
             var findBlockCenter = function(map, row, col){
                 if (row>map.length-1 || row<0){
                     return [];
@@ -672,8 +734,24 @@
                 return [];
             };
 
-            //
+            /**
+             * Adds padding to a map, based on how big the map actually is and how big
+             * we want it to be
+             *
+             * for invalid sizes, just returns the original map
+             *
+             * @param map
+             * @param numTilesRow
+             * @param numTilesCol
+             * @returns {Array}
+             */
+
             var addPadding = function(map, numTilesRow, numTilesCol){
+                // for invalid sizes, just return the original map,
+                if (numTilesRow<=map.length || numTilesCol<=map[0].length){
+                    return map;
+                }
+
                 // to offset the effects of even blocks size, the padding adds
                 // extra empty tiles to the top and left :)
                 var paddedMap = [];
@@ -719,7 +797,13 @@
             };
 
 
-            // i = row; j = col
+            /**
+             * Checks whether the (row,col) cell is an intersection
+             * @param map
+             * @param i row
+             * @param j col
+             * @returns {*[isIntersection, intersectionID]}
+             */
             var checkIntersection = function(map, i, j){
                 if (!map[i] || !map[i][j]){
                     return [false, IMPASSABLE];
@@ -753,10 +837,14 @@
                 return [false, map[i][j]]; // just return the old value
             };
 
-
-
-
-
+            /**
+             * For the (i,j) cell, checks whether that cell, the cell above, below, to the
+             * left and to the right of it are intersections
+             * @param map
+             * @param i row
+             * @param j col
+             * @returns {*[own, up, down, left, right]}
+             */
             var checkIntersectionOfSurroundings = function(map, i, j){
                 var own = checkIntersection(map, i, j);
                 var up = checkIntersection(map, i-1, j);
@@ -768,10 +856,20 @@
             };
 
 
-
-            // mutates
-            var defineTileDirection = function(map, i, j){ // to be preceeded/followed by checking for intersections
-                                                            // ie, (i,j) should not be an intersection
+            /**
+             * Given an road of unknown direction (UNKNOWN_ROAD), figures out which direction it should be
+             * based on its surroundings
+             *
+             * needs to be preceeded/followed by checking for intersections
+             * ie, (i,j) should not be an intersection
+             *
+             * mutates the map
+             *
+             * @param map
+             * @param i
+             * @param j
+             */
+            var defineTileDirection = function(map, i, j){
 
                 if (!map[i] || !map[i][j]){
                     return;
@@ -795,8 +893,19 @@
                 }
             };
 
-            // removes unknown roads
-            // mutates
+            /**
+             * Given an road of unknown direction (UNKNOWN_ROAD), figures out which direction it should be
+             * based on its surroundings, and does the same for its 4 surrounding tiles
+             *
+             * needs to be preceeded/followed by checking for intersections
+             * ie, (i,j) should not be an intersection
+             *
+             * mutates the map
+             *
+             * @param map
+             * @param i
+             * @param j
+             */
             var defineTileDirectionOfSurroundings = function(map, i, j){
                 defineTileDirection(map, i, j);
                 defineTileDirection(map, i-1, j);
@@ -806,7 +915,9 @@
 
             };
 
-
+            /**
+             * Checks if a cell should be a stop tile or not (if it has an intersection to the side)
+             */
             var checkForStop = function(map, i, j) {
                 if (TileType.PASSABLE.has(map[i][j])) {
                     if ((i > 0) && (map[i - 1][j] in INTERSECTIONS )) {//up
@@ -823,11 +934,19 @@
                     }
                 }
                 return [false, null];
-            }
+            };
 
-            // mutates
-            // these are the tiles that the player stops at
-            // looks at the tiles around (i,j)
+
+            /**
+             * Given a map and a cell (i,j),
+             * if it is to mark: looks at the 4 surroundings and either marks them as stop tiles appropriately
+             * if it is to remove: marks itself as an unknown tile (UNKNOWN_ROAD) and removes surrounding stop
+             *      tiles appropriately (if they belong to another intersection, they will not be removed)
+             *
+             * mutates
+             * stop tile = tiles that the player stops at next to an intersection
+             */
+
             var markOrRemoveIntersectionStopTiles = function(map, i, j, mark, updateMap){
                 if (!map[i] || !map[i][j]){
                     return;
@@ -980,8 +1099,12 @@
                 }
             };
 
-
-            // mutates
+            /**
+             * Given a map, looks for intersections and marks it
+             *  mutates the map
+             * @param map
+             * @param display
+             */
             var markIntersections = function(map, display){
 
                 for (var i = 0; i< map.length; i++){ // i is y is row
@@ -1001,7 +1124,7 @@
 
     <div id="displayMap">
         <script>
-            /*
+            /**
                 displays the map as a canvas element inside #mapboard
             */
             var displayMap = function(map){
@@ -1051,6 +1174,8 @@
     <div id="manualMapEdit">
         <script type="text/javascript">
             $(function(){
+                // Handlers for manually editing the map
+
                 $('#start-edit').click(function(){
                     $('#edit-buttons-show-hide').css({
                         display: 'none'
@@ -1216,26 +1341,26 @@
 
 
 
-
-
-
-
-
         </script>
     </div>
     <div id="dat.gui">
         <script type="text/javascript">
-            /*
+            /**
+             * Create a new random map
+
                 height, width integer
              */
             var createNewMap = function(height, width){
-//                var mapHeight =
                 var map = mapGenerate(height,width);
                 unpaddedMap = map;
                 currentMap = addPadding(map, numTilesRow, numTilesCol);
                 displayMap(currentMap);
             };
 
+            /**
+             * Function that allows saving the map to disk as a csv file
+             * @param map
+             */
             var saveMap = function(map){
                 var csvContent = "data:text/csv;charset=utf-8,";
                 map.forEach(function(infoArray, index){
@@ -1254,10 +1379,9 @@
                 link.setAttribute("download", filename);
 
                 link.click(); // This will download the data file named "{file name}.csv".
-            }
+            };
 
-
-
+            // The dat.gui interface for inputting parameters to tweek the map
             var mapTweeker = function() {
                 this.mapNameToLoad = "test12";
                 this.cellSize = cellSize;
@@ -1306,7 +1430,6 @@
                 }
 
                 this.userDefined_Mapping = function(){
-//                    markIntersections(currentMap, true);
                     var newMap = [];
                     for (var i= 0; i<currentMap.length; i++){
                         newMap.push([]);
@@ -1431,41 +1554,16 @@
 
                 }
                 this.default_Mapping = function(){
-//                    markIntersections(currentMap, true);
                     saveMap(currentMap);
                 };
                 
             };
         </script>
     </div>
-    <div id="queryString">
-        <script>
-            var QueryString = function () {
-                // This function is anonymous, is executed immediately and
-                // the return value is assigned to QueryString!
-                var query_string = {};
-                var query = window.location.search.substring(1);
-                var vars = query.split("&");
-                for (var i=0;i<vars.length;i++) {
-                    var pair = vars[i].split("=");
-                    // If first entry with this name
-                    if (typeof query_string[pair[0]] === "undefined") {
-                        query_string[pair[0]] = decodeURIComponent(pair[1]);
-                        // If second entry with this name
-                    } else if (typeof query_string[pair[0]] === "string") {
-                        var arr = [ query_string[pair[0]],decodeURIComponent(pair[1]) ];
-                        query_string[pair[0]] = arr;
-                        // If third or later entry with this name
-                    } else {
-                        query_string[pair[0]].push(decodeURIComponent(pair[1]));
-                    }
-                }
-                return query_string;
-            }();
-        </script>
-    </div>
     <script>
         window.onload = function() {
+            // Making a new dat.gui interface
+
             var mapTweekerUI = new mapTweeker();
             var gui = new dat.GUI({width:350});
 
@@ -1527,6 +1625,7 @@
 <div id="show-row-col">
     <script>
         $(function(){
+            // to show the position of a cell on hover
             $('body').on('mouseenter', '.cell', function(event){
                 var row = $(this).data("row");
                 var col = $(this).data("col");
