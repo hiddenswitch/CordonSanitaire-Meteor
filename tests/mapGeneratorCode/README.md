@@ -41,6 +41,29 @@ Generating new maps is really simple, and can be used without setting up a local
 	b. Under "tweek", click "cleanSlate"
 		This will give you a map with no roads, the same size as specified above
 
+#####Changing Scale#####
+To make the map appear smaller or bigger:
+1. Go to the tab to the right
+2. Under "resizeDisplay", choose cellSize
+3. Click "resizeCurrent" to have the current map resized
+
+#####Changing Default Values#####
+To change the values that the tool starts with, in `mapTweekerTester.html` (using an editor) change the following parameters:
+```
+// Default values
+
+// For generating the map
+var numTilesCol = 40;
+var numTilesRow = 50;
+var blockWidth = 8;
+var blockHeight = 8;
+
+...
+
+// the zoom factor for display
+var cellSize = 9;
+```
+
 ####Saving Maps####
 Saving maps also does not require a local server.
 
@@ -71,7 +94,7 @@ if it still has its default mapping.
 
 To get a new map into the game:
 
-1. Under `Server>maps.js` insert the name of the map
+1. Under `Server>maps.js` insert the name of the map (using an editor)
 ```
 // These are the map IDs to use for new games
     var mapInfos = _.map([
@@ -86,7 +109,7 @@ To get a new map into the game:
     ]
 ```
 2. Under `Settings>singleplayer.json` (or which ever setting you want to play under), insert the name of the map
-corresponding to "map"
+corresponding to "map" (using an editor)
 ```
 {
   "public": {
