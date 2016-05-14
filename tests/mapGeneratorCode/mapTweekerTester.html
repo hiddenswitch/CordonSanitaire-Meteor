@@ -1248,13 +1248,8 @@
                 var encodedUri = encodeURI(csvContent);
                 var link = document.createElement("a");
                 link.setAttribute("href", encodedUri);
-                var name = this.mapNameToSave;
-                if (!name){
-                    var millis = new Date();
-                    var filename = "cs_map_" + millis.getTime() + ".csv";
-                } else {
-                    var filename = name + ".csv";
-                }
+                var millis = new Date();
+                var filename = "cs_map_" + millis.getTime() + ".csv";
 
                 link.setAttribute("download", filename);
 
@@ -1264,7 +1259,6 @@
 
 
             var mapTweeker = function() {
-                this.mapNameToSave = "newMap";
                 this.mapNameToLoad = "test12";
                 this.cellSize = cellSize;
 
@@ -1311,7 +1305,7 @@
 
                 }
 
-                this.saveWithDefinedMapping = function(){
+                this.userDefined_Mapping = function(){
 //                    markIntersections(currentMap, true);
                     var newMap = [];
                     for (var i= 0; i<currentMap.length; i++){
@@ -1436,7 +1430,7 @@
                     currentMapSafetyCopy  = $.extend(true, [], currentMap);
 
                 }
-                this.saveWithDefaultMapping = function(){
+                this.default_Mapping = function(){
 //                    markIntersections(currentMap, true);
                     saveMap(currentMap);
                 };
@@ -1473,7 +1467,7 @@
     <script>
         window.onload = function() {
             var mapTweekerUI = new mapTweeker();
-            var gui = new dat.GUI();
+            var gui = new dat.GUI({width:350});
 
 
             var f1 = gui.addFolder("tweek");
@@ -1512,9 +1506,8 @@
             f3.add(mapTweekerUI, 'resizeCurrent');
 
             var f5 = gui.addFolder("save");
-            f5.add(mapTweekerUI, 'mapNameToSave');
-            f5.add(mapTweekerUI, 'saveWithDefaultMapping');
-            f5.add(mapTweekerUI, "saveWithDefinedMapping");
+            f5.add(mapTweekerUI, 'default_Mapping');
+            f5.add(mapTweekerUI, "userDefined_Mapping");
 
             var f2 = gui.addFolder("load");
             f2.add(mapTweekerUI, 'mapNameToLoad');

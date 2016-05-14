@@ -50,8 +50,12 @@ canvas {
     background-color: yellow;
 }
 
-.black:hover, .black2:hover{
+.black:hover, .intersection:hover{
     background-color: midnightblue;
+}
+
+.horStop:hover, .verStop:hover{
+    background-color: gold;
 }
 
 .grey:hover{
