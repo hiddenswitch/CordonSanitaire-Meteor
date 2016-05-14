@@ -535,7 +535,7 @@
                 }
 
                 combineDisconnected(map);
-                markIntersections(map);
+                markIntersections(map, false);
                 return map;
             }
 
@@ -756,14 +756,56 @@
 
             };
 
+
+            var checkForStop = function(map, i, j) {
+                if (TileType.PASSABLE.has(map[i][j])) {
+                    if ((i > 0) && (map[i - 1][j] in INTERSECTIONS )) {//up
+                        return [true, VER_STOP];
+                    }
+                    if ((j > 0) && (map[i][j - 1] in INTERSECTIONS )) {//left
+                        return [true, HOR_STOP];
+                    }
+                    if ((j < map[0].length - 1) && (map[i][j+1] in INTERSECTIONS)) {//right
+                        return [true, HOR_STOP];
+                    }
+                    if ((i < map.length - 1) && (map[i+1][j] in INTERSECTIONS)) {//down
+                        return [true, VER_STOP];
+                    }
+                }
+                return [false, null];
+            }
+
             // mutates
             // these are the tiles that the player stops at
+            // looks at the tiles around (i,j)
             var markOrRemoveIntersectionStopTiles = function(map, i, j, mark, updateMap){
                 if (!map[i] || !map[i][j]){
                     return;
                 }
 
                 if (map[i][j] in INTERSECTIONS){ // it is an intersection
+                    if (!mark) { // we are removing this, so might as well unmark it here
+                        map[i][j] = UNKNOWN_ROAD; // since only removing roads does this, it's going to be fixed later
+                        var [isStop, type] = checkForStop(map, i, j);
+                        if (isStop) { // it is actually a stop for some other intersection
+                            if (type === HOR_STOP) {
+                                if (updateMap) {
+                                    $("[data-row='" + (i) + "'][data-col='" + (j) + "']").removeClass().addClass("cell").addClass("horStop");
+                                }
+                                map[i][j] = HOR_STOP;
+                            } else {
+                                if (updateMap) {
+                                    $("[data-row='" + (i) + "'][data-col='" + (j) + "']").removeClass().addClass("cell").addClass("verStop");
+                                }
+                                map[i][j] = VER_STOP;
+
+                            }
+                        } else {
+                            if (updateMap) {
+                                $("[data-row='" + (i) + "'][data-col='" + (j) + "']").removeClass().addClass("cell").addClass("black");
+                            }
+                        }
+                    }
                     if ((i>0) && ROADS.has(map[i-1][j])) {//up
                         if (mark){
                             if(updateMap) {
@@ -771,10 +813,27 @@
                             }
                             map[i-1][j] = VER_STOP;
                         } else {
-                            if(updateMap) {
-                                $("[data-row='" + (i - 1) + "'][data-col='" + (j) + "']").removeClass().addClass("cell").addClass("black");
+                            var [isStop, type] = checkForStop(map, i-1, j);
+                            if (isStop){ // it is actually a stop for some other intersection
+                                if (type === HOR_STOP){
+                                    if (updateMap){
+                                        $("[data-row='" + (i - 1) + "'][data-col='" + (j) + "']").removeClass().addClass("cell").addClass("horStop");
+                                    }
+                                    map[i-1][j] = HOR_STOP;
+                                } else {
+                                    if (updateMap){
+                                        $("[data-row='" + (i - 1) + "'][data-col='" + (j) + "']").removeClass().addClass("cell").addClass("verStop");
+                                    }
+                                    map[i-1][j] = VER_STOP;
+
+                                }
+                            } else {
+                                if(updateMap) {
+                                    $("[data-row='" + (i - 1) + "'][data-col='" + (j) + "']").removeClass().addClass("cell").addClass("black");
+                                }
+                                map[i-1][j] = VER_ROAD;
                             }
-                            map[i-1][j] = VER_ROAD;
+
                         }
 
                     }
@@ -785,10 +844,26 @@
                             }
                             map[i][j-1] = HOR_STOP;
                         } else{
-                            if(updateMap) {
-                                $("[data-row='" + (i) + "'][data-col='" + (j - 1) + "']").removeClass().addClass("cell").addClass("black");
+                            var [isStop, type] = checkForStop(map, i, j-1);
+                            if (isStop){ // it is actually a stop for some other intersection
+                                if (type === HOR_STOP){
+                                    if (updateMap){
+                                        $("[data-row='" + (i) + "'][data-col='" + (j-1) + "']").removeClass().addClass("cell").addClass("horStop");
+                                    }
+                                    map[i][j-1] = HOR_STOP;
+                                } else {
+                                    if (updateMap){
+                                        $("[data-row='" + (i) + "'][data-col='" + (j-1) + "']").removeClass().addClass("cell").addClass("verStop");
+                                    }
+                                    map[i][j-1] = VER_STOP;
+
+                                }
+                            } else {
+                                if(updateMap) {
+                                    $("[data-row='" + (i) + "'][data-col='" + (j-1) + "']").removeClass().addClass("cell").addClass("black");
+                                }
+                                map[i][j-1] = VER_ROAD;
                             }
-                            map[i][j-1] = HOR_ROAD;
                         }
 
                     }
@@ -799,10 +874,26 @@
                             }
                             map[i][j+1] = HOR_STOP;
                         } else {
-                            if(updateMap) {
-                                $("[data-row='" + (i) + "'][data-col='" + (j + 1) + "']").removeClass().addClass("cell").addClass("black");
+                            var [isStop, type] = checkForStop(map, i, j+1);
+                            if (isStop){ // it is actually a stop for some other intersection
+                                if (type === HOR_STOP){
+                                    if (updateMap){
+                                        $("[data-row='" + (i) + "'][data-col='" + (j+1) + "']").removeClass().addClass("cell").addClass("horStop");
+                                    }
+                                    map[i][j+1] = HOR_STOP;
+                                } else {
+                                    if (updateMap){
+                                        $("[data-row='" + (i) + "'][data-col='" + (j+1) + "']").removeClass().addClass("cell").addClass("verStop");
+                                    }
+                                    map[i][j+1] = VER_STOP;
+
+                                }
+                            } else {
+                                if(updateMap) {
+                                    $("[data-row='" + (i) + "'][data-col='" + (j+1) + "']").removeClass().addClass("cell").addClass("black");
+                                }
+                                map[i][j+1] = VER_ROAD;
                             }
-                            map[i][j+1] = HOR_ROAD;
                         }
 
                     }
@@ -814,29 +905,47 @@
                             map[i+1][j] = VER_STOP;
 
                         } else {
-                            if(updateMap) {
-                                $("[data-row='" + (i + 1) + "'][data-col='" + (j) + "']").removeClass().addClass("cell").addClass("black");
-                            }
-                            map[i+1][j] = VER_ROAD;
+                            var [isStop, type] = checkForStop(map, i+1, j);
+                            if (isStop){ // it is actually a stop for some other intersection
+                                if (type === HOR_STOP){
+                                    if (updateMap){
+                                        $("[data-row='" + (i+1) + "'][data-col='" + (j) + "']").removeClass().addClass("cell").addClass("horStop");
+                                    }
+                                    map[i+1][j] = HOR_STOP;
+                                } else {
+                                    if (updateMap){
+                                        $("[data-row='" + (i+1) + "'][data-col='" + (j) + "']").removeClass().addClass("cell").addClass("verStop");
+                                    }
+                                    map[i+1][j] = VER_STOP;
 
+                                }
+                            } else {
+                                if(updateMap) {
+                                    $("[data-row='" + (i+1) + "'][data-col='" + (j) + "']").removeClass().addClass("cell").addClass("black");
+                                }
+                                map[i+1][j] = VER_ROAD;
+                            }
                         }
                     }
                 }
             };
 
+
             // mutates
-            var markIntersections = function(map){
+            var markIntersections = function(map, display){
 
                 for (var i = 0; i< map.length; i++){ // i is y is row
                     for (var j = 0; j<map[0].length; j++){ // j is x is col
                         var [isIntersection, intersectionID] = checkIntersection(map, i, j);
                         if(isIntersection){
                             map[i][j] = intersectionID;
-                            markOrRemoveIntersectionStopTiles(map, i, j, true, false);
+                            markOrRemoveIntersectionStopTiles(map, i, j, true, display);
                         }
                     }
                 }
             };
+
+
         </script>
     </div>
 
@@ -940,6 +1049,7 @@
                     $("#add").prop("disabled",false);
                     $("#remove").prop("disabled",false);
                     $("#reset").prop("disabled",true);
+//                    markIntersections(currentMap, true);
                     currentMapSafetyCopy = $.extend(true, [], currentMap);
 
                     // hide away edit options
@@ -1018,11 +1128,11 @@
                                 markOrRemoveIntersectionStopTiles(currentMap, row, col+1, true, true);
                             }
                         } else if (editingRemove) {
-                            $(this).removeClass();
-                            $(this).addClass("cell").addClass("grey");
                             if (currentMap[row][col] in INTERSECTIONS){
                                 markOrRemoveIntersectionStopTiles(currentMap, row, col, false, true);
                             }
+                            $(this).removeClass();
+                            $(this).addClass("cell").addClass("grey");
                             currentMap[row][col] = IMPASSABLE; // get rid of current road
 
                             var newIntersections = checkIntersectionOfSurroundings(currentMap, row, col);
@@ -1075,13 +1185,40 @@
                 displayMap(map);
             };
 
+            var saveMap = function(map){
+                var csvContent = "data:text/csv;charset=utf-8,";
+                map.forEach(function(infoArray, index){
+                    dataString = infoArray.join(",");
+                    csvContent += index < map.length ? dataString+ "\n" : dataString;
+
+                });
+
+
+                var encodedUri = encodeURI(csvContent);
+                var link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                var name = this.mapNameToSave;
+                if (!name){
+                    var millis = new Date();
+                    var filename = "cs_map_" + millis.getTime() + ".csv";
+                } else {
+                    var filename = name + ".csv";
+                }
+
+                link.setAttribute("download", filename);
+
+                link.click(); // This will download the data file named "{file name}.csv".
+            }
+
+
+
             var mapTweeker = function() {
                 this.mapNameToSave = "newMap";
                 this.mapNameToLoad = "test12";
                 this.cellSize = cellSize;
 
-                this.numCols = numCols;
-                this.numRows = numRows;
+                this.numBlocksCol = numCols;
+                this.numBlocksRow = numRows;
                 this.blockWidth = blockWidth;
                 this.blockHeight = blockHeight;
                 this.density = 0;
@@ -1105,8 +1242,78 @@
                 this.UP_RIGHT = INTERSECTION1["UP_RIGHT"];
                 this.DOWN_RIGHT = INTERSECTION1["DOWN_RIGHT"];
                 this.DOWN_LEFT = INTERSECTION1["DOWN_LEFT"];
-                this.mappingUpdate = function(){
-                    console.log('moop');
+                this.resetToDefault = function(){
+                    this.IMPASSABLE = IMPASSABLE;
+                    this.VERTICAL = VER_ROAD;
+                    this.HORIZONTAL = HOR_ROAD;
+                    this.HOR_STOP = HOR_STOP;
+                    this.VER_STOP = VER_STOP;
+                    this.PLUS = INTERSECTION1["PLUS"];
+                    this.T_LEFT = INTERSECTION1["T_LEFT"];
+                    this.T_RIGHT = INTERSECTION1["T_RIGHT"];
+                    this.T_UP = INTERSECTION1["T_UP"];
+                    this.T_DOWN = INTERSECTION1["T_DOWN"];
+                    this.UP_LEFT = INTERSECTION1["UP_LEFT"];
+                    this.UP_RIGHT = INTERSECTION1["UP_RIGHT"];
+                    this.DOWN_RIGHT = INTERSECTION1["DOWN_RIGHT"];
+                    this.DOWN_LEFT = INTERSECTION1["DOWN_LEFT"];
+
+                }
+
+                this.saveWithDefinedMapping = function(){
+//                    markIntersections(currentMap, true);
+                    var newMap = [];
+                    for (var i= 0; i<currentMap.length; i++){
+                        newMap.push([]);
+                        for (var j=0; j<currentMap[0].length; j++){
+                            switch(currentMap[i][j]){
+                                case IMPASSABLE:
+                                    newMap[i][j] = this.IMPASSABLE;
+                                    break;
+                                case VER_ROAD:
+                                    newMap[i][j] = this.VERTICAL;
+                                    break;
+                                case HOR_ROAD:
+                                    newMap[i][j] = this.HORIZONTAL;
+                                    break;
+                                case HOR_STOP:
+                                    newMap[i][j] = this.HOR_STOP;
+                                    break;
+                                case VER_STOP:
+                                    newMap[i][j] = this.VER_STOP;
+                                    break;
+                                case INTERSECTION1["PLUS"]:
+                                    newMap[i][j] = this.PLUS;
+                                    break;
+                                case INTERSECTION1["T_LEFT"]:
+                                    newMap[i][j] = this.T_LEFT;
+                                    break;
+                                case INTERSECTION1["T_RIGHT"]:
+                                    newMap[i][j] = this.T_RIGHT;
+                                    break;
+                                case INTERSECTION1["T_UP"]:
+                                    newMap[i][j] = this.T_UP;
+                                    break;
+                                case INTERSECTION1["T_DOWN"]:
+                                    newMap[i][j] = this.T_DOWN;
+                                    break;
+                                case INTERSECTION1["UP_LEFT"]:
+                                    newMap[i][j] = this.UP_LEFT;
+                                    break;
+                                case INTERSECTION1["UP_RIGHT"]:
+                                    newMap[i][j] = this.UP_RIGHT;
+                                    break;
+                                case INTERSECTION1["DOWN_RIGHT"]:
+                                    newMap[i][j] = this.DOWN_RIGHT;
+                                    break;
+                                case INTERSECTION1["DOWN_LEFT"]:
+                                    newMap[i][j] = this.DOWN_LEFT;
+                                    break;
+
+                            }
+                        }
+                    }
+                    saveMap(newMap);
                 };
                 
                 this.update = function(){
@@ -1142,6 +1349,7 @@
                     currentMapSafetyCopy  = $.extend(true, [], currentMap);
                 };
                 this.load = function(){
+                    $("#mapboard").html("");
                     mapName = this.mapNameToLoad;
                     $.get(mapName + ".csv", function(data) {
                         var rows = data.split("\n");
@@ -1171,31 +1379,11 @@
                     currentMapSafetyCopy  = $.extend(true, [], currentMap);
 
                 }
-                this.save = function(){
-                    var csvContent = "data:text/csv;charset=utf-8,";
-                    currentMap.forEach(function(infoArray, index){
-                        dataString = infoArray.join(",");
-                        csvContent += index < currentMap.length ? dataString+ "\n" : dataString;
-
-                    });
-
-
-                    var encodedUri = encodeURI(csvContent);
-                    var link = document.createElement("a");
-                    link.setAttribute("href", encodedUri);
-                    var name = this.mapNameToSave;
-                    if (!name){
-                        var millis = new Date();
-                        var filename = "cs_map_" + millis.getTime() + ".csv";
-                    } else {
-                        var filename = name + ".csv";
-                    }
-
-                    link.setAttribute("download", filename);
-
-                    link.click(); // This will download the data file named "{file name}.csv".
-
+                this.saveWithDefaultMapping = function(){
+//                    markIntersections(currentMap, true);
+                    saveMap(currentMap);
                 };
+                
             };
         </script>
     </div>
@@ -1230,13 +1418,11 @@
             var mapTweekerUI = new mapTweeker();
             var gui = new dat.GUI();
 
+
             var f1 = gui.addFolder("tweek");
-            f1.add(mapTweekerUI, 'mapNameToSave');
 
-
-
-            f1.add(mapTweekerUI, 'numRows', 1, 20);
-            f1.add(mapTweekerUI, 'numCols', 1, 20);
+            f1.add(mapTweekerUI, 'numBlocksRow', 1, 20);
+            f1.add(mapTweekerUI, 'numBlocksCol', 1, 20);
 
             f1.add(mapTweekerUI, 'blockHeight', 1, 20);
             f1.add(mapTweekerUI, 'blockWidth', 1, 20);
@@ -1245,29 +1431,33 @@
             f1.add(mapTweekerUI, 'deadends');
 
             f1.add(mapTweekerUI, 'update');
-            f1.add(mapTweekerUI, 'save');
 
 
             var f4 = gui.addFolder("defineTileMapping");
-            f4.add(mapTweekerUI, "IMPASSABLE");
-            f4.add(mapTweekerUI, "VERTICAL");
-            f4.add(mapTweekerUI, "HORIZONTAL");
-            f4.add(mapTweekerUI, "VER_STOP");
-            f4.add(mapTweekerUI, "HOR_STOP");
-            f4.add(mapTweekerUI, "PLUS");
-            f4.add(mapTweekerUI, "T_LEFT");
-            f4.add(mapTweekerUI, "T_RIGHT");
-            f4.add(mapTweekerUI, "T_UP");
-            f4.add(mapTweekerUI, "T_DOWN");
-            f4.add(mapTweekerUI, "UP_LEFT");
-            f4.add(mapTweekerUI, "UP_RIGHT");
-            f4.add(mapTweekerUI, "DOWN_RIGHT");
-            f4.add(mapTweekerUI, "DOWN_LEFT");
-            f4.add(mapTweekerUI, "mappingUpdate");
+            f4.add(mapTweekerUI, "IMPASSABLE").listen();
+            f4.add(mapTweekerUI, "VERTICAL").listen();
+            f4.add(mapTweekerUI, "HORIZONTAL").listen();
+            f4.add(mapTweekerUI, "VER_STOP").listen();
+            f4.add(mapTweekerUI, "HOR_STOP").listen();
+            f4.add(mapTweekerUI, "PLUS").listen();
+            f4.add(mapTweekerUI, "T_LEFT").listen();
+            f4.add(mapTweekerUI, "T_RIGHT").listen();
+            f4.add(mapTweekerUI, "T_UP").listen();
+            f4.add(mapTweekerUI, "T_DOWN").listen();
+            f4.add(mapTweekerUI, "UP_LEFT").listen();
+            f4.add(mapTweekerUI, "UP_RIGHT").listen();
+            f4.add(mapTweekerUI, "DOWN_RIGHT").listen();
+            f4.add(mapTweekerUI, "DOWN_LEFT").listen();
+            f4.add(mapTweekerUI, "resetToDefault")
 
-            var f3 = gui.addFolder("resize");
+            var f3 = gui.addFolder("resizeDisplay");
             f3.add(mapTweekerUI, 'cellSize', 1, 20);
             f3.add(mapTweekerUI, 'resizeCurrent');
+
+            var f5 = gui.addFolder("save");
+            f5.add(mapTweekerUI, 'mapNameToSave');
+            f5.add(mapTweekerUI, 'saveWithDefaultMapping');
+            f5.add(mapTweekerUI, "saveWithDefinedMapping");
 
             var f2 = gui.addFolder("load");
             f2.add(mapTweekerUI, 'mapNameToLoad');
@@ -1275,7 +1465,6 @@
             f2.add(mapTweekerUI, 'loadEmptyMap');
 
             f1.closed = false;
-            f2.closed = false;
             f3.closed = false;
 
             BlockTypesMaker(blockHeight,blockWidth);
