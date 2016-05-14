@@ -1,6 +1,5 @@
 #Cordon Sanitaire#
 ##Map Generator Tool##
-The following blah is blarg!
 
 ###Desciption###
 The map generator tool is a tool to create unique, interesting maps to be used to play Cordon Sanitaire.
@@ -65,7 +64,7 @@ if it still has its default mapping.
 
 1. To load a saved map:
 	a. Go to the tab to the right
-	b. Under "load", write the directory of the map relative to the folder containing the tool (`mapGeneratorCode`)
+	b. Under "load", write the directory of the map relative to the folder containing the tool (`/mapGeneratorCode`)
 	c. Click "load"
 
 ###Inserting New Maps into CS###
