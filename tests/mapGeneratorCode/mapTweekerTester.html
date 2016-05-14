@@ -26,19 +26,29 @@
     <script type="text/javascript" src="dat.gui.js"></script>
     <div id="globalVariables">
         <script>
+            // Default values
+
+            // For generating the map
             var numTilesCol = 40;
             var numTilesRow = 50;
             var blockWidth = 8;
             var blockHeight = 8;
             var numCols = Math.floor(numTilesCol/blockWidth);
             var numRows = Math.floor(numTilesRow/blockHeight);
+
+            // for loading maps
             var mapName;
-            var currentMap;
+
+            // initial density of the map
             var density = 1;
 
+            // the zoom factor for display
             var cellSize = 9;
-            var currentMapSafetyCopy;
-            var unpaddedMap;
+
+            // map copies
+            var currentMap; // the map shown, and actively edited
+            var currentMapSafetyCopy; // a copy for the edited map
+            var unpaddedMap; // a copy of the map without padding, useful for debugging
 
         </script>
     </div>
@@ -1383,7 +1393,7 @@
 
             // The dat.gui interface for inputting parameters to tweek the map
             var mapTweeker = function() {
-                this.mapNameToLoad = "test12";
+                this.mapNameToLoad = "cs_map_1463203007411";
                 this.cellSize = cellSize;
 
                 this.numTilesCol = numTilesCol;
@@ -1525,7 +1535,11 @@
                 this.load = function(){
                     $("#mapboard").html("");
                     mapName = this.mapNameToLoad;
-                    $.get(mapName + ".csv", function(data) {
+                    var ext = mapName.slice(-4);
+                    if (!(ext === ".csv")){
+                        mapName += ".csv";
+                    }
+                    $.get(mapName, function(data) {
                         var rows = data.split("\n");
 
                         var parsedMap = [];
@@ -1547,7 +1561,7 @@
 
                 };
 
-                this.loadEmptyMap = function(){
+                this.cleanSlate = function(){
                     currentMap = emptyMapGenerate(numRows, numCols);
                     displayMap(currentMap);
                     currentMapSafetyCopy  = $.extend(true, [], currentMap);
@@ -1580,7 +1594,7 @@
             f1.add(mapTweekerUI, 'deadends');
 
             f1.add(mapTweekerUI, 'update');
-
+            f1.add(mapTweekerUI, 'cleanSlate');
 
             var f4 = gui.addFolder("defineTileMapping");
             f4.add(mapTweekerUI, "IMPASSABLE").listen();
@@ -1610,7 +1624,6 @@
             var f2 = gui.addFolder("load");
             f2.add(mapTweekerUI, 'mapNameToLoad');
             f2.add(mapTweekerUI, 'load');
-            f2.add(mapTweekerUI, 'loadEmptyMap');
 
             f1.closed = false;
             f3.closed = false;
