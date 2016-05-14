@@ -4,5 +4,6 @@
  **/
 Accounts.onCreateUser(function (options, user) {
     user.hasSeenTutorial = false;
+    user.sms = null;
     return user;
 });

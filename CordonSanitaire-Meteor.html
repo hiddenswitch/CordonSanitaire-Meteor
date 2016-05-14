@@ -7,30 +7,23 @@
     <meta http-equiv='expires' content='0'>
     <meta http-equiv='pragma' content='no-cache'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
-    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
 </head>
 
 <!--Sign Up-->
 <template name="signup">
-    {{> loginButtons}}
+    <div id="splash">
+        <img src="/assets/splash/splash_03.jpg"/>
+    </div>
     <div class="textCenter">
         <div id="signup_header">
-            <h1> CORDON SANITAIRE</h1>
-            <p>
-                Cordon Sanitaire is a collaborative game in which players seek to isolate an infectious “patient zero”
-                from
-                the larger population. The game lasts for two minute. In 60 seconds, players must choose either to help
-                form
-                the front line of a quarantine, or remain passive.
-            </p>
+            <h1 class="logotype">CORDON SANITAIRE</h1>
         </div>
-
+        <div id="splash_body">
+            As long as there have been cities, there have been plagues. And every plague has been met with the same
+            idea: isolate the healthy from the sick. Every once in a while, it works.
+        </div>
         <div id="signup_body">
-            <button class="inputButton fbButton" id="fbLogin">Sign in with Facebook</button>
-            <br>
-            <p class="lilMargin">or</p><br>
-            <button class="inputButton guestButton" id="guest">Play as guest</button>
-            <!--<input class="inputButton guestButton" id="guest" type="button" onClick=""  value="Play as guest">-->
+            <button class="inputButton guestButton splashButton" id="guest">PREPARE FOR OUTBREAK</button>
         </div>
     </div>
 </template>
@@ -38,19 +31,45 @@
 <!--Log In-->
 <template name="login">
     {{> loginButtons}}
-    <!--<h2>Log in</h2>-->
-    <!--<input id="username" type="text" placeholder="username">-->
-    <!--<input id="password" type="text" placeholder="password">-->
-    <!--<button id="logIn" onclick="logIn()">Log In</button>-->
 </template>
 
+<!--Main Menu-->
 <template name="mainmenu">
-    {{> loginButtons}}
     <div class="textCenter">
         <div class="textCenter vertCenter">
-            <button class="inputButton playButton" id="play">Play now</button>
-            <button class="inputButton profileButton" id="profile">My profile</button>
-            <button class="inputButton tutButton" id="tutorial">Tutorial</button>
+            {{#if showPlayButton}}
+                <button class="inputButton playButton" id="play">PLAY NOW</button>
+                <button class="inputButton tutButton" id="tutorial">TUTORIAL</button>
+                <button class="inputButton optionsButton" id="options">OPTIONS</button>
+            {{else}}
+                <div>
+                    {{#if showTextSignUp}}
+                        <!-- Sign up for Twilio -->
+                        <span class="stay-calm">STAY CALM</span>
+                        <p class="mainMenuText">No outbreak. No game in progress.
+                            Add your cell number to be notified of the next outbreak.</p>
+                        <input type="text" id="sms_number" placeholder="(555)555-1234">
+                        <button class="inputButton" id="submit_sms">TEXT ME</button>
+                    {{else}}
+                        <span class="stay-calm">AT THE READY</span>
+                        <p class="mainMenuText">No outbreak. No game in progress. You’ll be notified at <span
+                                class="cellNumber">{{cellNumber}}</span> when the next outbreak occurs.</p>
+                        <button class="inputButton tutButton" id="tutorial">TUTORIAL</button>
+                        <button class="inputButton optionsButton" id="options">OPTIONS</button>
+                    {{/if}}
+                </div>
+            {{/if}}
+        </div>
+    </div>
+</template>
+
+<!-- Notification Confirmation Page -->
+<template name="notify">
+    <div class="textCenter">
+        <p>We've got you signed up for the next game. No one knows when the next outbreak might be, but we'll let you
+            know when we need more responders.</p>
+        <div class="bottomDiv">
+            <button id="mainmenu" class="inputButton">Main Menu</button>
         </div>
     </div>
 </template>
@@ -69,10 +88,14 @@
         <h2>RESPONSE TEAM</h2>
         <h4>squad: {{gameId}}</h4>
         <br>
-        <div>
-            <p class="lobbyP"><span id="respondersPresent">{{numberOfPlayersPresent}}</span> responders present</p>
-            <p class="lobbyP">Waiting for <span id="respondersToJoin">{{numberOfPlayersNeeded}}</span> more</p>
-        </div>
+        {{#if showLobbyCountdown}}
+        {{else}}
+            <div>
+                <p class="lobbyP"><span id="respondersPresent">{{numberOfPlayersPresent}}</span> responders present</p>
+                <p class="lobbyP">Need <span id="respondersToJoin"><b>{{numberOfPlayersNeeded}}</b></span> more in <span
+                        id="lobbyExpireTime">{{secondsTilExpire}} seconds</span></p>
+            </div>
+        {{/if}}
         <br>
         <!-- List of players in lobby-->
         <div id="players">
@@ -94,24 +117,6 @@
     <!-- Container for countdown -->
     <div id="countdown"><span id="seconds">{{timeLeftInGame.seconds}}</span>.<span
             id="hundredths">{{timeLeftInGame.hundredths}}</span></div>
-
-    <!-- Container for patient zero distance and direction -->
-    <div id="distance-direction-container">
-        <div id="distance-container">
-            <span id="distance">Distance: {{updatePatientZeroDistance}} feet</span>
-        </div>
-        <div id="compass">
-            <div id="compass-needle">
-                <img id="compass-img" src="/assets/sprites/PZero_Compass_needle.png"/>
-            </div>
-            <div id="compass-bg">
-                <img id="compass-img" src="/assets/sprites/PZero_Compass_bg.png"/>
-            </div>
-        </div>
-        {{updatePatientZeroDirection}}
-    </div>
-
-
 
 
     <!-- Logout button for player | Not currently necessary -->
@@ -140,56 +145,52 @@
         {{/if}}
     </div>
 
-    <div id="bottom_container">
-        {{#if showingDestroyButton}}
-            <a href="#" id="destroyButton" class="centerButton quarantineButton destroyButton">DEMOLISH</a>
-            <p class="buttonSubtext">or swipe to keep running</p>
-        {{/if}}
-        {{#if showingBuildButton}}
-                <a href="#" id="buildButton" class="centerButton quarantineButton buildButton">BUILD</a>
-            <p class="buttonSubtext">or swipe to keep running</p>
-        {{/if}}
-        {{#if showingBuildAndDestroyButtons}}
-            <a href="#" id="buildButton" class="leftButton quarantineButton buildButton">BUILD</a>
-            <a href="#" id="destroyButton" class="rightButton quarantineButton destroyButton">DEMO</a>
-            <p class="buttonSubtext">or swipe to keep running</p>
-        {{/if}}
-        <!--<a href="#" id="mainToggleButton" class="mainButton toggleButton">JOIN</a>-->
-        <!--<a href="#" id="shoutButton" class="mainButton shoutButton" onclick="sendShout()">SHOUT!</a>-->
-        <!--<a href="#" id="helloButton" class="mainButton helloButton" onclick="sendHello()">HELLO!</a>-->
-    </div>
-
-    <!-- container for introduction screen -->
-    <div id="intro_container">
-    </div>
-
-    <!-- Container for Phaser Game -->
-    <div id="map-container" style="background:rgb(47,54,61); {{#if isGameZoomedOut}} padding-top: 90px;{{/if}}">
-        {{> worldBoard gameId=gameId}}
-    </div>
-</template>
-
-<!-- Display conclusion after the game -->
-<template name="conclusion">
-    <div class="textCenter">
-        <h2 class="gameOverTitle">Game Over</h2>
-        <p class = "gameOverMessage">Lorem ipsum dolor sit amet, scelerisque erat elit. Vel mauris et tempus pede praesent, luctus mauris laoreet.</p>
-        <p>{{endGameSynopsis}}</p>
-        <div class="finalStats">
-            <ul class="finalStatsList">
-                <li><img class="statsIcon" src="/assets/icons/patientIsolated.png">
-                    <p class="statsDesc">Patient Zero {{pZeroStatus}}</p></li>
-                <li><img class="statsIcon" src="/assets/icons/quarantineCreated.png">
-                    <p class="statsDesc">{{numQuarantines}} quarantine zones built</p></li>
-                <li><img class="statsIcon" src="/assets/icons/barricadeBuilt.png">
-                    <p class="statsDesc">{{numBarricades}} barricades built</p></li>
-                <li><img class="statsIcon" src="/assets/icons/respondentInjured.png">
-                    <p class="statsDesc">{{numInjured}}respondents injured</p></li>
-            </ul>
+    {{#if showGameConclusion}}
+        <!-- Display conclusion after the game -->
+        <div id="conclusion_container">
+            {{#if showPatientZeroIsolated}}
+                <p class="">
+                    <span class="">Patient Zero was isolated</span><br><br>
+                    and the city is saved!<br><br>
+                    Will everyone be this lucky next time?
+                </p>
+            {{/if}}
+            {{#if showPatientZeroContained}}
+                <p class="">
+                    <span class="">Patient Zero was contained</span><br><br>
+                    but {{numberOfPeopleContained}} people were also trapped<br><br>
+                    Next time, try to isolate the disease...
+                </p>
+            {{/if}}
+            {{#if showPatientZeroLoose}}
+                <p class="">
+                    <span class="">Time ran out with Patient Zero on the loose.</span><br><br>
+                    The city is lost.<br><br>
+                    There are still other cities, and other outbreaks…
+                </p>
+            {{/if}}
         </div>
         <div class="bottomDiv">
-            <button id="mainmenu" class="inputButton">Main Menu</button>
+            <button id="mainmenu" class="inputButton">MAIN MENU</button>
         </div>
+    {{else}}
+        <div id="bottom_container">
+            {{#if isMobile}}
+                <a href="#" id="buildButton" class="leftButton quarantineButton buildButton">BUILD</a>
+                <a href="#" id="destroyButton" class="rightButton quarantineButton destroyButton">DEMOLISH</a>
+                <p class="buttonSubtext" id="swipeText">or swipe to keep running</p>
+            {{else}}
+                <p id="stunned">IMMOBILIZED</p>
+                <div id="stunned_sub"><span class="yellow">sit tight, and see if your team can save you.</span></div>
+            {{/if}}
+        </div>
+    {{/if}}
+
+
+    <!-- Container for Phaser Game -->
+    <div id="map-container"
+         style="background:rgb(20,20,20); {{#if isGameZoomedOut}} padding-top: 70px; padding-bottom: {{gameBottomPadding}}px;{{/if}}">
+        {{> worldBoard gameId=gameId}}
     </div>
 </template>
 
@@ -217,7 +218,35 @@
             </ul>
         </div>
         <div class="bottomDiv">
-            <button id="mainmenu" class="inputButton">Main Menu</button>
+            <button id="mainmenu" class="inputButton">MAIN MENU</button>
+        </div>
+    </div>
+</template>
+
+<template name="expired">
+    <div class="textCenter">
+        <div class="vertCenter">
+            <p class="mainMenuText">Not enough responders joined.</p>
+            <button class="inputButton" id="try-again">TRY AGAIN</button>
+            <br>
+            <br>
+            <p class="mainMenuText">or we'll let you know for the next outbreak.</p>
+        </div>
+        <div class="bottomDiv">
+            <button id="mainmenu" class="inputButton">MAIN MENU</button>
+        </div>
+    </div>
+</template>
+
+<template name="options">
+    <div class="textCenter">
+        <div class="vertCenter">
+            <button class="inputButton" id="removeSMS">REMOVE SMS</button>
+            <button class="inputButton" id="signOut">DELETE ACCOUNT</button>
+            <a href="mailto:playful@media.mit.edu" class="inputButton" id="contact">CONTACT US</a>
+        </div>
+        <div class="bottomDiv">
+            <button id="mainmenu" class="inputButton">MAIN MENU</button>
         </div>
     </div>
 </template>

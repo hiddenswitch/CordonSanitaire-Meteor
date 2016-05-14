@@ -1,3 +1,4 @@
+abhiaiyer:meteor-twilio@0.0.5
 accounts-base@1.2.2
 accounts-facebook@1.0.6
 accounts-oauth@1.1.8
@@ -25,6 +26,7 @@ ddp-rate-limiter@1.0.0
 ddp-server@1.2.2
 deps@1.0.9
 diff-sequence@1.0.1
+doctorpangloss:admin@1.0.1
 ecmascript@0.1.6
 ecmascript-runtime@0.2.6
 ejson@1.0.7
@@ -69,6 +71,7 @@ oauth@1.1.6
 oauth2@1.1.5
 observe-sequence@1.0.7
 ordered-dict@1.0.4
+percolatestudio:synced-cron@1.1.0
 promise@0.5.1
 random@1.0.5
 rate-limit@1.0.0

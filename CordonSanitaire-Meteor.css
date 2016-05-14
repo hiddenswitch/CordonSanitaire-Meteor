@@ -1,34 +1,11 @@
 /* CSS declarations go here */
+@import url(https://fonts.googleapis.com/css?family=Rajdhani:400,500,700,600);
+
 * {
     margin: 0px;
     padding: 0px;
     /*font-family: sans-serif;*/
     font-family: 'Open Sans', sans-serif;
-}
-
-h1 {
-    /*font-weight: lighter;*/
-    /*font-size: 2em;*/
-}
-
-h2 {
-    /*font-weight: lighter;*/
-    /*font-size: 1em;*/
-}
-
-h3 {
-}
-
-p {
-}
-
-ol {
-}
-
-ul {
-}
-
-li {
 }
 
 body {
@@ -49,6 +26,7 @@ button {
     top: 2px;
     right: 2px
 }
+
 /* An invisible full screen object that serves as a container for the info box - hidden at
 start of game */
 #overlay {
@@ -81,8 +59,8 @@ start of game */
     color: white;
 }
 
-#intro p{
-    color:white;
+#intro p {
+    color: white;
 }
 
 #version {
@@ -127,21 +105,21 @@ start of game */
     margin: 0 0 10px 0;
 }
 
-.minibox h2{
+.minibox h2 {
     font-size: 1.3em;
     font-weight: bold;
     text-align: center;
     color: #000000;
 }
 
-#lobby_count p{
+#lobby_count p {
     line-height: 1.3em;
 }
 
 #lobby_container {
     width: 100%;
     height: 100%;
-    background: rgba(255,255,255,0.8);
+    background: rgba(255, 255, 255, 0.8);
     position: absolute;
 }
 
@@ -158,7 +136,6 @@ start of game */
     margin: 5%;
     height: 50px;
     line-height: 50px;
-    background: rgba(0,0,0,1);
     color: white;
     font-family: sans-serif;
     font-size: 2.3em;
@@ -185,7 +162,7 @@ start of game */
 
 #distance-container {
     visibility: hidden;
-    background: rgba(0,0,0,1);
+    background: rgba(0, 0, 0, 1);
     color: white;
     border-radius: 5px;
     padding: 6px 10px 6px 30px;
@@ -290,19 +267,19 @@ start of game */
 #p0_loose {
     /*display: none;*/
     z-index: 100;
-    width: 200px;
+    width: 160px;
 }
 
 #p0_contained {
     /*display: none;*/
     z-index: 100;
-    width: 200px;
+    width: 160px;
 }
 
 #p0_isolated {
     /*display: none;*/
     z-index: 100;
-    width: 200px;
+    width: 160px;
 }
 
 #end_game {
@@ -330,9 +307,9 @@ start of game */
     -moz-user-select: none;
     -ms-user-select: none;
 
-    -moz-border-radius: 50px;
-    -webkit-border-radius: 50px;
-    border-radius: 50px;
+    -moz-border-radius: 20px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
     border: 3px solid #000000;
     display: inline-block;
     cursor: pointer;
@@ -347,21 +324,24 @@ start of game */
 }
 
 .centerButton {
+    font-family: 'Rajdhani', sans-serif;
     bottom: 40px;
     width: 50%;
     margin: 0 25% 0 25%;
 }
 
 .leftButton {
+    font-family: 'Rajdhani', sans-serif;
     bottom: 40px;
-    width: 30%;
-    margin: 0 55% 0 15%;
+    width: 40%;
+    margin: 0 55% 0 5%;
 }
 
 .rightButton {
+    font-family: 'Rajdhani', sans-serif;
     bottom: 40px;
-    width: 30%;
-    margin: 0 15% 0 55%;
+    width: 40%;
+    margin: 0 5% 0 55%;
 }
 
 .buttonSubtext {
@@ -371,102 +351,54 @@ start of game */
     margin: 0 10% 0 10%;
     font-size: 14px;
     font-weight: bold;
-    color: rgba(164,182,200,1.0);
+    color: rgba(164, 182, 200, 1.0);
     text-align: center;
 }
 
 .cancelButton {
-    background-color: rgba(164,182,200,0.9);
+    font-family: 'Rajdhani', sans-serif;
+    background-color: rgba(164, 182, 200, 0.9);
 }
 
 .buildButton {
-    background-color: rgba(253,238,74,0.9);
+    font-family: 'Rajdhani', sans-serif;
+    color: rgba(0, 0, 0, 0.2);
+    border-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(164, 182, 200, 0.2);
 }
 
 .destroyButton {
-    background-color: rgba(63,72,83,0.9);
-    color: rgba(164,182,200,0.9);
-}
-
-/* Main button styling */
-.mainButton {
-    z-index: 999;
-    position: absolute;
-    bottom: 20px;
-    width: 40%;
-    height: 50px;
-    margin: 0 30% 0 30%;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-
-    background-color: #ffffff;
-    -moz-border-radius: 40px;
-    -webkit-border-radius: 40px;
-    border-radius: 40px;
-    border: 3px solid #000000;
-    display: inline-block;
-    cursor: pointer;
-    font-size: 24px;
-    color: #000000;
-    font-family: Trebuchet, Arial, sans-serif;
-    font-weight: bold;
-    padding: 0px;
-    text-decoration: none;
-    text-align: center;
-    line-height: 50px;
-}
-
-/* introduction screen styling*/
-#intro_container {
-    display: none;
-    position: fixed;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #111111;
-    z-index: 1100;
-}
-
-#title{
-    font-size: .67em;
-    padding: 20px 30px;
-    color: white;
-}
-
-#intro_container img{
-    width: 85%;
-    margin: 0 7.5%;
-}
-
-#intro_text{
-    font-size: .7em;
-    font-weight: lighter;
-    text-align: left;
-    line-height: 1.2em;
-    padding: 20px 30px;
-    color: white;
+    font-family: 'Rajdhani', sans-serif;
+    color: rgba(0, 0, 0, 0.2);
+    border-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(164, 182, 200, 0.2);
 }
 
 /* Styling for sign up screen */
 .inputButton {
+    font-family: 'Rajdhani', sans-serif;
     border: 1.5px solid black;
     background-size: 100%; /* To fill the dimensions of container (button), or */
     background-size: 40px auto; /* to specify dimensions explicitly */
-    font-family: 'Open Sans', sans-serif;
     background-color: white;
     color: #000;
-    font-weight: 700;
-    font-size: 16px;
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 30px;
     width: 70%;
     height: 50px;
-    margin-top:20px;
+    margin-top: 20px;
     margin-left: auto;
     margin-right: auto;
     border-radius: 0px;
 }
 
 .guestButton {
+    background-color: #000;
+    color: white;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 18px;
+    line-height: 30px;
     margin-top: 0px;
     margin-bottom: 0px;
     position: relative;
@@ -474,6 +406,7 @@ start of game */
 }
 
 .fbButton {
+    font-family: 'Rajdhani', sans-serif;
     border: 0;
     background-color: #3b5998;
     color: white;
@@ -483,12 +416,43 @@ start of game */
 #signup_body {
     text-align: center;
     margin: auto;
-    width:100%;
+    width: 100%;
     display: block;
     position: fixed;
     bottom: 0;
     padding-bottom: 20px;
     right: 0.3%;
+}
+
+.mainMenuText {
+    width: 70%;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    font-size: .7em;
+}
+
+.cellNumber {
+    font-weight: bold;
+    font-family: Rajdhani, SansSerif;
+}
+
+#sms_number {
+    font-family: 'Rajdhani', sans-serif;
+    border: 1.5px solid black;
+    background-size: 100%; /* To fill the dimensions of container (button), or */
+    background-size: 40px auto; /* to specify dimensions explicitly */
+    background-color: white;
+    color: #000;
+    font-weight: 700;
+    font-size: 16px;
+    text-align: center;
+    width: 70%;
+    height: 50px;
+    margin-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 0px;
 }
 
 /* spacing */
@@ -503,7 +467,7 @@ start of game */
 }
 
 .vertCenter {
-    margin-top:50%;
+    margin-top: 50%;
 }
 
 .lilMargin {
@@ -522,7 +486,7 @@ start of game */
 }
 
 #players ul {
-   list-style: none;
+    list-style: none;
 }
 
 #players li {
@@ -536,7 +500,7 @@ start of game */
 .bottomDiv {
     text-align: center;
     margin: auto;
-    width:100%;
+    width: 100%;
     display: block;
     position: fixed;
     bottom: 0;
@@ -547,14 +511,14 @@ start of game */
 .profImg {
     background-color: black;
     border-radius: 30px;
-    height:60px;
-    width:60px;
+    height: 60px;
+    width: 60px;
     margin: 0 auto;
     margin-top: 10px;
 }
 
 .playerStatsList {
-    list-style-type:none;
+    list-style-type: none;
     font-family: 'Open Sans', sans-serif;
     font-weight: 400;
     padding: 0;
@@ -572,7 +536,173 @@ start of game */
 
 .statsIcon {
     display: inline-block;
-    width:15%;
+    width: 15%;
     vertical-align: middle;
 }
 
+/* Chrome, Safari, Opera */
+@-webkit-keyframes playButtonAnimation {
+    0% {
+        background-color: white;
+    }
+    50% {
+        background-color: #ff4444;
+    }
+    100% {
+        background-color: white;
+    }
+}
+
+/* Standard syntax */
+@keyframes playButtonAnimation {
+    0% {
+        background-color: white;
+    }
+    50% {
+        background-color: #ff4444;
+    }
+    100% {
+        background-color: white;
+    }
+}
+
+.playButton {
+    -webkit-animation-name: playButtonAnimation; /* Chrome, Safari, Opera */
+    -webkit-animation-duration: 1.2s; /* Chrome, Safari, Opera */
+    -webkit-animation-iteration-count: infinite; /* Chrome, Safari, Opera */
+    -webkit-animation-timing-function: ease-in-out;
+    animation-name: playButtonAnimation;
+    animation-duration: 1.2s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+
+    font-weight: 600;
+}
+
+#contact {
+    display: block;
+    line-height: 50px;
+    text-decoration: none;
+}
+
+#splash {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+#splash img {
+    /*width: 100%;*/
+    height: 100%;
+}
+
+#logotype {
+    width:280px;
+    position: fixed;
+    top: 80px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.logotype {
+    font-family: 'Rajdhani', sans-serif;
+    text-shadow: 2px 2px 5px #000000;
+    font-size: 8vw;
+    color: #ffff00;
+    padding: 40% 10% 45% 10%;
+}
+
+#splash_body {
+    width: 70%;
+    color: #ffffff;
+    margin-left: auto;
+    margin-right: auto;
+    color: #ffffff;
+    text-align: left;
+    text-shadow: 0px 0px 5px #000000;
+    font-size: 3.5vw;
+    line-height: 1.5em;
+    font-family: Rajdhani, SansSerif;
+    font-weight: 500;
+}
+
+#swipeText {
+    visibility: hidden;
+}
+
+#conclusion_container {
+    z-index: 100;
+    position: absolute;
+    background: rgba(0,0,0,.7);
+    padding: 20px;
+    width: 60%;
+    margin-top: 40%;
+    margin-left: 15%;
+    margin-right: 20%;
+    text-align: left;
+    border-radius: 10px;
+    color: white;
+    line-height: 1.5em;
+    font-weight: lighter;
+    font-size: .9em;
+}
+
+.yellow {
+    color: #FFFF00;
+}
+
+.red {
+    color: #FF4444;
+}
+
+.green {
+    color: rgb(94,254,187);
+}
+
+#stunned {
+    font-family: Rajdhani, SansSerif;
+    font-size: 24px;
+    font-weight: bold;
+    color: rgba(255,255,255,.9);
+    text-align: center;
+}
+
+#stunned_sub {
+    width: 140px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: .7em;
+    text-align: center;
+}
+
+.stay-calm {
+    font-family: Rajdhani, SansSerif;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Standard syntax */
+@keyframes splashButtonAnimation {
+    0% {
+        color: white;
+    }
+    50% {
+        color: #ffff00;
+    }
+    100% {
+        color: white;
+    }
+}
+
+.splashButton {
+    -webkit-animation-name: splashButtonAnimation ; /* Chrome, Safari, Opera */
+    -webkit-animation-duration: 1.2s; /* Chrome, Safari, Opera */
+    -webkit-animation-iteration-count: infinite; /* Chrome, Safari, Opera */
+    -webkit-animation-timing-function: ease-in-out;
+    animation-name: splashButtonAnimation ;
+    animation-duration: 1.2s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+}

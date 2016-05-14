@@ -8,7 +8,8 @@ Meteor.publish('me', function () {
             profile: 1,
             username: 1,
             emails: 1,
-            hasSeenTutorial: 1
+            hasSeenTutorial: 1,
+            sms: 1
         }
     })
 });

@@ -3,11 +3,13 @@
     "maxPlayers": 2,
     "durationSeconds": 60,
     "countdownSeconds": 5,
+    "maximumLobbyWaitSeconds": 20,
     "demolishTimeSeconds": 3,
     "buildTimeSeconds": 6,
     "stunTimeSeconds": 60,
-    "map":"Simple_56_60.csv",
+    "map":"Simple_40_50.csv",
     "uniqueness":true,
-    "zoom": "SHOW_FULL_MAP"
+    "zoom": "SHOW_FULL_MAP",
+    "timeRestrictedEntry": "NO_RESTRICTION"
   }
 }

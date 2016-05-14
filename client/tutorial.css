@@ -1,0 +1,50 @@
+#tutorial-image {
+    width: 100%;
+}
+
+#tutorial-controls {
+    text-align: center;
+    width: 100%;
+    height: 35px;
+    position: absolute;
+    bottom: 35px;
+}
+
+#tutorial-step-count {
+    color: #CCCCCC;
+    font-size: .7em;
+    font-weight: bold;
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    bottom: 0px;
+}
+
+#prevButton {
+    font-family: 'Rajdhani', sans-serif;
+    visibility: hidden;
+    position: absolute;
+    left: 0;
+    border-radius: 0;
+    font-size: 1.8em;
+    line-height: 1.8em;
+}
+
+#nextButton {
+    font-family: 'Rajdhani', sans-serif;
+    position: absolute;
+    right: 0;
+    border-radius: 0;
+    font-size: 1.8em;
+    line-height: 1.8em;
+}
+
+#finishButton {
+    font-family: 'Rajdhani', sans-serif;
+    visibility: hidden;
+    position: absolute;
+    right: 0;
+    border-radius: 0;
+    font-size: 1.8em;
+    line-height: 1.8em;
+}
