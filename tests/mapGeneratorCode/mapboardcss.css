@@ -60,9 +60,63 @@ canvas {
 
 #cell-row-col{
     display: none;
-    background: white;
+    background: whitesmoke;
+    padding: 5px;
+    border-radius: 5px;
 }
 
 #edit-button{
     display: none;
+}
+
+#edit{
+    padding: 5px;
+}
+
+#edit-button, #edit-buttons-show-hide{
+    padding: 5px;
+}
+
+.edit-btn{
+    padding: 10px 15px;
+    background: royalblue;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+.edit-btn:hover{
+    background-color: midnightblue;
+}
+
+
+.edit-btn:disabled{
+    background-color: midnightblue;
+}
+
+#reset{
+    background-color: crimson;
+    margin: 0 30px 0 45px ;
+}
+
+#reset:hover{
+   background-color: darkred;
+}
+
+#reset:disabled{
+    background-color: grey;
+    color: lightgray;
+}
+
+#done{
+    background-color: forestgreen;
+    margin: 0 15px;
+}
+
+#done:hover{
+    background-color: darkgreen;
+}
+
+body{
+    font-family: Calibri, Arial, sans-serif;
 }
