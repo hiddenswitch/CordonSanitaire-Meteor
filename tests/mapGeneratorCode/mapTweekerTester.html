@@ -578,19 +578,20 @@
              */
             var mapGenerate = function(numRows, numCols){
                 var mapEmpty = true;
-                while (mapEmpty){
-                    var map = mapDecode(mapDescriptionGenerate(numRows, numCols));
-                    if ((map.length === Blocks.SOLID.length)&&(map[0].length === Blocks.SOLID.length)){ // for the 5x5 map that will always be empty
-                        break;
-                    }
-                    for (var i = 0; i<map.length; i++){
-                        for (var j = 0; j<map[0].length; j++){
-                            if (STRAIGHT_ROADS.has(map[i][j])){
-                                mapEmpty = false;
-                            }
-                        }
-                    }
-                }
+//                while (mapEmpty){ To disallow empty maps; has an issue of causing the webpage to hang for certain inputs
+//                    var map = mapDecode(mapDescriptionGenerate(numRows, numCols));
+//                    if ((map.length === Blocks.SOLID.length)&&(map[0].length === Blocks.SOLID.length)){ // for the 5x5 map that will always be empty
+//                        break;
+//                    }
+//                    for (var i = 0; i<map.length; i++){
+//                        for (var j = 0; j<map[0].length; j++){
+//                            if (STRAIGHT_ROADS.has(map[i][j])){
+//                                mapEmpty = false;
+//                            }
+//                        }
+//                    }
+//                }
+                var map = mapDecode(mapDescriptionGenerate(numRows, numCols));
 
                 combineDisconnected(map);
                 markIntersections(map, false);
@@ -758,7 +759,7 @@
 
             var addPadding = function(map, numTilesRow, numTilesCol){
                 // for invalid sizes, just return the original map,
-                if (numTilesRow<=map.length || numTilesCol<=map[0].length){
+                if (numTilesRow<map.length || numTilesCol<map[0].length){
                     return map;
                 }
 
@@ -787,7 +788,7 @@
                     }
 
                     // middle portion
-                    paddedMap[i] = paddedMap[i].concat(map[i]);
+                    paddedMap[i] = paddedMap[i].concat(map[i-paddingTop]); //map's i is shifted by paddingTop
 
                     // right padding
                     for (j=paddingLeft+map[0].length; j<numTilesCol; j++){
@@ -1327,7 +1328,7 @@
                                 markOrRemoveIntersectionStopTiles(currentMap, row-1, col, false, true);
                                 currentMap[row-1][col] = UNKNOWN_ROAD;
                             }
-                            if (!newIntersections[2][0] && currentMap[row+1][col] && (currentMap[row+1][col] in INTERSECTIONS)){ //down
+                            if (!newIntersections[2][0] && currentMap[row+1] && (currentMap[row+1][col] in INTERSECTIONS)){ //down
                                 $("[data-row='"+(row+1)+"'][data-col='"+col+"']").removeClass().addClass("cell").addClass("black");
                                 markOrRemoveIntersectionStopTiles(currentMap, row+1, col, false, true);
                                 currentMap[row+1][col] = UNKNOWN_ROAD;
