@@ -34,9 +34,14 @@ var INTERSECTION_TILENUMBER_TO_NAME = { // should never have -1
     "-15": "DOWN_LEFT",
 };
 
+var IMPASSABLE = -888;
+
+// This tile will show up as white, so can help debug issues with the code
+// You can, for example, see what happens to the roads used to connect
+// disconnected components in combineDisconnected()
 var DEBUGGING = -333;
 
-var IMPASSABLE = -888;
+
 
 var TileType = {
     PASSABLE: new Set([HOR_ROAD, VER_ROAD, UNKNOWN_ROAD, DEBUGGING, HOR_STOP, VER_STOP]),
