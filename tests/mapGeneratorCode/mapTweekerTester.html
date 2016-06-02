@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>CS Map Tweeker Tester</title>
-  <link rel="stylesheet" type="text/css" href="mapboardcss.css">
+  <link rel="stylesheet" type="text/css" href="mapboard.css">
 </head>
 <body>
 <div id="edit">
@@ -52,7 +52,7 @@
 
         </script>
     </div>
-    <script type="text/javascript" src="graphStuff.js"></script>
+    <script type="text/javascript" src="graphAlgorithms.js"></script>
     <div id="mapGenerator">
         <script>
             /**
@@ -842,7 +842,7 @@
                         ID *= down;
                     }
                 }
-                if ((ID != -1) && (ID in INTERSECTIONS)){
+                if ((ID != -1) && (ID in INTERSECTION_TILENUMBER_TO_NAME)){
                     return [true, ID];  // ID is new map value
                 }
                 return [false, map[i][j]]; // just return the old value
@@ -931,16 +931,16 @@
              */
             var checkForStop = function(map, i, j) {
                 if (TileType.PASSABLE.has(map[i][j])) {
-                    if ((i > 0) && (map[i - 1][j] in INTERSECTIONS )) {//up
+                    if ((i > 0) && (map[i - 1][j] in INTERSECTION_TILENUMBER_TO_NAME )) {//up
                         return [true, VER_STOP];
                     }
-                    if ((j > 0) && (map[i][j - 1] in INTERSECTIONS )) {//left
+                    if ((j > 0) && (map[i][j - 1] in INTERSECTION_TILENUMBER_TO_NAME )) {//left
                         return [true, HOR_STOP];
                     }
-                    if ((j < map[0].length - 1) && (map[i][j+1] in INTERSECTIONS)) {//right
+                    if ((j < map[0].length - 1) && (map[i][j+1] in INTERSECTION_TILENUMBER_TO_NAME)) {//right
                         return [true, HOR_STOP];
                     }
-                    if ((i < map.length - 1) && (map[i+1][j] in INTERSECTIONS)) {//down
+                    if ((i < map.length - 1) && (map[i+1][j] in INTERSECTION_TILENUMBER_TO_NAME)) {//down
                         return [true, VER_STOP];
                     }
                 }
@@ -963,7 +963,7 @@
                     return;
                 }
 
-                if (map[i][j] in INTERSECTIONS){ // it is an intersection
+                if (map[i][j] in INTERSECTION_TILENUMBER_TO_NAME){ // it is an intersection
                     if (!mark) { // we are removing this, so might as well unmark it here
                         map[i][j] = UNKNOWN_ROAD; // since only removing roads does this, it's going to be fixed later
                         var [isStop, type] = checkForStop(map, i, j);
@@ -1157,7 +1157,7 @@
                         if (TileType.PASSABLE.has(map[i][j])){
                             if(map[i][j] === DEBUGGING){ //debugging
                                 mapDrawing = mapDrawing.concat(makeCell("white",i,j));
-                            } else if (map[i][j] in INTERSECTIONS) { // intersection
+                            } else if (map[i][j] in INTERSECTION_TILENUMBER_TO_NAME) { // intersection
                                 mapDrawing = mapDrawing.concat(makeCell("intersection", i, j));
                             } else if (STOPS.has(map[i][j])){ // stop
                                 if (map[i][j] === HOR_STOP){
@@ -1314,7 +1314,7 @@
                                 markOrRemoveIntersectionStopTiles(currentMap, row, col+1, true, true);
                             }
                         } else if (editingRemove) {
-                            if (currentMap[row][col] in INTERSECTIONS){
+                            if (currentMap[row][col] in INTERSECTION_TILENUMBER_TO_NAME){
                                 markOrRemoveIntersectionStopTiles(currentMap, row, col, false, true);
                             }
                             $(this).removeClass();
@@ -1323,22 +1323,22 @@
 
                             var newIntersections = checkIntersectionOfSurroundings(currentMap, row, col);
                             // if intersections need to be removed
-                            if (!newIntersections[1][0] && currentMap[row-1] && (currentMap[row-1][col] in INTERSECTIONS)){ //up
+                            if (!newIntersections[1][0] && currentMap[row-1] && (currentMap[row-1][col] in INTERSECTION_TILENUMBER_TO_NAME)){ //up
                                 $("[data-row='"+(row-1)+"'][data-col='"+col+"']").removeClass().addClass("cell").addClass("black");
                                 markOrRemoveIntersectionStopTiles(currentMap, row-1, col, false, true);
                                 currentMap[row-1][col] = UNKNOWN_ROAD;
                             }
-                            if (!newIntersections[2][0] && currentMap[row+1] && (currentMap[row+1][col] in INTERSECTIONS)){ //down
+                            if (!newIntersections[2][0] && currentMap[row+1] && (currentMap[row+1][col] in INTERSECTION_TILENUMBER_TO_NAME)){ //down
                                 $("[data-row='"+(row+1)+"'][data-col='"+col+"']").removeClass().addClass("cell").addClass("black");
                                 markOrRemoveIntersectionStopTiles(currentMap, row+1, col, false, true);
                                 currentMap[row+1][col] = UNKNOWN_ROAD;
                             }
-                            if (!newIntersections[3][0] && (currentMap[row][col-1] in INTERSECTIONS)){ //left
+                            if (!newIntersections[3][0] && (currentMap[row][col-1] in INTERSECTION_TILENUMBER_TO_NAME)){ //left
                                 $("[data-row='"+row+"'][data-col='"+(col-1)+"']").removeClass().addClass("cell").addClass("black");
                                 markOrRemoveIntersectionStopTiles(currentMap, row, col-1, false, true);
                                 currentMap[row][col-1] = UNKNOWN_ROAD;
                             }
-                            if (!newIntersections[4][0] && (currentMap[row][col+1] in INTERSECTIONS)){ //right
+                            if (!newIntersections[4][0] && (currentMap[row][col+1] in INTERSECTION_TILENUMBER_TO_NAME)){ //right
                                 $("[data-row='"+row+"'][data-col='"+(col+1)+"']").removeClass().addClass("cell").addClass("black");
                                 markOrRemoveIntersectionStopTiles(currentMap, row, col+1, false, true);
                                 currentMap[row][col+1] = UNKNOWN_ROAD;
@@ -1392,6 +1392,9 @@
                 link.click(); // This will download the data file named "{file name}.csv".
             };
 
+
+            var gui = new dat.GUI({width:350});
+
             // The dat.gui interface for inputting parameters to tweek the map
             var mapTweeker = function() {
                 this.mapNameToLoad = "cs_map_1463203007411";
@@ -1413,32 +1416,36 @@
                 this.HORIZONTAL = HOR_ROAD;
                 this.HOR_STOP = HOR_STOP;
                 this.VER_STOP = VER_STOP;
-                this.PLUS = INTERSECTION1["PLUS"];
-                this.T_LEFT = INTERSECTION1["T_LEFT"];
-                this.T_RIGHT = INTERSECTION1["T_RIGHT"];
-                this.T_UP = INTERSECTION1["T_UP"];
-                this.T_DOWN = INTERSECTION1["T_DOWN"];
-                this.UP_LEFT = INTERSECTION1["UP_LEFT"];
-                this.UP_RIGHT = INTERSECTION1["UP_RIGHT"];
-                this.DOWN_RIGHT = INTERSECTION1["DOWN_RIGHT"];
-                this.DOWN_LEFT = INTERSECTION1["DOWN_LEFT"];
+                this.PLUS = INTERSECTION_NAME_TO_TILENUMBER["PLUS"];
+                this.T_LEFT = INTERSECTION_NAME_TO_TILENUMBER["T_LEFT"];
+                this.T_RIGHT = INTERSECTION_NAME_TO_TILENUMBER["T_RIGHT"];
+                this.T_UP = INTERSECTION_NAME_TO_TILENUMBER["T_UP"];
+                this.T_DOWN = INTERSECTION_NAME_TO_TILENUMBER["T_DOWN"];
+                this.UP_LEFT = INTERSECTION_NAME_TO_TILENUMBER["UP_LEFT"];
+                this.UP_RIGHT = INTERSECTION_NAME_TO_TILENUMBER["UP_RIGHT"];
+                this.DOWN_RIGHT = INTERSECTION_NAME_TO_TILENUMBER["DOWN_RIGHT"];
+                this.DOWN_LEFT = INTERSECTION_NAME_TO_TILENUMBER["DOWN_LEFT"];
                 this.resetToDefault = function(){
                     this.IMPASSABLE = IMPASSABLE;
                     this.VERTICAL = VER_ROAD;
                     this.HORIZONTAL = HOR_ROAD;
                     this.HOR_STOP = HOR_STOP;
                     this.VER_STOP = VER_STOP;
-                    this.PLUS = INTERSECTION1["PLUS"];
-                    this.T_LEFT = INTERSECTION1["T_LEFT"];
-                    this.T_RIGHT = INTERSECTION1["T_RIGHT"];
-                    this.T_UP = INTERSECTION1["T_UP"];
-                    this.T_DOWN = INTERSECTION1["T_DOWN"];
-                    this.UP_LEFT = INTERSECTION1["UP_LEFT"];
-                    this.UP_RIGHT = INTERSECTION1["UP_RIGHT"];
-                    this.DOWN_RIGHT = INTERSECTION1["DOWN_RIGHT"];
-                    this.DOWN_LEFT = INTERSECTION1["DOWN_LEFT"];
+                    this.PLUS = INTERSECTION_NAME_TO_TILENUMBER["PLUS"];
+                    this.T_LEFT = INTERSECTION_NAME_TO_TILENUMBER["T_LEFT"];
+                    this.T_RIGHT = INTERSECTION_NAME_TO_TILENUMBER["T_RIGHT"];
+                    this.T_UP = INTERSECTION_NAME_TO_TILENUMBER["T_UP"];
+                    this.T_DOWN = INTERSECTION_NAME_TO_TILENUMBER["T_DOWN"];
+                    this.UP_LEFT = INTERSECTION_NAME_TO_TILENUMBER["UP_LEFT"];
+                    this.UP_RIGHT = INTERSECTION_NAME_TO_TILENUMBER["UP_RIGHT"];
+                    this.DOWN_RIGHT = INTERSECTION_NAME_TO_TILENUMBER["DOWN_RIGHT"];
+                    this.DOWN_LEFT = INTERSECTION_NAME_TO_TILENUMBER["DOWN_LEFT"];
 
-                }
+                    for (var i = 0; i < gui.__folders.defineTileMapping.__controllers.length; i++) {
+                        gui.__folders.defineTileMapping.__controllers[i].updateDisplay();
+                    }
+
+                };
 
                 this.userDefined_Mapping = function(){
                     var newMap = [];
@@ -1461,31 +1468,31 @@
                                 case VER_STOP:
                                     newMap[i][j] = this.VER_STOP;
                                     break;
-                                case INTERSECTION1["PLUS"]:
+                                case INTERSECTION_NAME_TO_TILENUMBER["PLUS"]:
                                     newMap[i][j] = this.PLUS;
                                     break;
-                                case INTERSECTION1["T_LEFT"]:
+                                case INTERSECTION_NAME_TO_TILENUMBER["T_LEFT"]:
                                     newMap[i][j] = this.T_LEFT;
                                     break;
-                                case INTERSECTION1["T_RIGHT"]:
+                                case INTERSECTION_NAME_TO_TILENUMBER["T_RIGHT"]:
                                     newMap[i][j] = this.T_RIGHT;
                                     break;
-                                case INTERSECTION1["T_UP"]:
+                                case INTERSECTION_NAME_TO_TILENUMBER["T_UP"]:
                                     newMap[i][j] = this.T_UP;
                                     break;
-                                case INTERSECTION1["T_DOWN"]:
+                                case INTERSECTION_NAME_TO_TILENUMBER["T_DOWN"]:
                                     newMap[i][j] = this.T_DOWN;
                                     break;
-                                case INTERSECTION1["UP_LEFT"]:
+                                case INTERSECTION_NAME_TO_TILENUMBER["UP_LEFT"]:
                                     newMap[i][j] = this.UP_LEFT;
                                     break;
-                                case INTERSECTION1["UP_RIGHT"]:
+                                case INTERSECTION_NAME_TO_TILENUMBER["UP_RIGHT"]:
                                     newMap[i][j] = this.UP_RIGHT;
                                     break;
-                                case INTERSECTION1["DOWN_RIGHT"]:
+                                case INTERSECTION_NAME_TO_TILENUMBER["DOWN_RIGHT"]:
                                     newMap[i][j] = this.DOWN_RIGHT;
                                     break;
-                                case INTERSECTION1["DOWN_LEFT"]:
+                                case INTERSECTION_NAME_TO_TILENUMBER["DOWN_LEFT"]:
                                     newMap[i][j] = this.DOWN_LEFT;
                                     break;
 
@@ -1580,7 +1587,6 @@
             // Making a new dat.gui interface
 
             var mapTweekerUI = new mapTweeker();
-            var gui = new dat.GUI({width:350});
 
 
             var f1 = gui.addFolder("tweek");
@@ -1598,21 +1604,21 @@
             f1.add(mapTweekerUI, 'cleanSlate');
 
             var f4 = gui.addFolder("defineTileMapping");
-            f4.add(mapTweekerUI, "IMPASSABLE").listen();
-            f4.add(mapTweekerUI, "VERTICAL").listen();
-            f4.add(mapTweekerUI, "HORIZONTAL").listen();
-            f4.add(mapTweekerUI, "VER_STOP").listen();
-            f4.add(mapTweekerUI, "HOR_STOP").listen();
-            f4.add(mapTweekerUI, "PLUS").listen();
-            f4.add(mapTweekerUI, "T_LEFT").listen();
-            f4.add(mapTweekerUI, "T_RIGHT").listen();
-            f4.add(mapTweekerUI, "T_UP").listen();
-            f4.add(mapTweekerUI, "T_DOWN").listen();
-            f4.add(mapTweekerUI, "UP_LEFT").listen();
-            f4.add(mapTweekerUI, "UP_RIGHT").listen();
-            f4.add(mapTweekerUI, "DOWN_RIGHT").listen();
-            f4.add(mapTweekerUI, "DOWN_LEFT").listen();
-            f4.add(mapTweekerUI, "resetToDefault")
+            f4.add(mapTweekerUI, "IMPASSABLE");
+            f4.add(mapTweekerUI, "VERTICAL");
+            f4.add(mapTweekerUI, "HORIZONTAL");
+            f4.add(mapTweekerUI, "VER_STOP");
+            f4.add(mapTweekerUI, "HOR_STOP");
+            f4.add(mapTweekerUI, "PLUS");
+            f4.add(mapTweekerUI, "T_LEFT");
+            f4.add(mapTweekerUI, "T_RIGHT");
+            f4.add(mapTweekerUI, "T_UP");
+            f4.add(mapTweekerUI, "T_DOWN");
+            f4.add(mapTweekerUI, "UP_LEFT");
+            f4.add(mapTweekerUI, "UP_RIGHT");
+            f4.add(mapTweekerUI, "DOWN_RIGHT");
+            f4.add(mapTweekerUI, "DOWN_LEFT");
+            f4.add(mapTweekerUI, "resetToDefault");
 
             var f3 = gui.addFolder("resizeDisplay");
             f3.add(mapTweekerUI, 'cellSize', 1, 20);

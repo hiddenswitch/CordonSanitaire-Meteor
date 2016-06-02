@@ -10,7 +10,7 @@ var STRAIGHT_ROADS = new Set([HOR_ROAD, VER_ROAD]);
 var ROADS = new Set([HOR_ROAD, VER_ROAD, UNKNOWN_ROAD, HOR_STOP, VER_STOP]);
 var STOPS = new Set ([HOR_STOP, VER_STOP]);
 
-var INTERSECTION1 = {
+var INTERSECTION_NAME_TO_TILENUMBER = {
     "PLUS" : -210,
     "T_LEFT" : -30,
     "T_RIGHT" : -42,
@@ -22,7 +22,7 @@ var INTERSECTION1 = {
     "DOWN_LEFT" : -15,
 };
 
-var INTERSECTIONS = { // should never have -1
+var INTERSECTION_TILENUMBER_TO_NAME = { // should never have -1
     "-210": "PLUS",
     "-30": "T_LEFT",
     "-42": "T_RIGHT",
@@ -45,7 +45,7 @@ var TileType = {
 
 };
 
-for (var key in INTERSECTIONS){
+for (var key in INTERSECTION_TILENUMBER_TO_NAME){
     TileType.PASSABLE.add(parseInt(key));
 }
 
